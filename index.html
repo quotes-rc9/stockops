@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -596,6 +596,7 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
     <span class="nav-sub">Gestão de Estoque · Impressão Digital</span>
     <div class="nav-right">
       <div class="live"><span class="live-dot"></span>Ao vivo</div>
+      <span id="sync-status" style="font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;">☁ Sincronizado</span>
       <!-- Badge do usuário logado -->
       <div class="user-badge" id="user-badge" onclick="showPage('auditoria')" title="Histórico de ações">
         <div class="ub-avatar role-admin" id="ub-avatar">👤</div>
@@ -2182,6 +2183,8 @@ function confirmar(){
   MOV.push({cod,nome:p.nome,tipo:modalTipo==='entrada'?'ENTRADA':'SAÍDA',qty,custo,resp,obs,data:agora.toLocaleDateString('pt-BR')+' '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
   registrarAudit('estoque', `${modalTipo==='entrada'?'Entrada':'Saída'}: ${p.nome}`, `Qtd: ${qty} un | Est.: ${p.estoque} | Resp: ${resp||'—'}`, modalTipo==='entrada'?'📥':'📤');
   closeModal(); renderAll();
+  if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length-1]);
+  if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
   toast(`${modalTipo==='entrada'?'Entrada':'Saída'} registrada: ${qty}× ${p.nome}`,'success');
   pushNotif(
     modalTipo,
@@ -2332,6 +2335,7 @@ function salvarProduto() {
     P.push({ cod, nome, cat, forn, estoque, min, repo, custo, consumo, abc, val: [] });
     toast(`Produto "${nome}" criado com sucesso!`, 'success');
     registrarAudit('produto', `Produto criado: ${nome}`, `Cód: ${cod} | Cat: ${cat} | Forn: ${forn}`, '📦');
+    if (typeof fbSalvarProduto === 'function') fbSalvarProduto(P[P.length-1]);
   } else {
     const p = P.find(x => x.cod === _editCod);
     if (!p) return;
@@ -2339,6 +2343,7 @@ function salvarProduto() {
     p.estoque=estoque; p.min=min; p.repo=repo; p.custo=custo; p.consumo=consumo;
     toast(`Produto "${nome}" atualizado!`, 'success');
     registrarAudit('produto', `Produto editado: ${nome}`, `Cód: ${_editCod} | Est: ${estoque} | Custo: ${custo}`, '✏');
+    if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
   }
   closeEditModal();
   populateFornSelect();
@@ -2368,6 +2373,7 @@ function deletarProduto() {
   renderAll();
   toast(`Produto "${nome}" removido.`, 'success');
   registrarAudit('produto', `Produto excluído: ${nome}`, `Cód: ${_deleteCod}`, '🗑');
+  if (typeof fbExcluirProduto === 'function') fbExcluirProduto(_deleteCod);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2494,6 +2500,7 @@ function confirmarSolicitacao() {
   });
   registrarAudit('solic', `Solicitação de ${_solicTipo==='entrada'?'entrada':'saída'}: ${p.nome}`,
     `Qtd: ${qty} | Solicitante: ${resp}${obs?' | '+obs:''}`, '📋');
+  if (typeof fbSalvarSolic === 'function') fbSalvarSolic(SOLIC[SOLIC.length-1]);
   closeSolicModal();
   renderSolicBadge();
   renderSolicitacoes();
@@ -2521,6 +2528,9 @@ function aprovarSolic(id) {
     data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
   });
   s.status = 'aprovado';
+  if (typeof fbSalvarSolic === 'function') fbSalvarSolic(s);
+  if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
+  if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length-1]);
   registrarAudit('solic', `Solicitação #${id} aprovada`,
     `${s.tipo} de ${s.qty} un de "${s.nome}" | Sol: ${s.resp} | Est.: ${p.estoque}`, '✅');
   renderAll();
@@ -2536,6 +2546,7 @@ function rejeitarSolic(id) {
   const s = SOLIC.find(x => x.id === id);
   if (!s || s.status !== 'pendente') return;
   s.status = 'rejeitado';
+  if (typeof fbSalvarSolic === 'function') fbSalvarSolic(s);
   registrarAudit('solic', `Solicitação #${id} rejeitada`,
     `${s.tipo} de ${s.qty} un de "${s.nome}" | Sol: ${s.resp}`, '❌');
   renderSolicBadge();
@@ -3641,9 +3652,186 @@ function downloadCSV(nome, conteudo) {
 // ═══════════════════════════════════════════════════════════════
 aplicarPrecosMimaki();
 carregarTema();
-// Tenta restaurar sessão salva — se não houver, exibe login
-restaurarSessao();
-setTimeout(gerarNotifsSistema, 1000);
+// Firebase inicializa e restaura sessão (ver bloco Firebase abaixo)
+</script>
+
+<!-- ══ FIREBASE SDK ══════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                         from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getFirestore, doc, collection,
+         setDoc, getDoc, getDocs, onSnapshot,
+         deleteDoc, serverTimestamp }            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+// ── Configuração do projeto Firebase ─────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyBGuN6uieFgTmIa8mJwiRA3eqB70UPp0xM",
+  authDomain:        "stockops-70ba6.firebaseapp.com",
+  projectId:         "stockops-70ba6",
+  storageBucket:     "stockops-70ba6.firebasestorage.app",
+  messagingSenderId: "1059526294275",
+  appId:             "1:1059526294275:web:8ac9135d6728c65c4c8736"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Helpers ───────────────────────────────────────────────────
+const COL_PRODUTOS = 'produtos';
+const COL_MOV      = 'movimentacoes';
+const COL_SOLIC    = 'solicitacoes';
+const COL_USUARIOS = 'usuarios';
+const COL_CONFIG   = 'config';
+
+// Mostra indicador de sincronização
+function setSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (status === 'ok')      { el.textContent = '☁ Sincronizado';  el.style.color = 'var(--green)'; }
+  if (status === 'saving')  { el.textContent = '↑ Salvando...';   el.style.color = 'var(--yellow)'; }
+  if (status === 'loading') { el.textContent = '↓ Carregando...'; el.style.color = 'var(--blue)'; }
+  if (status === 'error')   { el.textContent = '✕ Erro sync';     el.style.color = 'var(--red)'; }
+}
+
+// ── SALVAR produto no Firestore ───────────────────────────────
+window.fbSalvarProduto = async function(p) {
+  try {
+    setSyncStatus('saving');
+    await setDoc(doc(db, COL_PRODUTOS, p.cod), p);
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar produto:', e); setSyncStatus('error'); }
+};
+
+window.fbExcluirProduto = async function(cod) {
+  try {
+    await deleteDoc(doc(db, COL_PRODUTOS, cod));
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao excluir produto:', e); setSyncStatus('error'); }
+};
+
+// ── SALVAR movimentação ───────────────────────────────────────
+window.fbSalvarMov = async function(mov) {
+  try {
+    setSyncStatus('saving');
+    const id = 'mov_' + Date.now();
+    await setDoc(doc(db, COL_MOV, id), { ...mov, _id: id, ts: serverTimestamp() });
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar mov:', e); setSyncStatus('error'); }
+};
+
+// ── SALVAR solicitação ────────────────────────────────────────
+window.fbSalvarSolic = async function(s) {
+  try {
+    setSyncStatus('saving');
+    await setDoc(doc(db, COL_SOLIC, 'solic_' + s.id), s);
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar solic:', e); setSyncStatus('error'); }
+};
+
+// ── SALVAR usuários ───────────────────────────────────────────
+window.fbSalvarUsuarios = async function(usuarios) {
+  try {
+    setSyncStatus('saving');
+    // Salva sem as senhas em texto — apenas hash
+    await setDoc(doc(db, COL_CONFIG, 'usuarios'), { lista: usuarios, ts: serverTimestamp() });
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar usuários:', e); setSyncStatus('error'); }
+};
+
+// ── CARREGAR dados iniciais do Firestore ──────────────────────
+async function carregarDadosFirebase() {
+  setSyncStatus('loading');
+  try {
+    // Produtos
+    const prodSnap = await getDocs(collection(db, COL_PRODUTOS));
+    if (!prodSnap.empty) {
+      window.P = [];
+      prodSnap.forEach(d => window.P.push(d.data()));
+      aplicarPrecosMimaki();
+    } else {
+      // Primeiro acesso: sobe os produtos padrão para o Firebase
+      for (const p of window.P) {
+        await setDoc(doc(db, COL_PRODUTOS, p.cod), p);
+      }
+    }
+
+    // Movimentações
+    const movSnap = await getDocs(collection(db, COL_MOV));
+    if (!movSnap.empty) {
+      window.MOV = [];
+      movSnap.forEach(d => { const m = d.data(); delete m.ts; delete m._id; window.MOV.push(m); });
+      window.MOV.sort((a,b) => a.data > b.data ? 1 : -1);
+    }
+
+    // Solicitações
+    const solicSnap = await getDocs(collection(db, COL_SOLIC));
+    if (!solicSnap.empty) {
+      window.SOLIC = [];
+      solicSnap.forEach(d => window.SOLIC.push(d.data()));
+    }
+
+    // Usuários
+    const usersDoc = await getDoc(doc(db, COL_CONFIG, 'usuarios'));
+    if (usersDoc.exists()) {
+      window.USUARIOS = usersDoc.data().lista;
+    } else {
+      // Primeiro acesso: sobe usuários padrão
+      await window.fbSalvarUsuarios(window.USUARIOS);
+    }
+
+    setSyncStatus('ok');
+  } catch(e) {
+    console.error('Erro ao carregar Firebase:', e);
+    setSyncStatus('error');
+  }
+
+  // Renderiza após carregar
+  populateFornSelect();
+  renderAll();
+  restaurarSessao();
+  setTimeout(gerarNotifsSistema, 1000);
+}
+
+// ── LISTENERS em tempo real ───────────────────────────────────
+// Produtos — atualiza em tempo real quando outro usuário editar
+onSnapshot(collection(db, COL_PRODUTOS), (snap) => {
+  if (snap.metadata.hasPendingWrites) return; // ignora mudanças locais ainda enviando
+  const novosP = [];
+  snap.forEach(d => novosP.push(d.data()));
+  if (novosP.length > 0) {
+    window.P = novosP;
+    aplicarPrecosMimaki();
+    populateFornSelect();
+    renderAll();
+    setSyncStatus('ok');
+  }
+});
+
+// Solicitações — atualiza em tempo real
+onSnapshot(collection(db, COL_SOLIC), (snap) => {
+  if (snap.metadata.hasPendingWrites) return;
+  const novasSolic = [];
+  snap.forEach(d => novasSolic.push(d.data()));
+  window.SOLIC = novasSolic;
+  renderSolicBadge();
+  if (window.currentPage === 'solicitacoes') renderSolicitacoes();
+});
+
+// Usuários — atualiza em tempo real
+onSnapshot(doc(db, COL_CONFIG, 'usuarios'), (snap) => {
+  if (!snap.exists() || snap.metadata.hasPendingWrites) return;
+  window.USUARIOS = snap.data().lista;
+  if (window.currentPage === 'usuarios') renderUsuarios();
+});
+
+// ── Sobrescreve salvarUsuariosLS para usar Firebase também ────
+const _salvarUsuariosOriginal = window.salvarUsuariosLS;
+window.salvarUsuariosLS = function() {
+  try { localStorage.setItem('stockops-usuarios', JSON.stringify(window.USUARIOS)); } catch(e) {}
+  window.fbSalvarUsuarios(window.USUARIOS);
+};
+
+// ── Inicializa ────────────────────────────────────────────────
+carregarDadosFirebase();
 </script>
 </body>
 </html>
