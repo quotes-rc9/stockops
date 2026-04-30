@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -116,7 +116,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-si
 
 /* KPI ROW */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
-.kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden;}
+.kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden;cursor:pointer;transition:all .15s;}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.25);border-color:var(--b3);}
+.kpi:hover .kpi-lbl::after{content:' →';opacity:.6;}
+.kpi-click-hint{font-size:9px;color:var(--t4);margin-top:4px;}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
 .kpi.blue::before{background:var(--blue);}
 .kpi.red::before{background:var(--red);}
@@ -596,7 +599,8 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
   <div class="alert-banner" id="alert-banner">
     <span>🔴</span>
     <span id="alert-banner-text"></span>
-    <button class="alert-banner-close" onclick="document.getElementById('alert-banner').classList.remove('show')">✕</button>
+    <button class="nav-btn danger" style="font-size:10px;padding:2px 10px;margin-left:8px;" onclick="showPage('alertas')">Ver todos</button>
+    <button class="alert-banner-close" onclick="fecharBanner()" title="Fechar aviso (reaparece no próximo acesso)">✕</button>
   </div>
 
   <!-- NAV -->
@@ -681,35 +685,41 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
 
           <!-- KPIs -->
           <div class="kpi-row" style="grid-template-columns:repeat(6,1fr);">
-            <div class="kpi blue">
+            <div class="kpi blue" onclick="kpiClick('estoque','','')" title="Ver estoque completo">
               <div class="kpi-lbl">Unidades em estoque</div>
               <div class="kpi-val" id="k-total">—</div>
               <div class="kpi-sub" id="k-itens">— itens</div>
+              <div class="kpi-click-hint">Clique para ver estoque →</div>
             </div>
-            <div class="kpi red">
+            <div class="kpi red" onclick="kpiClick('estoque','status','Crítico')" title="Ver itens críticos">
               <div class="kpi-lbl">Itens críticos</div>
               <div class="kpi-val" id="k-crit">—</div>
               <div class="kpi-sub">Reposição imediata</div>
+              <div class="kpi-click-hint">Clique para filtrar →</div>
             </div>
-            <div class="kpi yellow">
+            <div class="kpi yellow" onclick="kpiClick('estoque','status','Alerta')" title="Ver itens em alerta">
               <div class="kpi-lbl">Itens em alerta</div>
               <div class="kpi-val" id="k-alert">—</div>
               <div class="kpi-sub">Abaixo do ponto de reposição</div>
+              <div class="kpi-click-hint">Clique para filtrar →</div>
             </div>
-            <div class="kpi orange">
+            <div class="kpi orange" onclick="kpiClick('validade','','')" title="Ver validades próximas">
               <div class="kpi-lbl">Vencendo em 30 dias</div>
               <div class="kpi-val" id="k-exp">—</div>
               <div class="kpi-sub">Unidades com validade próxima</div>
+              <div class="kpi-click-hint">Clique para ver validades →</div>
             </div>
-            <div class="kpi green">
+            <div class="kpi green" onclick="kpiClick('relatorios','','')" title="Ver relatório financeiro">
               <div class="kpi-lbl">💰 Valor em estoque</div>
               <div class="kpi-val" id="k-valor" style="font-size:16px;">—</div>
               <div class="kpi-sub">Custo total do inventário</div>
+              <div class="kpi-click-hint">Clique para ver relatório →</div>
             </div>
-            <div class="kpi" style="border-top:2px solid var(--purple);background:var(--s1);">
+            <div class="kpi" style="border-top:2px solid var(--purple);background:var(--s1);" onclick="kpiClick('estoque','','')" title="Ver todos os produtos">
               <div class="kpi-lbl" style="color:var(--purple);">📊 Itens cadastrados</div>
               <div class="kpi-val" id="k-cadastrados" style="color:var(--purple);">—</div>
               <div class="kpi-sub" id="k-cats">—</div>
+              <div class="kpi-click-hint">Clique para ver estoque →</div>
             </div>
           </div>
 
@@ -1374,6 +1384,17 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
         <div class="fhint" id="m-custo-hint"></div>
       </div>
     </div>
+    <!-- Campo de validade — aparece só na ENTRADA -->
+    <div id="m-val-wrap" style="display:none;">
+      <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;margin-top:2px;">
+        📅 Validade do lote recebido
+      </div>
+      <div id="m-val-lista" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <button type="button" onclick="adicionarCampoVal()" style="margin-top:6px;font-size:10px;background:var(--blue-a);border:1px solid rgba(74,143,245,.3);border-radius:4px;color:var(--blue);padding:3px 10px;cursor:pointer;font-family:'Inter',sans-serif;">
+        ＋ Adicionar outra data de validade
+      </button>
+      <div class="fhint">Se o lote tiver validade, informe a data. Formato: DD/MM/AAAA</div>
+    </div>
     <div class="frow">
       <div class="fg">
         <label class="fl">Responsável</label>
@@ -1692,7 +1713,7 @@ let P = [
   {cod:'LH100-Y',   nome:'Tinta Amarela LH100',         cat:'Insumo',forn:'MIMAKI Brasil',estoque:2,min:2,repo:3,custo:360, consumo:1.4,abc:'A',val:['17/01/2027','26/04/2027']},
   {cod:'LH100-CL',  nome:'Verniz Clear LH100',          cat:'Insumo',forn:'MIMAKI Brasil',estoque:2,min:2,repo:3,custo:280, consumo:0.9,abc:'B',val:['30/07/2026','02/10/2026']},
   {cod:'LH100-M',   nome:'Magenta LH100',               cat:'Insumo',forn:'MIMAKI Brasil',estoque:2,min:2,repo:3,custo:360, consumo:1.5,abc:'A',val:['07/03/2027','07/03/2027']},
-  {cod:'PR200',     nome:'Tinta Neutra PR 200',          cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:280, consumo:0.5,abc:'B',val:['06/07/2026']},
+  {cod:'PR200',     nome:'Tinta Neutra PR 200',          cat:'Insumo',forn:'MIMAKI Brasil',estoque:3,min:1,repo:2,custo:2243.42, consumo:0.5,abc:'B',val:['06/07/2026']},
   // ── INSUMOS: ROLAND ECO UV ──────────────────────────────────
   {cod:'ECO UV-YE', nome:'Tinta Amarela Roland ECO UV', cat:'Insumo',forn:'Roland',        estoque:1,min:2,repo:2,custo:503.63, consumo:0.7,abc:'B',val:['27/01/2026']},
   {cod:'ECO UV-MG', nome:'Tinta Magenta Roland ECO UV', cat:'Insumo',forn:'Roland',        estoque:1,min:2,repo:2,custo:503.63, consumo:0.7,abc:'B',val:['28/08/2025']},
@@ -2251,8 +2272,49 @@ function openModal(tipo){
   $('m-qty').value=''; $('m-custo').value=''; $('m-obs').value='';
   $('m-resp').value = CURRENT_USER ? CURRENT_USER.nome : '';
   $('m-preview').style.display='none'; $('m-custo-hint').textContent='';
+  // Validade: só aparece na entrada
+  const valWrap = $('m-val-wrap');
+  if (valWrap) {
+    valWrap.style.display = tipo === 'entrada' ? '' : 'none';
+    $('m-val-lista').innerHTML = '';
+    adicionarCampoVal(); // começa com 1 campo
+  }
   $('overlay').classList.add('open');
   setTimeout(()=>$('m-prod').focus(),80);
+}
+
+function adicionarCampoVal() {
+  const lista = $('m-val-lista');
+  if (!lista) return;
+  const idx = lista.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;align-items:center;';
+  div.innerHTML = `
+    <input class="fi2" type="text" id="m-val-${idx}" placeholder="DD/MM/AAAA"
+      style="flex:1;" maxlength="10"
+      oninput="formatarDataVal(this)">
+    ${idx > 0 ? `<button type="button" onclick="this.parentElement.remove()" style="background:var(--red-a);border:1px solid rgba(224,72,74,.3);border-radius:4px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:12px;">✕</button>` : ''}
+  `;
+  lista.appendChild(div);
+  div.querySelector('input')?.focus();
+}
+
+function formatarDataVal(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length >= 3) v = v.slice(0,2)+'/'+v.slice(2);
+  if (v.length >= 6) v = v.slice(0,5)+'/'+v.slice(5);
+  input.value = v.slice(0,10);
+}
+
+function getValidadesModal() {
+  const lista = $('m-val-lista');
+  if (!lista) return [];
+  const vals = [];
+  lista.querySelectorAll('input').forEach(inp => {
+    const v = inp.value.trim();
+    if (v && v.length === 10) vals.push(v);
+  });
+  return vals;
 }
 function onProdSelect(){
   const p=P.find(x=>x.cod===$('m-prod').value);
@@ -2280,12 +2342,28 @@ function confirmar(){
   const p=P.find(x=>x.cod===cod);
   if(!p) return;
   if(modalTipo==='saida'&&qty>p.estoque){ toast(`Estoque insuficiente (disponível: ${p.estoque})`,'error'); return; }
-  if(modalTipo==='entrada') p.estoque+=qty;
+  if(modalTipo==='entrada') {
+    p.estoque+=qty;
+    // Salva validades informadas
+    const novasVals = getValidadesModal();
+    if (novasVals.length > 0) {
+      if (!p.val) p.val = [];
+      p.val.push(...novasVals);
+      p.val.sort((a,b) => {
+        const [da,ma,aa] = a.split('/'); const [db,mb,ab] = b.split('/');
+        return new Date(+aa,+ma-1,+da) - new Date(+ab,+mb-1,+db);
+      });
+    }
+  }
   else { p.estoque-=qty; p.consumo=Math.max(0.1,p.consumo*0.8+qty*0.2); }
   if(custo>0) p.custo=custo;
   const agora=new Date();
-  MOV.push({cod,nome:p.nome,tipo:modalTipo==='entrada'?'ENTRADA':'SAÍDA',qty,custo,resp,obs,data:agora.toLocaleDateString('pt-BR')+' '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
-  registrarAudit('estoque', `${modalTipo==='entrada'?'Entrada':'Saída'}: ${p.nome}`, `Qtd: ${qty} un | Est.: ${p.estoque} | Resp: ${resp||'—'}`, modalTipo==='entrada'?'📥':'📤');
+  const novasValsLog = modalTipo==='entrada' ? getValidadesModal() : [];
+  MOV.push({cod,nome:p.nome,tipo:modalTipo==='entrada'?'ENTRADA':'SAÍDA',qty,custo,resp,obs,
+    val: novasValsLog,
+    data:agora.toLocaleDateString('pt-BR')+' '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  const valLog = novasValsLog.length ? ` | Val: ${novasValsLog.join(', ')}` : '';
+  registrarAudit('estoque', `${modalTipo==='entrada'?'Entrada':'Saída'}: ${p.nome}`, `Qtd: ${qty} un | Est.: ${p.estoque} | Resp: ${resp||'—'}${valLog}`, modalTipo==='entrada'?'📥':'📤');
   closeModal(); renderAll();
   if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length-1]);
   if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
@@ -2301,6 +2379,40 @@ function confirmar(){
 
 // ── NAV ────────────────────────────────────────────────────────
 // (declarado no topo)
+function kpiClick(pagina, filtroTipo, filtroValor) {
+  // Navega para a página
+  const sbItem = document.querySelector(`.sb-item[onclick*="'${pagina}'"]`);
+  showPage(pagina, sbItem || null);
+
+  // Destaca sidebar item
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  if (sbItem) sbItem.classList.add('active');
+
+  // Aplica filtro automático se necessário
+  if (filtroTipo && filtroValor) {
+    setTimeout(() => {
+      if (filtroTipo === 'status') {
+        const sel = document.getElementById('f-status');
+        if (sel) { sel.value = filtroValor; renderEstoque(); }
+      }
+      if (filtroTipo === 'cat') {
+        const sel = document.getElementById('f-cat');
+        if (sel) { sel.value = filtroValor; renderEstoque(); }
+      }
+    }, 100);
+  } else if (pagina === 'estoque') {
+    // Limpa filtros ao ver estoque completo
+    setTimeout(() => {
+      const ids = ['f-search','f-cat','f-status','f-forn'];
+      ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      renderEstoque();
+    }, 100);
+  }
+
+  // Feedback visual no KPI clicado
+  event.currentTarget?.classList.add('kpi-clicked');
+  setTimeout(() => event.currentTarget?.classList.remove('kpi-clicked'), 300);
+}
 function showPage(id, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
@@ -4009,7 +4121,24 @@ function exportarRelatorioCSV(tipo) {
 }
 
 // ── Exportar Backup ───────────────────────────────────────────
+function fecharBanner() {
+  const banner = document.getElementById('alert-banner');
+  if (banner) banner.classList.remove('show');
+}
+
 function exportarBackup() {
+  // Confirmação antes de exportar
+  const confirmado = confirm(
+    '💾 Exportar backup do sistema?\n\n' +
+    'Será gerado um arquivo .json com:\n' +
+    '• Todos os produtos cadastrados\n' +
+    '• Histórico de movimentações\n' +
+    '• Solicitações\n' +
+    '• Últimas 100 entradas de auditoria\n\n' +
+    'Deseja continuar?'
+  );
+  if (!confirmado) return;
+
   const backup = {
     versao: '2.0',
     data: new Date().toISOString(),
@@ -4023,10 +4152,13 @@ function exportarBackup() {
   const blob = new Blob([json], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `stockops_backup_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.json`;
-  a.click(); URL.revokeObjectURL(url);
+  const dataStr = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  a.href = url;
+  a.download = `stockops_backup_${dataStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
   registrarAudit('sistema', 'Backup exportado', `Por ${CURRENT_USER?.nome||'Sistema'}`, '💾');
-  toast('Backup exportado com sucesso!', 'success');
+  toast('✅ Backup exportado com sucesso!', 'success');
 }
 
 // ── Utilitário download CSV ───────────────────────────────────
