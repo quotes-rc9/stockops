@@ -3758,12 +3758,16 @@ async function carregarDadosFirebase() {
     // Produtos
     const prodSnap = await getDocs(collection(db, COL_PRODUTOS));
     if (!prodSnap.empty) {
-      window.P = [];
-      prodSnap.forEach(d => window.P.push(d.data()));
-      aplicarPrecosMimaki();
+      const novosP = [];
+      prodSnap.forEach(d => novosP.push(d.data()));
+      if (novosP.length > 0) {
+        P.length = 0;
+        novosP.forEach(p => P.push(p));
+        aplicarPrecosMimaki();
+      }
     } else {
       // Primeiro acesso: sobe os produtos padrão para o Firebase
-      for (const p of window.P) {
+      for (const p of P) {
         await setDoc(doc(db, COL_PRODUTOS, p.cod), p);
       }
     }
@@ -3771,25 +3775,29 @@ async function carregarDadosFirebase() {
     // Movimentações
     const movSnap = await getDocs(collection(db, COL_MOV));
     if (!movSnap.empty) {
-      window.MOV = [];
-      movSnap.forEach(d => { const m = d.data(); delete m.ts; delete m._id; window.MOV.push(m); });
-      window.MOV.sort((a,b) => a.data > b.data ? 1 : -1);
+      MOV.length = 0;
+      movSnap.forEach(d => { const m = d.data(); delete m.ts; delete m._id; MOV.push(m); });
+      MOV.sort((a,b) => a.data > b.data ? 1 : -1);
     }
 
     // Solicitações
     const solicSnap = await getDocs(collection(db, COL_SOLIC));
     if (!solicSnap.empty) {
-      window.SOLIC = [];
-      solicSnap.forEach(d => window.SOLIC.push(d.data()));
+      SOLIC.length = 0;
+      solicSnap.forEach(d => SOLIC.push(d.data()));
     }
 
     // Usuários
     const usersDoc = await getDoc(doc(db, COL_CONFIG, 'usuarios'));
     if (usersDoc.exists()) {
-      window.USUARIOS = usersDoc.data().lista;
+      const lista = usersDoc.data().lista;
+      if (lista && lista.length) {
+        USUARIOS.length = 0;
+        lista.forEach(u => USUARIOS.push(u));
+      }
     } else {
       // Primeiro acesso: sobe usuários padrão
-      await window.fbSalvarUsuarios(window.USUARIOS);
+      await fbSalvarUsuarios(USUARIOS);
     }
 
     setSyncStatus('ok');
@@ -3806,13 +3814,13 @@ async function carregarDadosFirebase() {
 }
 
 // ── LISTENERS em tempo real ───────────────────────────────────
-// Produtos — atualiza em tempo real quando outro usuário editar
 onSnapshot(collection(db, COL_PRODUTOS), (snap) => {
-  if (snap.metadata.hasPendingWrites) return; // ignora mudanças locais ainda enviando
+  if (snap.metadata.hasPendingWrites) return;
   const novosP = [];
   snap.forEach(d => novosP.push(d.data()));
   if (novosP.length > 0) {
-    window.P = novosP;
+    P.length = 0;
+    novosP.forEach(p => P.push(p));
     aplicarPrecosMimaki();
     populateFornSelect();
     renderAll();
@@ -3820,28 +3828,30 @@ onSnapshot(collection(db, COL_PRODUTOS), (snap) => {
   }
 });
 
-// Solicitações — atualiza em tempo real
 onSnapshot(collection(db, COL_SOLIC), (snap) => {
   if (snap.metadata.hasPendingWrites) return;
   const novasSolic = [];
   snap.forEach(d => novasSolic.push(d.data()));
-  window.SOLIC = novasSolic;
+  SOLIC.length = 0;
+  novasSolic.forEach(s => SOLIC.push(s));
   renderSolicBadge();
-  if (window.currentPage === 'solicitacoes') renderSolicitacoes();
+  if (currentPage === 'solicitacoes') renderSolicitacoes();
 });
 
-// Usuários — atualiza em tempo real
 onSnapshot(doc(db, COL_CONFIG, 'usuarios'), (snap) => {
   if (!snap.exists() || snap.metadata.hasPendingWrites) return;
-  window.USUARIOS = snap.data().lista;
-  if (window.currentPage === 'usuarios') renderUsuarios();
+  const lista = snap.data().lista;
+  if (lista && lista.length) {
+    USUARIOS.length = 0;
+    lista.forEach(u => USUARIOS.push(u));
+  }
+  if (currentPage === 'usuarios') renderUsuarios();
 });
 
 // ── Sobrescreve salvarUsuariosLS para usar Firebase também ────
-const _salvarUsuariosOriginal = window.salvarUsuariosLS;
 window.salvarUsuariosLS = function() {
-  try { localStorage.setItem('stockops-usuarios', JSON.stringify(window.USUARIOS)); } catch(e) {}
-  window.fbSalvarUsuarios(window.USUARIOS);
+  try { localStorage.setItem('stockops-usuarios', JSON.stringify(USUARIOS)); } catch(e) {}
+  fbSalvarUsuarios(USUARIOS);
 };
 
 // ── Inicializa ────────────────────────────────────────────────
