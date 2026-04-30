@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -3146,13 +3146,27 @@ const ROLE_COR   = { admin:'role-admin', usuario:'role-user', viewer:'role-viewe
 // ── Base de usuários com persistência em localStorage ─────────
 const USUARIOS_KEY = 'stockops-usuarios';
 
+// Versão do sistema de usuários — incrementar força recarga
+const USUARIOS_VERSION = '2';
+
 function carregarUsuarios() {
   try {
+    const ver = localStorage.getItem(USUARIOS_KEY + '_ver');
+    // Se versão diferente, descarta cache e usa padrão atualizado
+    if (ver !== USUARIOS_VERSION) {
+      localStorage.removeItem(USUARIOS_KEY);
+      localStorage.setItem(USUARIOS_KEY + '_ver', USUARIOS_VERSION);
+    }
     const saved = localStorage.getItem(USUARIOS_KEY);
     if (saved) { const arr = JSON.parse(saved); if (arr && arr.length) return arr; }
   } catch(e) {}
-  // Usuário admin padrão para primeiro acesso
-  return [{ id:'admin1', nome:'Administrador', email:'admin', role:'admin', _hash:'admin123', criadoEm:new Date().toLocaleDateString('pt-BR') }];
+  // Usuários padrão do sistema
+  return [
+    { id:'admin1',  nome:'Administrador', email:'admin',     role:'admin',   _hash:'admin123', criadoEm:'30/04/2026' },
+    { id:'u_thais', nome:'Thais Paiva',   email:'thais',     role:'usuario', _hash:'1234',     criadoEm:'30/04/2026' },
+    { id:'u_alana', nome:'Alana Dias',    email:'alanadias', role:'viewer',  _hash:'1234',     criadoEm:'30/04/2026' },
+    { id:'u_bruno', nome:'Bruno Lima',    email:'bruno',     role:'usuario', _hash:'1234',     criadoEm:'30/04/2026' },
+  ];
 }
 function salvarUsuariosLS() {
   try { localStorage.setItem(USUARIOS_KEY, JSON.stringify(USUARIOS)); } catch(e) {}
