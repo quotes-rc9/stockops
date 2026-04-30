@@ -869,18 +869,28 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <!-- ══ MOVIMENTAÇÕES ══════════════════════════════════════ -->
       <div class="page" id="page-mov">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">↕ Movimentações</span>
+          <span class="ph-title">↕ Movimentações de Estoque</span>
           <span class="ph-sub" id="mov-count"></span>
           <div class="ph-right">
-            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);" onclick="openSolicModal('entrada')">📋 Solicitar Entrada</button>
-            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);" onclick="openSolicModal('saida')">📋 Solicitar Saída</button>
-            <button class="nav-btn success" onclick="openModal('entrada')">＋ Entrada</button>
-            <button class="nav-btn danger" onclick="openModal('saida')">－ Saída</button>
+            <button class="nav-btn success" style="font-size:12px;padding:6px 14px;" onclick="openModal('entrada')">＋ Registrar Entrada</button>
+            <button class="nav-btn danger"  style="font-size:12px;padding:6px 14px;" onclick="openModal('saida')">－ Registrar Saída</button>
+            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);font-size:12px;padding:6px 14px;" onclick="showPage('solicitacoes')">📋 Ver Solicitações</button>
           </div>
+        </div>
+        <!-- Legenda rápida -->
+        <div style="padding:6px 14px;flex-shrink:0;display:flex;gap:16px;font-size:11px;color:var(--t3);border-bottom:1px solid var(--b1);">
+          <span>💡 <b style="color:var(--green);">Entrada</b> = produto chegou ao estoque</span>
+          <span>💡 <b style="color:var(--red);">Saída</b> = produto foi usado ou retirado</span>
+          <span>💡 <b style="color:var(--purple);">Solicitação</b> = pedido aguardando aprovação do admin</span>
         </div>
         <div class="tbl-wrap" style="flex:1;">
           <table>
-            <thead><tr><th>Data/Hora</th><th>Código</th><th>Nome</th><th>Tipo</th><th style="text-align:center;">Qtd</th><th>Custo Unit.</th><th>Total</th><th>Responsável</th><th>Obs</th><th>Ações</th></tr></thead>
+            <thead><tr>
+              <th>Data/Hora</th><th>Produto</th><th>Tipo</th>
+              <th style="text-align:center;">Quantidade</th>
+              <th>Valor Unit.</th><th>Total</th>
+              <th>Responsável</th><th>Observação</th><th>Ações</th>
+            </tr></thead>
             <tbody id="mov-tbody"></tbody>
           </table>
         </div>
@@ -889,27 +899,33 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <!-- ══ SOLICITAÇÕES ═══════════════════════════════════════ -->
       <div class="page" id="page-solicitacoes">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">📋 Solicitações Pendentes</span>
+          <span class="ph-title">📋 Solicitações de Movimentação</span>
           <span class="ph-sub" id="solic-count-label"></span>
           <div class="ph-right">
-            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);" onclick="openSolicModal('entrada')">＋ Solicitar Entrada</button>
-            <button class="nav-btn" style="background:var(--red-a);border-color:rgba(224,72,74,.3);color:var(--red);" onclick="openSolicModal('saida')">－ Solicitar Saída</button>
+            <button class="nav-btn success" style="font-size:12px;padding:6px 14px;" onclick="openSolicModal('entrada')">＋ Pedir Entrada de produto</button>
+            <button class="nav-btn danger"  style="font-size:12px;padding:6px 14px;" onclick="openSolicModal('saida')">－ Pedir Saída de produto</button>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;overflow:hidden;padding:0 14px 14px;">
+        <!-- Explicação rápida -->
+        <div style="padding:8px 14px;flex-shrink:0;background:var(--purple-a);border-bottom:1px solid rgba(155,113,232,.15);">
+          <span style="font-size:11px;color:var(--purple);">
+            💡 <b>Como funciona:</b> Você solicita a entrada ou saída de um produto → o estoque <b>não muda ainda</b> → o administrador aprova ou rejeita → aí sim o estoque é atualizado.
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;overflow:hidden;padding:10px 14px;">
           <!-- Pendentes -->
           <div class="panel" style="overflow:hidden;display:flex;flex-direction:column;">
-            <div class="ph" style="border-left:3px solid var(--purple);padding-left:9px;">
+            <div class="ph" style="border-left:3px solid var(--purple);padding-left:9px;flex-shrink:0;">
               <span class="ph-title" style="color:var(--purple);">⏳ Aguardando aprovação</span>
               <span class="ph-sub" id="solic-pend-count"></span>
             </div>
             <div style="flex:1;overflow-y:auto;padding:8px;" id="solic-pend-list">
-              <div style="text-align:center;color:var(--t3);padding:24px;font-size:11px;">Nenhuma solicitação pendente.</div>
+              <div style="text-align:center;color:var(--t3);padding:24px;font-size:11px;">✓ Nenhuma solicitação pendente.</div>
             </div>
           </div>
           <!-- Histórico -->
           <div class="panel" style="overflow:hidden;display:flex;flex-direction:column;">
-            <div class="ph" style="border-left:3px solid var(--t4);padding-left:9px;">
+            <div class="ph" style="border-left:3px solid var(--t4);padding-left:9px;flex-shrink:0;">
               <span class="ph-title">📁 Histórico de solicitações</span>
               <span class="ph-sub" id="solic-hist-count"></span>
             </div>
@@ -928,15 +944,15 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
 
         <!-- ABAS -->
         <div class="ped-tabs">
-          <button class="ped-tab active" id="tab-auto" onclick="switchPedTab('auto')">📊 Automático (sugerido)</button>
-          <button class="ped-tab" id="tab-manual" onclick="switchPedTab('manual')">🛒 Manual (carrinho)</button>
+          <button class="ped-tab active" id="tab-auto" onclick="switchPedTab('auto')">🔴 Itens que precisam de compra</button>
+          <button class="ped-tab" id="tab-manual" onclick="switchPedTab('manual')">📝 Montar pedido manualmente</button>
           <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-bottom:4px;">
             <span style="font-size:11px;color:var(--green);font-weight:600;" id="ped-total-label"></span>
-            <button class="btn-wpp" onclick="openWpp('auto')">
-              <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              WhatsApp
+            <button class="btn-wpp" onclick="openWpp('auto')" style="background:linear-gradient(135deg,#25d366,#128c7e);">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Enviar via WhatsApp
             </button>
-            <button class="nav-btn primary" onclick="window.print()">⬇ Exportar</button>
+            <button class="nav-btn primary" onclick="window.print()">⬇ Imprimir</button>
           </div>
         </div>
 
@@ -970,40 +986,40 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
         <!-- ── ABA MANUAL (CARRINHO) ────────────────────────────── -->
         <div id="ped-manual-panel" style="display:none;flex:1;overflow:hidden;">
           <div class="cart-layout">
-
-            <!-- ESQUERDA: busca + tabela do carrinho -->
             <div class="cart-left">
-
+              <!-- Instrução -->
+              <div style="background:var(--blue-a);border:1px solid rgba(74,143,245,.2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--blue);">
+                💡 <b>Como usar:</b> Digite o nome do produto no campo abaixo, informe a quantidade e clique em <b>＋ Adicionar</b>. Depois clique em <b>Enviar via WhatsApp</b>.
+              </div>
               <!-- Barra de adição -->
               <div class="cart-add-bar">
-                <!-- Autocomplete produto -->
                 <div class="fg" style="flex:2;">
-                  <label class="fl">Produto (busca no estoque ou livre)</label>
+                  <label class="fl">🔍 Nome ou código do produto</label>
                   <div class="autocomplete-wrap">
-                    <input class="fi2" id="cart-search" placeholder="🔍 Código, nome ou produto novo..." autocomplete="off"
+                    <input class="fi2" id="cart-search" placeholder="Digite para buscar ou escreva livremente..." autocomplete="off"
                       oninput="onCartSearch()" onfocus="onCartSearch()" onblur="setTimeout(()=>closeCartDrop(),200)">
                     <div class="autocomplete-drop" id="cart-drop"></div>
                   </div>
                 </div>
                 <div class="fg" style="flex:1;">
                   <label class="fl">Fornecedor</label>
-                  <input class="fi2" id="cart-forn" placeholder="Fornecedor">
+                  <input class="fi2" id="cart-forn" placeholder="Ex: MIMAKI Brasil">
                 </div>
                 <div class="fg" style="flex:0 0 80px;">
-                  <label class="fl">Qtd</label>
+                  <label class="fl">Quantidade</label>
                   <input class="fi2" id="cart-qty" type="number" min="1" value="1" placeholder="1">
                 </div>
-                <div class="fg" style="flex:0 0 100px;">
-                  <label class="fl">Custo unit. (R$)</label>
+                <div class="fg" style="flex:0 0 110px;">
+                  <label class="fl">Valor unit. (R$)</label>
                   <input class="fi2" id="cart-custo" type="number" min="0" step="0.01" placeholder="0,00">
                 </div>
-                <button class="mbtn mbtn-ok" style="flex-shrink:0;height:34px;align-self:flex-end;" onclick="addToCart()">＋ Adicionar</button>
+                <button class="mbtn mbtn-ok" style="flex-shrink:0;height:34px;align-self:flex-end;padding:0 16px;" onclick="addToCart()">＋ Adicionar</button>
               </div>
 
               <!-- Tabela do carrinho -->
               <div class="cart-table">
                 <div class="ph" style="flex-shrink:0;">
-                  <span class="ph-title">🛒 Itens do pedido</span>
+                  <span class="ph-title">🛒 Itens adicionados ao pedido</span>
                   <span class="ph-sub" id="cart-count">0 itens</span>
                   <div class="ph-right">
                     <button class="nav-btn danger" onclick="limparCarrinho()" style="font-size:10px;">🗑 Limpar tudo</button>
@@ -1012,13 +1028,13 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
                 <div class="tbl-wrap" style="flex:1;" id="cart-table-wrap">
                   <table>
                     <thead><tr>
-                      <th>#</th><th>Código</th><th>Nome</th><th>Fornecedor</th>
-                      <th style="text-align:center;">Estoque</th>
-                      <th style="text-align:center;">Qtd</th>
-                      <th>Custo Unit.</th><th>Total</th><th></th>
+                      <th>#</th><th>Produto</th><th>Fornecedor</th>
+                      <th style="text-align:center;">Estoque atual</th>
+                      <th style="text-align:center;">Qtd a pedir</th>
+                      <th>Valor unit.</th><th>Total</th><th></th>
                     </tr></thead>
                     <tbody id="cart-tbody"></tbody>
-                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="9" style="text-align:right;color:var(--t3);font-style:italic;">Carrinho vazio</td></tr></tfoot>
+                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="8" style="text-align:right;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
                   </table>
                 </div>
               </div>
@@ -1027,33 +1043,31 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
             <!-- DIREITA: resumo -->
             <div class="cart-right">
               <div class="cart-summary">
-                <div class="sec-title">Resumo do pedido manual</div>
+                <div class="sec-title">💰 Total do pedido</div>
                 <div class="cart-total" id="cart-total-val">R$ 0,00</div>
-                <div style="font-size:10px;color:var(--t3);" id="cart-total-sub">0 itens · 0 fornecedores</div>
-                <div style="border-top:1px solid var(--b1);margin:4px 0;"></div>
+                <div style="font-size:10px;color:var(--t3);" id="cart-total-sub">0 itens adicionados</div>
+                <div style="border-top:1px solid var(--b1);margin:8px 0;"></div>
                 <div id="cart-forn-resumo" style="display:flex;flex-direction:column;gap:5px;"></div>
               </div>
 
-              <!-- Observação geral -->
               <div class="panel" style="padding:12px;">
-                <div class="sec-title" style="margin-bottom:6px;">Observação geral</div>
-                <textarea class="fi2" id="cart-obs" rows="3" placeholder="Observações para o pedido..." style="resize:none;width:100%;"></textarea>
+                <div class="sec-title" style="margin-bottom:6px;">Observação</div>
+                <textarea class="fi2" id="cart-obs" rows="3" placeholder="Ex: urgente, para semana que vem..." style="resize:none;width:100%;"></textarea>
               </div>
 
-              <!-- Número do pedido -->
               <div class="panel" style="padding:12px;">
-                <div class="sec-title" style="margin-bottom:6px;">Identificação</div>
+                <div class="sec-title" style="margin-bottom:8px;">Identificação do pedido</div>
                 <div class="fg" style="margin-bottom:8px;">
-                  <label class="fl">Nº do pedido</label>
+                  <label class="fl">Nº do pedido (opcional)</label>
                   <input class="fi2" id="cart-num" placeholder="PC-2026-001">
                 </div>
-                <div class="fg" style="margin-bottom:8px;">
-                  <label class="fl">Solicitante</label>
-                  <input class="fi2" id="cart-resp" placeholder="Nome do responsável">
+                <div class="fg" style="margin-bottom:12px;">
+                  <label class="fl">Seu nome</label>
+                  <input class="fi2" id="cart-resp" placeholder="Quem está fazendo o pedido">
                 </div>
-                <button class="btn-wpp" style="width:100%;justify-content:center;" onclick="openWpp('manual')">
-                  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  Enviar via WhatsApp
+                <button class="btn-wpp" style="width:100%;justify-content:center;padding:10px;font-size:12px;" onclick="openWpp('manual')">
+                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  📋 Copiar e Enviar via WhatsApp
                 </button>
               </div>
             </div>
@@ -1524,12 +1538,17 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <textarea class="fi2" id="wpp-msg" rows="11" style="resize:none;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.5;"></textarea>
     </div>
     <div class="fhint" style="margin-bottom:10px;">✏ Você pode editar a mensagem acima antes de enviar.</div>
+    <!-- Instrução clara -->
+    <div style="background:var(--green-a);border:1px solid rgba(45,184,122,.25);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--green);margin-bottom:12px;line-height:1.6;">
+      <strong>Como enviar:</strong><br>
+      1. Clique em <strong>📋 Copiar mensagem</strong><br>
+      2. Clique em <strong>Abrir WhatsApp</strong><br>
+      3. Escolha o contato e cole com <strong>Ctrl+V</strong>
+    </div>
     <div class="m-foot">
       <button class="mbtn mbtn-cancel" onclick="closeWpp()">Cancelar</button>
-      <button class="mbtn mbtn-ok" onclick="copiarMsgWpp()" style="background:var(--s3);border-color:var(--b2);color:var(--t2);">📋 Copiar</button>
-      <button class="btn-wpp" onclick="abrirWhatsApp()">
-        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Abrir WhatsApp Web
+      <button class="mbtn mbtn-ok" onclick="copiarEAbrirWpp()" style="background:var(--green);border-color:var(--green);color:#fff;font-size:12px;padding:8px 20px;">
+        📋 Copiar e Abrir WhatsApp
       </button>
     </div>
   </div>
@@ -2019,24 +2038,30 @@ function renderAlertas(){
 
 // ── MOVIMENTAÇÕES ─────────────────────────────────────────────
 function renderMov(){
-  $('mov-count').textContent=MOV.length+' registros';
-  if(!MOV.length){ $('mov-tbody').innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma movimentação ainda.</td></tr>`; return; }
+  $('mov-count').textContent=MOV.length+' registro'+(MOV.length!==1?'s':'');
+  if(!MOV.length){
+    $('mov-tbody').innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
+      <div style="font-size:24px;margin-bottom:8px;">📭</div>
+      Nenhuma movimentação registrada ainda.<br>
+      <span style="font-size:10px;">Use os botões acima para registrar entradas e saídas.</span>
+    </td></tr>`;
+    return;
+  }
   $('mov-tbody').innerHTML=[...MOV].reverse().map((m,ri)=>{
-    const i=MOV.length-1-ri; // índice real no array
+    const i=MOV.length-1-ri;
     const isE=m.tipo==='ENTRADA';
     return `<tr>
-      <td class="mono" style="font-size:10px;color:var(--t3);">${m.data}</td>
-      <td class="mono" style="color:var(--blue);font-size:11px;">${m.cod}</td>
-      <td style="font-weight:500;">${m.nome}</td>
-      <td><span class="badge ${isE?'b-ok':'b-crit'}">${m.tipo}</span></td>
-      <td style="text-align:center;color:${isE?'var(--green)':'var(--red)'};font-weight:700;">${isE?'+':'-'}${m.qty}</td>
+      <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${m.data}</td>
+      <td style="font-weight:500;">${m.nome}<br><span style="font-size:10px;color:var(--t3);">${m.cod}</span></td>
+      <td><span class="badge ${isE?'b-ok':'b-crit'}" style="font-size:11px;">${isE?'📥 ENTRADA':'📤 SAÍDA'}</span></td>
+      <td style="text-align:center;font-weight:700;font-size:14px;color:${isE?'var(--green)':'var(--red)'};">${isE?'+':'-'}${m.qty}</td>
       <td style="color:var(--t3);">${m.custo?R(m.custo):'—'}</td>
-      <td style="color:var(--t3);">${m.custo?R(m.custo*m.qty):'—'}</td>
+      <td style="font-weight:600;color:${isE?'var(--green)':'var(--red)'};">${m.custo?R(m.custo*m.qty):'—'}</td>
       <td style="color:var(--t3);">${m.resp||'—'}</td>
-      <td style="color:var(--t3);font-size:11px;">${m.obs||'—'}</td>
+      <td style="color:var(--t3);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;">${m.obs||'—'}</td>
       <td style="white-space:nowrap;">
-        <button class="btn-edit" onclick="openMovEdit(${i})">✏</button>
-        <button class="btn-del" onclick="deletarMov(${i})">✕</button>
+        <button class="btn-edit" onclick="openMovEdit(${i})" title="Editar">✏</button>
+        <button class="btn-del" onclick="deletarMov(${i})" title="Excluir">✕</button>
       </td>
     </tr>`;
   }).join('');
@@ -3038,7 +3063,7 @@ function closeWpp() {
   $('overlay-wpp').classList.remove('open');
 }
 
-function abrirWhatsApp() {
+function copiarEAbrirWpp() {
   const solicitante = ($('wpp-solicitante')?.value || '').trim();
   const solEl = $('wpp-solicitante');
   if (!solicitante) {
@@ -3049,12 +3074,27 @@ function abrirWhatsApp() {
   if (solEl) solEl.classList.remove('wpp-solicitante-required');
   const msg = $('wpp-msg').value;
   if (!msg.trim()) { toast('Mensagem vazia', 'error'); return; }
-  const encoded = encodeURIComponent(msg);
-  window.open(`https://wa.me/?text=${encoded}`, '_blank');
-  registrarAudit('pedido', `Pedido enviado via WhatsApp`, `Solicitante: ${solicitante} | Fonte: ${_wppSource}`, '💬');
+
+  // 1. Copia a mensagem
+  navigator.clipboard.writeText(msg).then(() => {
+    toast('✅ Mensagem copiada! Agora escolha o contato no WhatsApp.', 'success');
+  }).catch(() => {
+    try { $('wpp-msg').select(); document.execCommand('copy'); } catch(e) {}
+    toast('✅ Mensagem copiada!', 'success');
+  });
+
+  // 2. Abre WhatsApp Web após 600ms para usuário ver o toast
+  setTimeout(() => {
+    window.open('https://web.whatsapp.com', '_blank');
+  }, 600);
+
+  registrarAudit('pedido', `Pedido enviado via WhatsApp`, `Solicitante: ${solicitante}`, '💬');
   closeWpp();
-  pushNotif('wpp', 'Pedido enviado via WhatsApp', `Solicitante: ${solicitante}`, '💬', 'ni-ok');
+  pushNotif('wpp', 'Pedido copiado para WhatsApp', `Solicitante: ${solicitante}`, '💬', 'ni-ok');
 }
+
+// Mantém compatibilidade
+function abrirWhatsApp() { copiarEAbrirWpp(); }
 
 function copiarMsgWpp() {
   const msg = $('wpp-msg').value;
