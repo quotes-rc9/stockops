@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -978,10 +978,23 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <!-- ══ PEDIDO DE COMPRA ═══════════════════════════════════ -->
       <div class="page" id="page-pedido">
 
-        <!-- ABAS -->
-        <div class="ped-tabs">
-          <button class="ped-tab active" id="tab-auto" onclick="switchPedTab('auto')">🔴 Itens que precisam de compra</button>
-          <button class="ped-tab" id="tab-manual" onclick="switchPedTab('manual')">📝 Montar pedido manualmente</button>
+        <!-- CABEÇALHO SIMPLIFICADO - SÓ MANUAL -->
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">🛒 Solicitar Pedido de Compra</span>
+          <span class="ph-sub" id="ped-total-label"></span>
+          <div class="ph-right">
+            <button class="nav-btn danger" onclick="limparCarrinho()" style="font-size:10px;">🗑 Limpar</button>
+          </div>
+        </div>
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--blue);">
+            💡 Monte o pedido abaixo e envie via WhatsApp para o responsável aprovar a compra.
+          </span>
+        </div>
+
+        <div class="ped-tabs" style="display:none;">
+          <button class="ped-tab active" id="tab-auto" onclick="switchPedTab('auto')">auto</button>
+          <button class="ped-tab" id="tab-manual" onclick="switchPedTab('manual')">manual</button>
           <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-bottom:4px;">
             <span style="font-size:11px;color:var(--green);font-weight:600;" id="ped-total-label"></span>
             <button class="btn-wpp" onclick="openWpp('auto')" style="background:linear-gradient(135deg,#25d366,#128c7e);">
@@ -992,35 +1005,17 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
           </div>
         </div>
 
-        <!-- ── ABA AUTOMÁTICO ───────────────────────────────────── -->
-        <div id="ped-auto-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-          <div class="ph" style="flex-shrink:0;padding:6px 14px;border-top:none;">
-            <span class="ph-sub" id="ped-subtitle"></span>
-          </div>
-          <div class="tbl-wrap" style="flex:1;">
-            <table>
-              <thead><tr><th>#</th><th>Código</th><th>Nome</th><th>Cat.</th><th>Fornecedor</th><th style="text-align:center;">Estoque</th><th style="text-align:center;">Qtd Pedir</th><th>Custo Unit.</th><th>Total</th><th>Prioridade</th></tr></thead>
-              <tbody id="ped-tbody"></tbody>
-              <tfoot><tr id="ped-tfoot" class="tfoot-row"><td colspan="10"></td></tr></tfoot>
-            </table>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 280px;gap:10px;padding:10px 14px;flex-shrink:0;">
-            <div class="panel">
-              <div class="ph"><span class="ph-title">Por fornecedor</span></div>
-              <div class="tbl-wrap"><table>
-                <thead><tr><th>Fornecedor</th><th style="text-align:center;">Itens</th><th>Valor estimado</th><th>Observação</th></tr></thead>
-                <tbody id="ped-forn-tbody"></tbody>
-              </table></div>
-            </div>
-            <div class="panel" style="padding:14px;">
-              <div class="sec-title">Resumo do pedido</div>
-              <div id="ped-resumo" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;"></div>
-            </div>
-          </div>
+        <!-- ── ABA AUTOMÁTICO (oculto) ──────────────────────────── -->
+        <div id="ped-auto-panel" style="display:none;">
+          <div id="ped-subtitle"></div>
+          <tbody id="ped-tbody"></tbody>
+          <tr id="ped-tfoot"></tr>
+          <tbody id="ped-forn-tbody"></tbody>
+          <div id="ped-resumo"></div>
         </div>
 
-        <!-- ── ABA MANUAL (CARRINHO) ────────────────────────────── -->
-        <div id="ped-manual-panel" style="display:none;flex:1;overflow:hidden;">
+        <!-- ── PEDIDO MANUAL ────────────────────────────────────── -->
+        <div id="ped-manual-panel" style="display:flex;flex:1;overflow:hidden;">
           <div class="cart-layout">
             <div class="cart-left">
               <!-- Instrução -->
@@ -1039,23 +1034,25 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
                 </div>
                 <div class="fg" style="flex:1;">
                   <label class="fl">Fornecedor</label>
-                  <input class="fi2" id="cart-forn" placeholder="Ex: MIMAKI Brasil">
+                  <select class="fi2" id="cart-forn">
+                    <option value="">Selecione...</option>
+                    <option value="MIMAKI Brasil">MIMAKI Brasil</option>
+                    <option value="Roland">Roland</option>
+                    <option value="Local/Mercado">Local/Mercado</option>
+                    <option value="Outro">Outro</option>
+                  </select>
                 </div>
                 <div class="fg" style="flex:0 0 80px;">
                   <label class="fl">Quantidade</label>
                   <input class="fi2" id="cart-qty" type="number" min="1" value="1" placeholder="1">
                 </div>
-                <div class="fg" style="flex:0 0 110px;">
-                  <label class="fl">Valor unit. (R$)</label>
-                  <input class="fi2" id="cart-custo" type="number" min="0" step="0.01" placeholder="0,00">
-                </div>
                 <button class="mbtn mbtn-ok" style="flex-shrink:0;height:34px;align-self:flex-end;padding:0 16px;" onclick="addToCart()">＋ Adicionar</button>
               </div>
 
-              <!-- Tabela do carrinho -->
+              <!-- Tabela do carrinho SEM valores -->
               <div class="cart-table">
                 <div class="ph" style="flex-shrink:0;">
-                  <span class="ph-title">🛒 Itens adicionados ao pedido</span>
+                  <span class="ph-title">🛒 Itens da solicitação</span>
                   <span class="ph-sub" id="cart-count">0 itens</span>
                   <div class="ph-right">
                     <button class="nav-btn danger" onclick="limparCarrinho()" style="font-size:10px;">🗑 Limpar tudo</button>
@@ -1066,11 +1063,11 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
                     <thead><tr>
                       <th>#</th><th>Produto</th><th>Fornecedor</th>
                       <th style="text-align:center;">Estoque atual</th>
-                      <th style="text-align:center;">Qtd a pedir</th>
-                      <th>Valor unit.</th><th>Total</th><th></th>
+                      <th style="text-align:center;">Qtd solicitada</th>
+                      <th></th>
                     </tr></thead>
                     <tbody id="cart-tbody"></tbody>
-                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="8" style="text-align:right;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
+                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="6" style="text-align:center;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
                   </table>
                 </div>
               </div>
@@ -1732,7 +1729,7 @@ let P = [
   {cod:'LIQ-001a',  nome:'Tecnopaint (lote Jun/25)',    cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:229.80, consumo:0.5,abc:'C',val:['12/06/2026']},
   {cod:'LIQ-001b',  nome:'Tecnopaint (lote Jan/25)',    cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:229.80, consumo:0.5,abc:'C',val:['08/01/2026']},
   {cod:'LIQ-002',   nome:'DTSAT3 Coating',              cat:'Insumo',forn:'MIMAKI Brasil',estoque:4,min:2,repo:3,custo:190, consumo:1.2,abc:'B',val:['13/07/2026','13/07/2026','13/07/2026','13/07/2026']},
-  {cod:'LIQ-003',   nome:'Acetona 60%',                 cat:'Insumo',forn:'Fornecedor D', estoque:2,min:2,repo:3,custo:45,  consumo:0.8,abc:'C',val:['23/09/2026','23/09/2026']},
+  {cod:'LIQ-003',   nome:'Acetona 60%',                 cat:'Insumo',forn:'Local/Mercado', estoque:2,min:2,repo:3,custo:45,  consumo:0.8,abc:'C',val:['23/09/2026','23/09/2026']},
   {cod:'LIQ-004',   nome:'Líq. Mimaki Maint. 07',       cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:190, consumo:0.6,abc:'C',val:['04/03/2028']},
   // ── PEÇAS: CABEÇA / IMPRESSÃO ────────────────────────────────
   {cod:'M021402',   nome:'Cap Head',                    cat:'Peça',forn:'MIMAKI Brasil',estoque:2,min:1,repo:2,custo:0,    consumo:0.3,abc:'C',val:[]},
@@ -1789,20 +1786,20 @@ let P = [
   {cod:'MP-M022219',         nome:'Peça MIMAKI — identificar',cat:'Peça',forn:'MIMAKI Brasil',estoque:3,min:1,repo:2,custo:0,consumo:0.1,abc:'C',val:[]},
   {cod:'SS-T12A',            nome:'Peça — identificar',       cat:'Peça',forn:'MIMAKI Brasil',estoque:4,min:2,repo:3,custo:0,consumo:0.2,abc:'C',val:[]},
   // ── CONSUMÍVEIS ──────────────────────────────────────────────
-  {cod:'CONS-001',  nome:'Filme PVC',                   cat:'Consumível',forn:'Fornecedor A',estoque:4,min:2,repo:3,custo:45, consumo:1.5,abc:'C',val:[]},
-  {cod:'CONS-002',  nome:'Saco de Lixo',                cat:'Consumível',forn:'Fornecedor A',estoque:2,min:3,repo:4,custo:26.91, consumo:2.0,abc:'C',val:[]},
-  {cod:'CONS-003',  nome:'Caixa de Luva',               cat:'Consumível',forn:'Fornecedor A',estoque:3,min:2,repo:2,custo:38.90, consumo:1.2,abc:'C',val:[]},
-  {cod:'CONS-004',  nome:'Caixa c/ Lâmina 18mm',        cat:'Consumível',forn:'Fornecedor A',estoque:2,min:2,repo:3,custo:28, consumo:0.8,abc:'C',val:[]},
-  {cod:'CONS-005',  nome:'Caixa de Lâmina 9mm',         cat:'Consumível',forn:'Fornecedor A',estoque:3,min:2,repo:3,custo:25, consumo:0.7,abc:'C',val:[]},
-  {cod:'CONS-006',  nome:'Cola Bond',                   cat:'Consumível',forn:'Fornecedor B',estoque:6,min:3,repo:4,custo:22, consumo:1.8,abc:'C',val:[]},
-  {cod:'CONS-007',  nome:'Pano Pega Poeira',            cat:'Consumível',forn:'Fornecedor A',estoque:4,min:2,repo:3,custo:15.49, consumo:1.0,abc:'C',val:[]},
-  {cod:'CONS-008',  nome:'Pacote Máscara c/ 50 und',    cat:'Consumível',forn:'Fornecedor A',estoque:1,min:1,repo:2,custo:20.00, consumo:0.5,abc:'C',val:[]},
-  {cod:'CONS-009',  nome:'Fita 3M 48mm x 50m',         cat:'Consumível',forn:'3M',          estoque:8,min:2,repo:2,custo:16.50, consumo:1.0,abc:'C',val:[]},
-  {cod:'CONS-010',  nome:'Fita Comum 48mm x 50m',      cat:'Consumível',forn:'Fornecedor A',estoque:1,min:2,repo:2,custo:14.45, consumo:0.8,abc:'C',val:[]},
-  {cod:'CONS-011',  nome:'Cotonete P Limpeza Máquina',  cat:'Consumível',forn:'Fornecedor A',estoque:2,min:2,repo:3,custo:18, consumo:0.9,abc:'C',val:[]},
-  {cod:'CONS-012',  nome:'Lata Tinta Spray Preta',      cat:'Consumível',forn:'Fornecedor A',estoque:2,min:1,repo:2,custo:40.00, consumo:0.5,abc:'C',val:[]},
-  {cod:'CONS-013',  nome:'Seringas',                    cat:'Consumível',forn:'Fornecedor C',estoque:26,min:5,repo:10,custo:2.5,consumo:6.0,abc:'C',val:[]},
-  {cod:'CONS-014',  nome:'Kit Crachá / Cartão c/ 100 und', cat:'Consumível',forn:'Fornecedor A',estoque:2,min:1,repo:2,custo:62.98, consumo:1.5,abc:'C',val:[]},
+  {cod:'CONS-001',  nome:'Filme PVC',                   cat:'Consumível',forn:'Local/Mercado',estoque:4,min:2,repo:3,custo:45, consumo:1.5,abc:'C',val:[]},
+  {cod:'CONS-002',  nome:'Saco de Lixo',                cat:'Consumível',forn:'Local/Mercado',estoque:2,min:3,repo:4,custo:26.91, consumo:2.0,abc:'C',val:[]},
+  {cod:'CONS-003',  nome:'Caixa de Luva',               cat:'Consumível',forn:'Local/Mercado',estoque:3,min:2,repo:2,custo:38.90, consumo:1.2,abc:'C',val:[]},
+  {cod:'CONS-004',  nome:'Caixa c/ Lâmina 18mm',        cat:'Consumível',forn:'Local/Mercado',estoque:2,min:2,repo:3,custo:28, consumo:0.8,abc:'C',val:[]},
+  {cod:'CONS-005',  nome:'Caixa de Lâmina 9mm',         cat:'Consumível',forn:'Local/Mercado',estoque:3,min:2,repo:3,custo:25, consumo:0.7,abc:'C',val:[]},
+  {cod:'CONS-006',  nome:'Cola Bond',                   cat:'Consumível',forn:'Local/Mercado',estoque:6,min:3,repo:4,custo:22, consumo:1.8,abc:'C',val:[]},
+  {cod:'CONS-007',  nome:'Pano Pega Poeira',            cat:'Consumível',forn:'Local/Mercado',estoque:4,min:2,repo:3,custo:15.49, consumo:1.0,abc:'C',val:[]},
+  {cod:'CONS-008',  nome:'Pacote Máscara c/ 50 und',    cat:'Consumível',forn:'Local/Mercado',estoque:1,min:1,repo:2,custo:20.00, consumo:0.5,abc:'C',val:[]},
+  {cod:'CONS-009',  nome:'Fita 3M 48mm x 50m',         cat:'Consumível',forn:'Local/Mercado', estoque:8,min:2,repo:2,custo:16.50, consumo:1.0,abc:'C',val:[]},
+  {cod:'CONS-010',  nome:'Fita Comum 48mm x 50m',      cat:'Consumível',forn:'Local/Mercado',estoque:1,min:2,repo:2,custo:14.45, consumo:0.8,abc:'C',val:[]},
+  {cod:'CONS-011',  nome:'Cotonete P Limpeza Máquina',  cat:'Consumível',forn:'Local/Mercado',estoque:2,min:2,repo:3,custo:18, consumo:0.9,abc:'C',val:[]},
+  {cod:'CONS-012',  nome:'Lata Tinta Spray Preta',      cat:'Consumível',forn:'Local/Mercado',estoque:2,min:1,repo:2,custo:40.00, consumo:0.5,abc:'C',val:[]},
+  {cod:'CONS-013',  nome:'Seringas',                    cat:'Consumível',forn:'Local/Mercado',estoque:26,min:5,repo:10,custo:2.5,consumo:6.0,abc:'C',val:[]},
+  {cod:'CONS-014',  nome:'Kit Crachá / Cartão c/ 100 und', cat:'Consumível',forn:'Local/Mercado',estoque:2,min:1,repo:2,custo:62.98, consumo:1.5,abc:'C',val:[]},
 ];
 
 // MOV e modalTipo declarados no topo do script
@@ -1816,8 +1813,9 @@ function diasAteVal(s){ return Math.round((parseDate(s)-HOJE)/864e5); }
 function minVal(arr){ return arr.length?arr.reduce((a,b)=>diasAteVal(a)<=diasAteVal(b)?a:b):null; }
 
 function status(p){
-  if(p.estoque<=0||p.estoque<=p.min) return 'Crítico';
-  if(p.estoque<=p.repo) return 'Alerta';
+  if(p.estoque<=0||p.estoque<p.min) return 'Crítico';  // abaixo do mínimo
+  if(p.estoque===p.min) return 'Alerta';                // exatamente no mínimo
+  if(p.estoque<p.repo) return 'Alerta';                 // abaixo do ponto de reposição
   return 'OK';
 }
 function diasEst(p){ return p.consumo>0?Math.round(p.estoque/(p.consumo/30)):999; }
@@ -1855,7 +1853,7 @@ function calcKPIs(){
   const crit=P.filter(p=>status(p)==='Crítico').length;
   const alrt=P.filter(p=>status(p)==='Alerta').length;
   const valor=P.reduce((a,p)=>a+p.estoque*p.custo,0);
-  const expUnits=P.flatMap(p=>p.val||[]).filter(v=>{ const d=diasAteVal(v); return d>=0&&d<=30; }).length;
+  const expUnits=P.flatMap(p=>p.val||[]).filter(v=>{ const d=diasAteVal(v); return d<=30; }).length;
   return {tot,crit,alrt,valor,expUnits};
 }
 function renderKPIs(){
@@ -2074,8 +2072,10 @@ function limparFiltros(){
 function populateFornSelect(){
   const sel=document.getElementById('f-forn');
   if(!sel) return;
-  const forns=[...new Set(P.map(p=>p.forn))].sort();
-  sel.innerHTML='<option value="">Todos os fornecedores</option>'+forns.map(f=>`<option>${f}</option>`).join('');
+  // Fornecedores reais do sistema
+  const FORNS_FIXOS = ['MIMAKI Brasil', 'Roland', 'Local/Mercado'];
+  sel.innerHTML='<option value="">Todos os fornecedores</option>'+
+    FORNS_FIXOS.map(f=>`<option>${f}</option>`).join('');
 }
 
 // ── VALIDADE PAGE ─────────────────────────────────────────────
@@ -2110,11 +2110,15 @@ function renderValidade(){
   // Rodapé com total de valor dos itens listados
   const totalValor = f.reduce((a,r)=>a+(r.p.custo||0)*r.p.estoque,0);
   const totalQtd   = f.reduce((a,r)=>a+r.p.estoque,0);
+  // Remove tfoot antigo se existir
+  const oldTfoot = document.getElementById('val-tfoot-row');
+  if (oldTfoot) oldTfoot.remove();
   const tfoot = document.createElement('tr');
+  tfoot.id = 'val-tfoot-row';
   tfoot.className='tfoot-row';
   tfoot.innerHTML=`
-    <td colspan="3" style="color:var(--t3);font-style:italic;">${f.length} unidade${f.length!==1?'s':''} listada${f.length!==1?'s':''}</td>
-    <td style="text-align:center;font-weight:700;color:var(--blue);">${totalQtd}</td>
+    <td colspan="3" style="color:var(--t3);font-style:italic;">${f.length} item${f.length!==1?'s':''} listado${f.length!==1?'s':''}</td>
+    <td style="text-align:center;font-weight:700;color:var(--blue);">${totalQtd} un</td>
     <td colspan="3"></td>
     <td style="text-align:right;font-weight:700;color:var(--green);">${totalValor>0?R(totalValor):'—'}</td>
     <td></td>`;
@@ -2171,44 +2175,8 @@ function renderMov(){
 
 // ── PEDIDO ────────────────────────────────────────────────────
 function renderPedido(){
-  const items=P.filter(p=>status(p)!=='OK').map(p=>({...p,sug:Math.max(1,(p.min*2)-p.estoque+Math.ceil(p.consumo)),st:status(p)})).sort((a,b)=>(a.st==='Crítico'?0:1)-(b.st==='Crítico'?0:1));
-  const total=items.reduce((a,i)=>a+i.sug*i.custo,0);
-  const num='PC-'+String(HOJE.getFullYear()).slice(2)+String(HOJE.getMonth()+1).padStart(2,'0')+'-0047';
-  $('ped-subtitle').textContent=num+' · '+HOJE.toLocaleDateString('pt-BR');
-  $('ped-total-label').textContent='Total estimado: '+R(total);
-  $('ped-tbody').innerHTML=items.map((p,i)=>`<tr>
-    <td style="color:var(--t3);">${i+1}</td>
-    <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
-    <td style="font-weight:500;">${p.nome}</td>
-    <td>${catBadge(p.cat)}</td>
-    <td style="color:var(--t3);font-size:11px;">${p.forn}</td>
-    <td style="text-align:center;color:${p.st==='Crítico'?'var(--red)':'var(--yellow)'};font-weight:700;">${p.estoque}</td>
-    <td style="text-align:center;color:var(--green);font-weight:700;">${p.sug}</td>
-    <td style="color:var(--t3);">${p.custo?R(p.custo):'—'}</td>
-    <td style="font-weight:600;">${p.custo?R(p.sug*p.custo):'—'}</td>
-    <td>${sBadge(p.st)}</td>
-  </tr>`).join('');
-  $('ped-tfoot').innerHTML=`<td colspan="9" style="text-align:right;padding-right:8px;font-weight:600;color:var(--t2);">TOTAL DO PEDIDO</td><td style="font-weight:700;color:var(--green);">${R(total)}</td>`;
-  const fm={};
-  items.forEach(p=>{ if(!fm[p.forn])fm[p.forn]={n:0,v:0}; fm[p.forn].n++; fm[p.forn].v+=p.sug*p.custo; });
-  $('ped-forn-tbody').innerHTML=Object.entries(fm).map(([f,d])=>`<tr>
-    <td style="font-weight:500;">${f}</td>
-    <td style="text-align:center;color:var(--t3);">${d.n}</td>
-    <td style="color:var(--green);">${R(d.v)}</td>
-    <td style="color:var(--t3);font-size:11px;">${f.includes('MIMAKI')?'Agrupar — cotação única':'Solicitar cotação'}</td>
-  </tr>`).join('');
-  const crit=items.filter(p=>p.st==='Crítico').length;
-  const alrt=items.filter(p=>p.st==='Alerta').length;
-  $('ped-resumo').innerHTML=[
-    ['Itens críticos',crit,'var(--red)'],
-    ['Itens em alerta',alrt,'var(--yellow)'],
-    ['Total de itens',items.length,'var(--t1)'],
-    ['Fornecedores',Object.keys(fm).length,'var(--t1)'],
-    ['Valor estimado',R(total),'var(--green)'],
-  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b1);font-size:11px;">
-    <span style="color:var(--t3);">${l}</span>
-    <span style="font-weight:600;color:${c};">${v}</span>
-  </div>`).join('');
+  // Pedido é sempre manual agora
+  switchPedTab('manual');
 }
 
 // ── ABC ────────────────────────────────────────────────────────
@@ -3110,19 +3078,13 @@ function renderCart() {
 
   tbody.innerHTML = CART.map((c, i) => `<tr>
     <td style="color:var(--t3);">${i + 1}</td>
-    <td class="mono" style="color:${c.livre ? 'var(--t3)' : 'var(--blue)'};font-size:11px;">${c.cod}</td>
-    <td style="font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;">${c.nome}${c.livre ? ' <span style="font-size:9px;color:var(--orange);background:var(--orange-a);padding:1px 5px;border-radius:4px;">livre</span>' : ''}</td>
-    <td style="color:var(--t3);font-size:11px;">${c.forn}</td>
-    <td style="text-align:center;color:var(--t3);">${c.estoque}</td>
+    <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${c.nome}${c.livre ? ' <span style="font-size:9px;color:var(--orange);background:var(--orange-a);padding:1px 5px;border-radius:4px;">livre</span>' : ''}</td>
+    <td style="color:var(--t3);font-size:11px;">${c.forn||'—'}</td>
+    <td style="text-align:center;color:var(--t3);">${c.estoque !== '—' ? c.estoque+' un' : '—'}</td>
     <td style="text-align:center;">
       <input class="qty-input" type="number" value="${c.qty}" min="1"
         oninput="updateCartQty(${c.id}, this.value)" onchange="updateCartQty(${c.id}, this.value)">
     </td>
-    <td>
-      <input class="cost-input" type="number" value="${c.custo || ''}" min="0" step="0.01" placeholder="0,00"
-        oninput="updateCartCusto(${c.id}, this.value)" onchange="updateCartCusto(${c.id}, this.value)">
-    </td>
-    <td style="font-weight:600;color:var(--green);" id="cart-row-total-${c.id}">${c.custo ? R(c.custo * c.qty) : '—'}</td>
     <td><button class="btn-del" onclick="removeFromCart(${c.id})">✕</button></td>
   </tr>`).join('');
 
