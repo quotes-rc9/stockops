@@ -656,6 +656,7 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <div class="sb-section">
         <div class="sb-lbl">Compras</div>
         <button class="sb-item" onclick="showPage('pedido',this)"><span class="sb-icon">🛒</span>Pedido de Compra</button>
+        <button class="sb-item" onclick="showPage('historico',this)"><span class="sb-icon">📜</span>Histórico de Pedidos<span class="sb-badge sbb-p" id="nb-hist" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('abc',this)"><span class="sb-icon">📊</span>Análise ABC</button>
         <button class="sb-item" onclick="showPage('previsao',this)"><span class="sb-icon">📈</span>Previsão de Compra</button>
       </div>
@@ -1147,6 +1148,66 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
         </div>
       </div>
 
+    <!-- ══ HISTÓRICO DE PEDIDOS ════════════════════════════════ -->
+      <div class="page" id="page-historico">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">📜 Histórico de Pedidos de Compra</span>
+          <span class="ph-sub" id="hist-count"></span>
+          <div class="ph-right">
+            <select class="fi" id="hist-filter-status" onchange="renderHistorico()">
+              <option value="">Todos os status</option>
+              <option value="enviado">📤 Enviados</option>
+              <option value="recebido">✅ Recebidos</option>
+              <option value="cancelado">❌ Cancelados</option>
+            </select>
+            <select class="fi" id="hist-filter-user" onchange="renderHistorico()">
+              <option value="">Todos solicitantes</option>
+            </select>
+            <input class="fi" type="text" id="hist-search" placeholder="🔍 Buscar nº pedido..." style="width:160px;" oninput="renderHistorico()">
+            <button class="btn-export" onclick="exportarHistoricoCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--blue);">
+            💡 <b>Como funciona:</b> Todo pedido enviado via WhatsApp é salvo aqui. Quando o pedido chegar, clique em <b>✅ Marcar Recebido</b> para registrar.
+          </span>
+        </div>
+        <div class="tbl-wrap" style="flex:1;">
+          <table>
+            <thead><tr>
+              <th>Nº Pedido</th>
+              <th>Data</th>
+              <th>Solicitante</th>
+              <th style="text-align:center;">Itens</th>
+              <th>Fornecedores</th>
+              <th style="text-align:right;">Valor Total</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr></thead>
+            <tbody id="hist-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODAL DETALHES DO PEDIDO -->
+      <div class="overlay" id="overlay-pedido-det" onclick="if(event.target===this)closePedidoDet()">
+        <div class="modal" style="width:600px;max-height:85vh;overflow-y:auto;">
+          <div class="m-head">
+            <div class="m-title">📋 Detalhes do Pedido <span id="pd-num" style="color:var(--blue);font-family:'JetBrains Mono',monospace;"></span></div>
+            <button class="m-close" onclick="closePedidoDet()">✕</button>
+          </div>
+          <div id="pd-info" style="background:var(--s3);border-radius:var(--r6);padding:10px 14px;font-size:11px;color:var(--t2);margin-bottom:14px;display:flex;flex-direction:column;gap:4px;"></div>
+          <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">📦 Itens do pedido</div>
+          <div id="pd-itens" style="background:var(--s3);border-radius:var(--r6);padding:10px;max-height:280px;overflow-y:auto;margin-bottom:12px;"></div>
+          <div id="pd-obs-wrap" style="display:none;">
+            <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">📝 Observação</div>
+            <div id="pd-obs" style="background:var(--s3);border-radius:var(--r6);padding:10px;font-size:11px;color:var(--t2);margin-bottom:12px;"></div>
+          </div>
+          <div class="m-foot" id="pd-actions" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <!-- Botões dinâmicos -->
+          </div>
+        </div>
+      </div>  
       <!-- ══ NOTIFICAÇÕES ═══════════════════════════════════════ -->
       <div class="page" id="page-notificacoes">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
@@ -2432,6 +2493,7 @@ function showPage(id, el){
   if(id==='notificacoes')    renderNotifPage();
   if(id==='auditoria')       renderAuditoria();
   if(id==='relatorios')      renderRelatorios();
+  if(id==='historico')       renderHistorico();
   if(id==='usuarios')        renderUsuarios();
   if(typeof _notifPanelOpen !== 'undefined' && _notifPanelOpen){
     _notifPanelOpen=false;
@@ -2470,7 +2532,9 @@ function renderAll(){
   else if(currentPage==='notificacoes') renderNotifPage();
   else if(currentPage==='auditoria')  renderAuditoria();
   else if(currentPage==='relatorios') renderRelatorios();
+  else if(currentPage==='historico')  renderHistorico();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
+  if(typeof renderHistBadge === 'function') renderHistBadge();
   if(typeof atualizarBadgeNotif === 'function') atualizarBadgeNotif();
   // Reaplica permissões após render (botões dinâmicos)
   if(typeof aplicarPermissoes === 'function') setTimeout(aplicarPermissoes, 0);
@@ -3337,9 +3401,15 @@ function regenerarMsgWpp() {
 
 function _buildWppMsg(source, solicitante) {
   const hoje = new Date().toLocaleDateString('pt-BR');
-  const numPed = 'PC-' + String(HOJE.getFullYear()).slice(2) + String(HOJE.getMonth()+1).padStart(2,'0');
+  // Pega o nº do pedido do campo (manual) ou gera automático
+  const numCampo = (document.getElementById('cart-num')?.value || '').trim();
+  const numAuto = 'PC-' + String(HOJE.getFullYear()).slice(2) + String(HOJE.getMonth()+1).padStart(2,'0') + '-' + String(Date.now()).slice(-4);
+  const numPed = numCampo || numAuto;
+  // Salva o nº gerado para uso no salvarPedido
+  window._ultimoNumPedido = numPed;
 
   let msg = `🛒 *PEDIDO DE COMPRA*\n`;
+  msg += `🔢 Nº: *${numPed}*\n`;
   msg += `📅 Data: ${hoje}\n`;
   if (solicitante) msg += `👤 Solicitante: *${solicitante}*\n`;
   msg += `${'─'.repeat(30)}\n\n`;
@@ -3392,22 +3462,27 @@ function copiarEAbrirWpp() {
   const msg = $('wpp-msg').value;
   if (!msg.trim()) { toast('Mensagem vazia', 'error'); return; }
 
-  // 1. Copia a mensagem
+  // 💾 SALVA O PEDIDO NO HISTÓRICO ANTES DE ABRIR WHATSAPP
+  if (_wppSource === 'manual' && CART.length > 0) {
+    salvarPedidoNoHistorico(solicitante, msg);
+  }
+
+  // Copia a mensagem
   navigator.clipboard.writeText(msg).then(() => {
-    toast('✅ Mensagem copiada! Agora escolha o contato no WhatsApp.', 'success');
+    toast('✅ Pedido salvo e copiado! Escolha o contato no WhatsApp.', 'success');
   }).catch(() => {
     try { $('wpp-msg').select(); document.execCommand('copy'); } catch(e) {}
-    toast('✅ Mensagem copiada!', 'success');
+    toast('✅ Pedido salvo e copiado!', 'success');
   });
 
-  // 2. Abre WhatsApp Web após 600ms para usuário ver o toast
+  // Abre WhatsApp Web após 600ms
   setTimeout(() => {
     window.open('https://web.whatsapp.com', '_blank');
   }, 600);
 
   registrarAudit('pedido', `Pedido enviado via WhatsApp`, `Solicitante: ${solicitante}`, '💬');
   closeWpp();
-  pushNotif('wpp', 'Pedido copiado para WhatsApp', `Solicitante: ${solicitante}`, '💬', 'ni-ok');
+  pushNotif('wpp', 'Pedido enviado e salvo no histórico', `Solicitante: ${solicitante}`, '💬', 'ni-ok');
 }
 
 // Mantém compatibilidade
@@ -3902,6 +3977,229 @@ function excluirUsuario(id){
 
 
 // ═══════════════════════════════════════════════════════════════
+// MÓDULO: HISTÓRICO DE PEDIDOS DE COMPRA
+// ═══════════════════════════════════════════════════════════════
+let PEDIDOS = [];
+let _pedDetId = null;
+
+function salvarPedidoNoHistorico(solicitante, mensagemWpp) {
+  const agora = new Date();
+  const num = window._ultimoNumPedido || ('PC-' + Date.now().toString().slice(-6));
+  const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
+  const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
+  const obs = ($('cart-obs')?.value || '').trim();
+  const itens = CART.map(c => ({
+    cod: c.cod, nome: c.nome, forn: c.forn,
+    qty: c.qty, custo: c.custo, livre: c.livre || false
+  }));
+  const pedido = {
+    id: 'ped_' + Date.now(),
+    num,
+    data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    dataISO: agora.toISOString(),
+    solicitante,
+    itens,
+    total,
+    fornecedores: forns,
+    obs,
+    mensagemWpp,
+    status: 'enviado',
+    criadoPor: CURRENT_USER?.nome || 'Sistema',
+    historicoStatus: [
+      { status: 'enviado', data: agora.toLocaleString('pt-BR'), por: CURRENT_USER?.nome || 'Sistema' }
+    ]
+  };
+  PEDIDOS.unshift(pedido);
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(pedido);
+  registrarAudit('pedido', `Pedido ${num} criado`,
+    `${itens.length} itens · ${R(total)} · ${solicitante}`, '🛒');
+  // Limpa o carrinho
+  CART = [];
+  if ($('cart-obs')) $('cart-obs').value = '';
+  if ($('cart-num')) $('cart-num').value = '';
+  renderCart();
+  renderHistBadge();
+  if (currentPage === 'historico') renderHistorico();
+}
+
+function renderHistBadge() {
+  const enviados = PEDIDOS.filter(p => p.status === 'enviado').length;
+  const nb = $('nb-hist');
+  if (!nb) return;
+  if (enviados > 0) {
+    nb.textContent = enviados;
+    nb.style.display = 'inline';
+  } else {
+    nb.style.display = 'none';
+  }
+}
+
+function renderHistorico() {
+  const fs = $('hist-filter-status')?.value || '';
+  const fu = $('hist-filter-user')?.value || '';
+  const fb = ($('hist-search')?.value || '').toLowerCase();
+  const sel = $('hist-filter-user');
+  if (sel) {
+    const users = [...new Set(PEDIDOS.map(p => p.solicitante))];
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos solicitantes</option>' +
+      users.map(u => `<option${cur===u?' selected':''}>${u}</option>`).join('');
+  }
+  const f = PEDIDOS.filter(p =>
+    (!fs || p.status === fs) &&
+    (!fu || p.solicitante === fu) &&
+    (!fb || p.num.toLowerCase().includes(fb))
+  );
+  if ($('hist-count')) $('hist-count').textContent = f.length + ' pedido' + (f.length!==1?'s':'');
+  const tbody = $('hist-tbody');
+  if (!tbody) return;
+  if (!f.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:32px;">
+      <div style="font-size:24px;margin-bottom:8px;">📭</div>
+      Nenhum pedido encontrado.<br>
+      <span style="font-size:10px;">Os pedidos aparecem aqui após serem enviados via WhatsApp.</span>
+    </td></tr>`;
+    return;
+  }
+  const statusBadge = (s) => {
+    if (s === 'enviado')   return `<span class="badge" style="background:rgba(232,160,32,.15);color:var(--yellow);border:1px solid rgba(232,160,32,.25);">📤 Enviado</span>`;
+    if (s === 'recebido')  return `<span class="badge b-ok">✅ Recebido</span>`;
+    if (s === 'cancelado') return `<span class="badge b-crit">❌ Cancelado</span>`;
+    return `<span class="badge b-info">${s}</span>`;
+  };
+  tbody.innerHTML = f.map(p => `<tr>
+    <td class="mono" style="color:var(--blue);font-size:11px;font-weight:600;">${p.num}</td>
+    <td class="mono" style="font-size:10px;color:var(--t3);">${p.data}</td>
+    <td style="font-weight:500;">${p.solicitante}</td>
+    <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
+    <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${p.total > 0 ? R(p.total) : '—'}</td>
+    <td>${statusBadge(p.status)}</td>
+    <td style="white-space:nowrap;">
+      <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
+      ${p.status === 'enviado' ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);" onclick="marcarRecebido('${p.id}')">✅ Recebido</button>` : ''}
+    </td>
+  </tr>`).join('');
+}
+
+function abrirPedidoDet(id) {
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  _pedDetId = id;
+  $('pd-num').textContent = p.num;
+  $('pd-info').innerHTML = `
+    <div><b>📅 Data:</b> ${p.data}</div>
+    <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
+    <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
+    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor:</b> ${R(p.total)}</div>
+    ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
+    ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
+  $('pd-itens').innerHTML = p.itens.map((it, i) => `
+    <div style="display:flex;gap:8px;padding:6px 0;${i < p.itens.length-1 ? 'border-bottom:1px solid var(--b1);' : ''}align-items:center;">
+      <div style="width:20px;color:var(--t4);font-size:10px;">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:500;">${it.nome}${it.livre ? ' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>' : ''}</div>
+        <div style="font-size:9px;color:var(--t3);">${it.cod !== '—' ? it.cod + ' · ' : ''}${it.forn || '—'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
+        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${R(it.custo * it.qty)}</div>` : ''}
+      </div>
+    </div>`).join('');
+  if (p.obs) {
+    $('pd-obs-wrap').style.display = '';
+    $('pd-obs').textContent = p.obs;
+  } else {
+    $('pd-obs-wrap').style.display = 'none';
+  }
+  let actions = `<button class="mbtn mbtn-cancel" onclick="closePedidoDet()">Fechar</button>`;
+  if (p.status === 'enviado') {
+    actions += `<button class="mbtn mbtn-ok red" onclick="cancelarPedido('${p.id}')">❌ Cancelar pedido</button>`;
+    actions += `<button class="mbtn mbtn-ok green" onclick="marcarRecebido('${p.id}')">✅ Marcar como Recebido</button>`;
+  } else if (p.status === 'recebido') {
+    actions += `<button class="mbtn mbtn-ok" style="background:var(--yellow);border-color:var(--yellow);color:#000;" onclick="reabrirPedido('${p.id}')">↩ Reabrir como Enviado</button>`;
+  }
+  $('pd-actions').innerHTML = actions;
+  $('overlay-pedido-det').classList.add('open');
+}
+
+function closePedidoDet() {
+  $('overlay-pedido-det').classList.remove('open');
+  _pedDetId = null;
+}
+
+function marcarRecebido(id) {
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Confirmar que o pedido ${p.num} foi RECEBIDO?\n\nIsso marca o pedido como concluído no histórico.`)) return;
+  p.status = 'recebido';
+  p.historicoStatus = p.historicoStatus || [];
+  p.historicoStatus.push({
+    status: 'recebido',
+    data: new Date().toLocaleString('pt-BR'),
+    por: CURRENT_USER?.nome || 'Sistema'
+  });
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
+  registrarAudit('pedido', `Pedido ${p.num} marcado como recebido`, `Por: ${CURRENT_USER?.nome}`, '✅');
+  closePedidoDet();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${p.num} marcado como recebido!`, 'success');
+  pushNotif('pedido', `Pedido ${p.num} recebido`, `Por: ${CURRENT_USER?.nome}`, '✅', 'ni-ok');
+}
+
+function cancelarPedido(id) {
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Cancelar o pedido ${p.num}?\n\nO pedido ficará marcado como cancelado no histórico.`)) return;
+  p.status = 'cancelado';
+  p.historicoStatus = p.historicoStatus || [];
+  p.historicoStatus.push({
+    status: 'cancelado',
+    data: new Date().toLocaleString('pt-BR'),
+    por: CURRENT_USER?.nome || 'Sistema'
+  });
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
+  registrarAudit('pedido', `Pedido ${p.num} cancelado`, `Por: ${CURRENT_USER?.nome}`, '❌');
+  closePedidoDet();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${p.num} cancelado.`, 'success');
+}
+
+function reabrirPedido(id) {
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Reabrir o pedido ${p.num} como Enviado?`)) return;
+  p.status = 'enviado';
+  p.historicoStatus = p.historicoStatus || [];
+  p.historicoStatus.push({
+    status: 'reaberto',
+    data: new Date().toLocaleString('pt-BR'),
+    por: CURRENT_USER?.nome || 'Sistema'
+  });
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
+  registrarAudit('pedido', `Pedido ${p.num} reaberto`, `Por: ${CURRENT_USER?.nome}`, '↩');
+  closePedidoDet();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${p.num} reaberto.`, 'success');
+}
+
+function exportarHistoricoCSV() {
+  if (!PEDIDOS.length) { toast('Nenhum pedido para exportar', 'error'); return; }
+  let csv = 'Nº Pedido,Data,Solicitante,Itens,Fornecedores,Valor Total,Status,Criado Por\n';
+  PEDIDOS.forEach(p => {
+    csv += `"${p.num}","${p.data}","${p.solicitante}",${p.itens.length},"${p.fornecedores.join('; ')}","${R(p.total)}","${p.status}","${p.criadoPor}"\n`;
+  });
+  csv += '\n\nDETALHAMENTO DE ITENS\nNº Pedido,Código,Produto,Fornecedor,Qtd,Custo Unit,Total\n';
+  PEDIDOS.forEach(p => {
+    p.itens.forEach(it => {
+      csv += `"${p.num}","${it.cod}","${it.nome}","${it.forn}",${it.qty},"${R(it.custo||0)}","${R((it.custo||0)*it.qty)}"\n`;
+    });
+  });
+  downloadCSV('stockops_historico_pedidos.csv', '\uFEFF' + csv);
+}// ═══════════════════════════════════════════════════════════════
 // MÓDULO: AUDITORIA — Histórico de todas as ações
 // ═══════════════════════════════════════════════════════════════
 let AUDIT = [];
@@ -4238,6 +4536,7 @@ const COL_MOV      = 'movimentacoes';
 const COL_SOLIC    = 'solicitacoes';
 const COL_USUARIOS = 'usuarios';
 const COL_CONFIG   = 'config';
+const COL_PEDIDOS  = 'pedidos';
 
 // Mostra indicador de sincronização
 function setSyncStatus(status) {
@@ -4291,7 +4590,16 @@ window.fbSalvarSolic = async function(s) {
   } catch(e) { console.error('Erro ao salvar solic:', e); setSyncStatus('error'); }
 };
 
-// ── SALVAR usuários ───────────────────────────────────────────
+
+  // ── SALVAR pedido ─────────────────────────────────────────────
+window.fbSalvarPedido = async function(p) {
+  try {
+    setSyncStatus('saving');
+    await setDoc(doc(db, COL_PEDIDOS, p.id), p);
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar pedido:', e); setSyncStatus('error'); }
+};
+  // ── SALVAR usuários ───────────────────────────────────────────
 window.fbSalvarUsuarios = async function(usuarios) {
   try {
     setSyncStatus('saving');
@@ -4337,6 +4645,14 @@ async function carregarDadosFirebase() {
       solicSnap.forEach(d => SOLIC.push(d.data()));
     }
 
+   // Pedidos
+    const pedSnap = await getDocs(collection(db, COL_PEDIDOS));
+    if (!pedSnap.empty) {
+      PEDIDOS.length = 0;
+      pedSnap.forEach(d => PEDIDOS.push(d.data()));
+      PEDIDOS.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
+    } 
+    
     // Usuários
     const usersDoc = await getDoc(doc(db, COL_CONFIG, 'usuarios'));
     if (usersDoc.exists()) {
@@ -4397,7 +4713,19 @@ onSnapshot(collection(db, COL_SOLIC), (snap) => {
   if (currentPage === 'solicitacoes') renderSolicitacoes();
 });
 
-onSnapshot(doc(db, COL_CONFIG, 'usuarios'), (snap) => {
+onSnapshot(collection(db, COL_PEDIDOS), (snap) => {
+  if (snap.metadata.hasPendingWrites) return;
+  const novos = [];
+  snap.forEach(d => novos.push(d.data()));
+  if (novos.length === 0) return;
+  PEDIDOS.length = 0;
+  novos.forEach(p => PEDIDOS.push(p));
+  PEDIDOS.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
+  renderHistBadge();
+  if (currentPage === 'historico') renderHistorico();
+});
+  
+  onSnapshot(doc(db, COL_CONFIG, 'usuarios'), (snap) => {
   if (!snap.exists() || snap.metadata.hasPendingWrites) return;
   const lista = snap.data().lista;
   if (lista && lista.length) {
