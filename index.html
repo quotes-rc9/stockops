@@ -3010,42 +3010,38 @@ function addToCart() {
   const searchEl = document.getElementById('cart-search');
   const rawText  = searchEl.value.trim();
   const qty      = parseInt(document.getElementById('cart-qty').value) || 1;
-  const custo    = parseFloat(document.getElementById('cart-custo').value) || 0;
   const forn     = document.getElementById('cart-forn').value.trim();
   const selCod   = searchEl.dataset.selectedCod || '';
 
   if (!rawText) { toast('Informe o produto', 'error'); return; }
   if (qty <= 0)  { toast('Quantidade inválida', 'error'); return; }
 
-  let item;
   if (selCod && P.find(x => x.cod === selCod)) {
     // Produto existente no estoque
     const p = P.find(x => x.cod === selCod);
-    // Se já está no carrinho, soma
+    const custo = p.custo || 0;
     const existing = CART.find(c => c.cod === p.cod);
     if (existing) {
       existing.qty += qty;
-      if (custo > 0) existing.custo = custo;
       toast(`Quantidade de "${p.nome}" atualizada no carrinho.`, 'success');
     } else {
       CART.push({ id: _cartIdCnt++, cod: p.cod, nome: p.nome, forn: forn || p.forn,
-        estoque: p.estoque, qty, custo: custo || p.custo, livre: false });
+        estoque: p.estoque, qty, custo, livre: false });
       toast(`"${p.nome}" adicionado ao carrinho.`, 'success');
     }
   } else {
     // Produto livre (não cadastrado)
     const nome = rawText;
     CART.push({ id: _cartIdCnt++, cod: '—', nome, forn: forn || '—',
-      estoque: '—', qty, custo, livre: true });
+      estoque: '—', qty, custo: 0, livre: true });
     toast(`"${nome}" adicionado como item livre.`, 'success');
   }
 
   // Limpa campos
   searchEl.value = '';
   searchEl.dataset.selectedCod = '';
-  document.getElementById('cart-qty').value   = '1';
-  document.getElementById('cart-custo').value = '';
-  document.getElementById('cart-forn').value  = '';
+  document.getElementById('cart-qty').value  = '1';
+  document.getElementById('cart-forn').value = '';
   renderCart();
 }
 
