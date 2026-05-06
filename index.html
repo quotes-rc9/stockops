@@ -1421,6 +1421,7 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
       <div class="m-title" id="m-title">Registrar Movimentação</div>
       <button class="m-close" onclick="closeModal()">✕</button>
     </div>
+   <div id="m-aviso-tipo" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--r6);border:1px solid;margin-bottom:12px;line-height:1.5;align-items:flex-start;gap:6px;"></div>
     <div class="stock-preview" id="m-preview" style="display:none;"></div>
     <div class="fg">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
@@ -2315,6 +2316,23 @@ function openModal(tipo){
   $('m-qty').value=''; $('m-custo').value=''; $('m-obs').value='';
   $('m-resp').value = CURRENT_USER ? CURRENT_USER.nome : '';
   $('m-preview').style.display='none'; $('m-custo-hint').textContent='';
+  // Aviso explicativo do tipo de movimentação
+  const avisoEl = $('m-aviso-tipo');
+  if (avisoEl) {
+    if (tipo === 'entrada') {
+      avisoEl.innerHTML = '💡 <b>Esta tela SOMA ao estoque atual</b> (use quando o produto chegar). Para definir a quantidade inicial sem somar, use <b>Estoque → ✏ Editar</b>.';
+      avisoEl.style.display = 'flex';
+      avisoEl.style.background = 'var(--green-a)';
+      avisoEl.style.borderColor = 'rgba(45,184,122,.25)';
+      avisoEl.style.color = 'var(--green)';
+    } else {
+      avisoEl.innerHTML = '💡 <b>Esta tela SUBTRAI do estoque atual</b> (use quando o produto for usado/retirado).';
+      avisoEl.style.display = 'flex';
+      avisoEl.style.background = 'var(--red-a)';
+      avisoEl.style.borderColor = 'rgba(224,72,74,.25)';
+      avisoEl.style.color = 'var(--red)';
+    }
+  }
   // Validade: só aparece na entrada
   const valWrap = $('m-val-wrap');
   if (valWrap) {
