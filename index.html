@@ -2652,14 +2652,30 @@ function salvarProduto() {
     toast(`Produto "${nome}" criado com sucesso!`, 'success');
     registrarAudit('produto', `Produto criado: ${nome}`, `Cód: ${cod} | Cat: ${cat} | Forn: ${forn}`, '📦');
     if (typeof fbSalvarProduto === 'function') fbSalvarProduto(P[P.length-1]);
-  } else {
+ } else {
     const p = P.find(x => x.cod === _editCod);
     if (!p) return;
-    p.nome=nome; p.cat=cat; p.forn=forn; p.abc=abc;
+    const codigoMudou = (cod !== _editCod);
+    // Se admin mudou o código, precisa validar e atualizar
+    if (codigoMudou) {
+      // Verifica se o novo código já existe em outro produto
+      if (P.find(x => x.cod === cod && x.cod !== _editCod)) {
+        toast(`Já existe outro produto com o código "${cod}"!`, 'error');
+        return;
+      }
+      // Apaga o documento antigo no Firebase (ID antigo)
+      if (typeof fbExcluirProduto === 'function') {
+        fbExcluirProduto(_editCod).catch(err => console.error('Erro ao excluir cod antigo:', err));
+      }
+      // Atualiza referências em movimentações
+      MOV.forEach(m => { if (m.cod === _editCod) m.cod = cod; });
+    }
+    p.cod = cod; p.nome=nome; p.cat=cat; p.forn=forn; p.abc=abc;
     p.estoque=estoque; p.min=min; p.repo=repo; p.custo=custo; p.consumo=consumo;
-    p.val = validades; // Atualiza validades
-    toast(`Produto "${nome}" atualizado!`, 'success');
-    registrarAudit('produto', `Produto editado: ${nome}`, `Cód: ${_editCod} | Est: ${estoque} | Validades: ${validades.length}`, '✏');
+    p.val = validades;
+    toast(`Produto "${nome}" atualizado!${codigoMudou?' Código alterado.':''}`, 'success');
+    registrarAudit('produto', `Produto editado: ${nome}`,
+      `Cód: ${_editCod}${codigoMudou?' → '+cod:''} | Est: ${estoque} | Validades: ${validades.length}`, '✏');
     if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
   }
   closeEditModal();
