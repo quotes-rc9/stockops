@@ -1,0 +1,72 @@
+/* ═══════════════════════════════════════════════════════════════
+   StockOps — Tema (variáveis CSS, 3 temas, base reset)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tema Escuro (padrão) ──────────────────────────────────── */
+:root{
+  --bg:#0b0d12;--s1:#111318;--s2:#181b22;--s3:#1f232d;--s4:#272c38;
+  --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.1);--b3:rgba(255,255,255,0.16);
+  --t1:#eceef2;--t2:#9ba3b5;--t3:#5c6478;--t4:#3a3f4e;
+  --blue:#4a8ff5;--blue2:#2d6fd4;--blue-a:rgba(74,143,245,0.12);
+  --green:#2db87a;--green-a:rgba(45,184,122,0.12);
+  --yellow:#e8a020;--yellow-a:rgba(232,160,32,0.12);
+  --red:#e0484a;--red-a:rgba(224,72,74,0.12);
+  --purple:#9b71e8;--purple-a:rgba(155,113,232,0.12);
+  --orange:#e87040;--orange-a:rgba(232,112,64,0.1);
+  --r4:4px;--r6:6px;--r8:8px;--r12:12px;
+}
+
+/* ── Modo escuro automático: respeita prefers-color-scheme se
+      o usuário não escolheu tema manualmente (sem data-theme).
+      "light" do SO mantém o escuro padrão (compatibilidade).
+      Para usar light real, o usuário aplica tema manualmente. ── */
+
+/* ── Tema Claro ────────────────────────────────────────────── */
+[data-theme="light"]{
+  --bg:#f0f2f5;--s1:#ffffff;--s2:#f7f8fa;--s3:#eef0f4;--s4:#e2e5ec;
+  --b1:rgba(0,0,0,0.07);--b2:rgba(0,0,0,0.11);--b3:rgba(0,0,0,0.18);
+  --t1:#1a1d26;--t2:#4b5168;--t3:#8891a8;--t4:#b8bfcf;
+  --blue:#2563eb;--blue2:#1d4ed8;--blue-a:rgba(37,99,235,0.10);
+  --green:#16a05a;--green-a:rgba(22,160,90,0.10);
+  --yellow:#b45309;--yellow-a:rgba(180,83,9,0.10);
+  --red:#dc2626;--red-a:rgba(220,38,38,0.10);
+  --purple:#7c3aed;--purple-a:rgba(124,58,237,0.10);
+  --orange:#c2410c;--orange-a:rgba(194,65,12,0.09);
+}
+
+/* ── Tema Azul Corporativo ─────────────────────────────────── */
+[data-theme="corporate"]{
+  --bg:#0d1b2e;--s1:#102039;--s2:#152844;--s3:#1b3154;--s4:#223c65;
+  --b1:rgba(100,160,255,0.08);--b2:rgba(100,160,255,0.13);--b3:rgba(100,160,255,0.20);
+  --t1:#ddeeff;--t2:#8ab4d8;--t3:#4f7ea8;--t4:#2d5070;
+  --blue:#5eaeff;--blue2:#3d8fe0;--blue-a:rgba(94,174,255,0.14);
+  --green:#22d3a0;--green-a:rgba(34,211,160,0.12);
+  --yellow:#fbbf24;--yellow-a:rgba(251,191,36,0.12);
+  --red:#f87171;--red-a:rgba(248,113,113,0.12);
+  --purple:#c084fc;--purple-a:rgba(192,132,252,0.12);
+  --orange:#fb923c;--orange-a:rgba(251,146,60,0.10);
+}
+
+/* ── Seletor de tema (na navbar) ───────────────────────────── */
+.theme-selector{display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);padding:3px 4px;}
+.theme-btn{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
+.theme-btn:hover{transform:scale(1.15);}
+.theme-btn.active{border-color:var(--t1);box-shadow:0 0 0 2px var(--blue);}
+.theme-btn[data-t="dark"]{background:radial-gradient(circle at 35% 35%,#272c38,#0b0d12);}
+.theme-btn[data-t="light"]{background:radial-gradient(circle at 35% 35%,#ffffff,#e2e5ec);}
+.theme-btn[data-t="corporate"]{background:radial-gradient(circle at 35% 35%,#5eaeff,#0d1b2e);}
+.theme-lbl{font-size:9px;color:var(--t3);letter-spacing:.04em;padding:0 4px;}
+
+/* ── Mimaki badges (semânticos do domínio) ─────────────────── */
+.mimaki-price-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--blue-a);color:var(--blue);border:1px solid rgba(74,143,245,.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;}
+.mimaki-caminho{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--purple-a);color:var(--purple);border:1px solid rgba(155,113,232,.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;animation:pulse-badge 2s infinite;}
+
+/* ── WhatsApp solicitante (validação) ──────────────────────── */
+.wpp-solicitante-required{border-color:var(--red)!important;}
+
+/* ── Base reset + tipografia ───────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:12px;}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px;}
+.mono{font-family:'JetBrains Mono',monospace;}

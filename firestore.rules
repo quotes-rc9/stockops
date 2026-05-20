@@ -1,0 +1,142 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// StockOps — Regras de Segurança Firestore
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// CONTEXTO IMPORTANTE
+// ────────────────────
+// Estas são regras INTERMEDIÁRIAS — o app NÃO usa Firebase Authentication
+// (login é feito via comparação de hash em JS contra a coleção config/usuarios).
+// Por isso não podemos exigir `request.auth != null`: quebraria o app.
+//
+// O QUE ESTAS REGRAS FAZEM
+// ────────────────────────
+// ✅ Validam ESTRUTURA dos dados em escritas (impede lixo arbitrário)
+// ✅ Tornam a coleção `auditoria` IMUTÁVEL (não permitem update — só create + delete)
+// ✅ Restringem campos sensíveis em `config/usuarios`
+// ✅ Validam enums (status, tipo, categoria)
+//
+// O QUE ESTAS REGRAS NÃO PROTEGEM
+// ────────────────────────────────
+// ❌ Qualquer pessoa com a apiKey pública (que está no index.html) pode LER tudo
+// ❌ Qualquer pessoa pode escrever desde que respeite a estrutura
+// ❌ Não há separação por usuário/role no Firestore (a checagem é só em JS)
+//
+// CAMINHO PARA REGRAS ESTRITAS
+// ─────────────────────────────
+// Quando migrar para Firebase Auth (Abordagem A da Prioridade 2):
+//   1. Trocar `allow read: if true` por `allow read: if request.auth != null`
+//   2. Adicionar custom claim `role` ao token e verificar
+//      `request.auth.token.role == 'admin'` em escritas sensíveis
+//   3. Restringir leitura de `config/usuarios` a admins
+//
+// COMO FAZER DEPLOY
+// ─────────────────
+// Opção 1 (Console — recomendado para o primeiro deploy):
+//   1. Acesse https://console.firebase.google.com/project/stockops-70ba6/firestore/rules
+//   2. Copie todo o conteúdo deste arquivo
+//   3. Cole no editor
+//   4. Clique em "Publicar"
+//
+// Opção 2 (CLI — depois de instalar firebase-tools):
+//   npm install -g firebase-tools
+//   firebase login
+//   firebase init firestore  (apontar para este arquivo)
+//   firebase deploy --only firestore:rules
+//
+// ═══════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── HELPERS ─────────────────────────────────────────────────────────────
+
+    function isString(v)  { return v is string; }
+    function isNumber(v)  { return v is number; }
+    function isList(v)    { return v is list; }
+    function isMap(v)     { return v is map; }
+    function naoVazio(v)  { return v is string && v.size() > 0; }
+
+    // ── PRODUTOS ───────────────────────────────────────────────────────────
+    // ID = código do produto. Estrutura validada na escrita.
+    match /produtos/{cod} {
+      allow read: if true;
+
+      allow create, update: if naoVazio(request.resource.data.cod)
+                            && naoVazio(request.resource.data.nome)
+                            && request.resource.data.cat in ['Insumo', 'Peça', 'Consumível']
+                            && isNumber(request.resource.data.estoque)
+                            && request.resource.data.estoque >= 0;
+
+      allow delete: if true;
+    }
+
+    // ── MOVIMENTAÇÕES ──────────────────────────────────────────────────────
+    // Histórico de entradas/saídas. Não devem ser deletadas (auditoria),
+    // mas o sistema atual não tem fluxo de delete — então mantém aberto.
+    match /movimentacoes/{id} {
+      allow read: if true;
+
+      allow create: if naoVazio(request.resource.data.cod)
+                    && request.resource.data.tipo in ['ENTRADA', 'SAÍDA']
+                    && isNumber(request.resource.data.qty)
+                    && request.resource.data.qty > 0;
+
+      allow update, delete: if true;
+    }
+
+    // ── SOLICITAÇÕES ───────────────────────────────────────────────────────
+    match /solicitacoes/{id} {
+      allow read: if true;
+
+      allow create, update: if request.resource.data.tipo in ['ENTRADA', 'SAÍDA']
+                            && request.resource.data.status in ['pendente', 'aprovado', 'rejeitado']
+                            && isNumber(request.resource.data.qty);
+
+      allow delete: if true;
+    }
+
+    // ── PEDIDOS DE COMPRA ──────────────────────────────────────────────────
+    match /pedidos/{id} {
+      allow read: if true;
+
+      allow create, update: if naoVazio(request.resource.data.id)
+                            && request.resource.data.status in ['enviado', 'recebido', 'cancelado']
+                            && isList(request.resource.data.itens);
+
+      allow delete: if true;
+    }
+
+    // ── AUDITORIA ──────────────────────────────────────────────────────────
+    // IMUTÁVEL: pode criar e ler, mas NÃO PODE EDITAR uma entrada existente.
+    // Delete é permitido apenas para suportar a função fbLimparAuditoria
+    // (limpar histórico — admin-only no JS).
+    match /auditoria/{id} {
+      allow read: if true;
+
+      allow create: if naoVazio(request.resource.data.tipo)
+                    && naoVazio(request.resource.data.acao)
+                    && naoVazio(request.resource.data.user);
+
+      allow update: if false;  // entradas de auditoria não podem ser alteradas
+      allow delete: if true;   // permite limpeza pelo admin
+    }
+
+    // ── CONFIGURAÇÃO (usuários, settings) ──────────────────────────────────
+    // Documento `config/usuarios` contém a lista com hashes de senhas.
+    // Quando migrar para Firebase Auth, restringir leitura a admins.
+    match /config/{document} {
+      allow read: if true;
+
+      // Validação mínima da estrutura do doc de usuários
+      allow write: if document != 'usuarios'
+                   || (request.resource.data.lista is list);
+    }
+
+    // ── PADRÃO: NEGAR TUDO O QUE NÃO FOI EXPLICITAMENTE PERMITIDO ──────────
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
