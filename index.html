@@ -168,6 +168,10 @@
         <button class="sb-item" onclick="showPage('previsao',this)"><span class="sb-icon">📈</span>Previsão de Compra</button>
       </div>
       <div class="sb-section">
+        <div class="sb-lbl">Equipamentos</div>
+        <button class="sb-item" onclick="showPage('maquinas',this)"><span class="sb-icon">🖨</span>Máquinas<span class="sb-badge sbb-p" id="nb-maq" style="display:none;">0</span></button>
+      </div>
+      <div class="sb-section">
         <div class="sb-lbl">Sistema</div>
         <button class="sb-item" onclick="showPage('notificacoes',this)"><span class="sb-icon">🔔</span>Notificações<span class="sb-badge sbb-r" id="nb-notif" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('auditoria',this)"><span class="sb-icon">📋</span>Histórico / Auditoria</button>
@@ -904,6 +908,22 @@
         </div>
       </div>
 
+      <div class="page" id="page-maquinas">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">🖨 Máquinas Mimaki</span>
+          <span class="ph-sub" id="maq-count"></span>
+          <div class="ph-right">
+            <button class="nav-btn primary" onclick="openMaquinaModal(null)">＋ Nova máquina</button>
+          </div>
+        </div>
+        <div style="padding:14px;flex:1;overflow-y:auto;">
+          <div id="maq-empty" style="display:none;text-align:center;color:var(--t4);padding:48px 14px;font-size:13px;">
+            Nenhuma máquina cadastrada ainda.<br>Clique em <b>＋ Nova máquina</b> para começar.
+          </div>
+          <div id="maq-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -975,6 +995,51 @@
     <div class="m-foot" style="margin-top:14px;">
       <button class="mbtn mbtn-cancel" onclick="closeUserModal()">Cancelar</button>
       <button class="mbtn mbtn-ok" id="um-ok" onclick="salvarUsuario()">Criar usuário</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CRIAR / EDITAR MÁQUINA -->
+<div class="overlay" id="overlay-maquina" onclick="if(event.target===this)closeMaquinaModal()">
+  <div class="modal" style="width:520px;max-height:90vh;overflow-y:auto;">
+    <div class="m-head">
+      <div class="m-title" id="maq-modal-title">＋ Nova Máquina</div>
+      <button class="m-close" onclick="closeMaquinaModal()">✕</button>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Nome / identificação</label>
+      <input class="fi2" id="maq-nome" placeholder="Ex: Mimaki 01 — Produção">
+    </div>
+
+    <div class="fg">
+      <label class="fl">Modelo</label>
+      <input class="fi2" id="maq-modelo" list="maq-modelos-sugestoes" placeholder="Ex: UJF-3042 MkII e">
+      <datalist id="maq-modelos-sugestoes">
+        <option value="UJF-3042 MkII e"><option value="UJF-6042 MkII e"><option value="UJF-7151 plus II">
+        <option value="JFX200-2513"><option value="JFX600-2513"><option value="CJV300 Plus">
+        <option value="JV300 Plus"><option value="JV33"><option value="UCJV300"><option value="TS100-1600">
+      </datalist>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Tintas usadas <span style="color:var(--t4);font-weight:400;">(separe por vírgula)</span></label>
+      <input class="fi2" id="maq-tintas" list="maq-tintas-sugestoes" placeholder="Ex: LUS-120, LH-100, PR-200">
+      <datalist id="maq-tintas-sugestoes">
+        <option value="LUS-120"><option value="LUS-150"><option value="LUS-170"><option value="LUS-175">
+        <option value="LH-100"><option value="SUV-100"><option value="PR-200"><option value="ECO UV">
+      </datalist>
+      <div class="fhint">Modelos de tinta que esta máquina utiliza.</div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Observações <span style="color:var(--t4);font-weight:400;">(opcional)</span></label>
+      <textarea class="fi2" id="maq-obs" rows="2" placeholder="Notas internas: localização, nº de série, etc." style="resize:vertical;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="nav-btn" onclick="closeMaquinaModal()">Cancelar</button>
+      <button class="nav-btn primary" id="maq-ok" onclick="salvarMaquina()">Salvar máquina</button>
     </div>
   </div>
 </div>
@@ -2401,6 +2466,7 @@ function showPage(id, el){
   if(id==='relatorios')      renderRelatorios();
   if(id==='historico')       renderHistorico();
   if(id==='usuarios')        renderUsuarios();
+  if(id==='maquinas')        renderMaquinas();
   if(typeof _notifPanelOpen !== 'undefined' && _notifPanelOpen){
     _notifPanelOpen=false;
     const np=$('notif-panel');
@@ -4068,6 +4134,104 @@ function excluirUsuario(id){
 }
 
 
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO: MÁQUINAS — Cadastro de equipamentos Mimaki
+// ═══════════════════════════════════════════════════════════════
+let MAQUINAS = [];
+let _maqEditId = null;
+
+function _escMaq(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function renderMaquinas(){
+  const grid=$('maq-grid'); const empty=$('maq-empty'); const count=$('maq-count');
+  if(!grid) return;
+  if(count) count.textContent = MAQUINAS.length+' máquina'+(MAQUINAS.length!==1?'s':'');
+  const badge=$('nb-maq');
+  if(badge){ if(MAQUINAS.length){ badge.textContent=MAQUINAS.length; badge.style.display=''; } else badge.style.display='none'; }
+  if(!MAQUINAS.length){ grid.innerHTML=''; if(empty) empty.style.display=''; return; }
+  if(empty) empty.style.display='none';
+  const ordenadas=[...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+  grid.innerHTML=ordenadas.map(m=>{
+    const tintas=(m.tintas&&m.tintas.length)
+      ? m.tintas.map(t=>`<span style="display:inline-block;background:var(--blue-a);color:var(--blue);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r6);margin:0 4px 4px 0;">${_escMaq(t)}</span>`).join('')
+      : '<span style="color:var(--t4);font-size:11px;">— sem tintas cadastradas —</span>';
+    return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🖨</div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:700;font-size:14px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escMaq(m.nome)}</div>
+          <div style="font-size:12px;color:var(--t3);">${_escMaq(m.modelo)||'—'}</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:5px;">Tintas usadas</div>
+        <div>${tintas}</div>
+      </div>
+      ${m.obs?`<div style="font-size:11px;color:var(--t3);border-top:1px solid var(--b2);padding-top:8px;white-space:pre-wrap;">${_escMaq(m.obs)}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:auto;padding-top:2px;">
+        <button class="btn-edit" onclick="openMaquinaModal('${m.id}')">✏ Editar</button>
+        <button class="btn-del" onclick="excluirMaquina('${m.id}')">🗑 Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openMaquinaModal(id){
+  if(!podeEditar()){ toast('Você não tem permissão para cadastrar máquinas.','error'); return; }
+  _maqEditId=id;
+  const isNew=id===null;
+  $('maq-modal-title').textContent=isNew?'＋ Nova Máquina':'✏ Editar Máquina';
+  $('maq-ok').textContent=isNew?'Salvar máquina':'Salvar alterações';
+  if(isNew){
+    $('maq-nome').value=''; $('maq-modelo').value=''; $('maq-tintas').value=''; $('maq-obs').value='';
+  } else {
+    const m=MAQUINAS.find(x=>x.id===id); if(!m) return;
+    $('maq-nome').value=m.nome||''; $('maq-modelo').value=m.modelo||'';
+    $('maq-tintas').value=(m.tintas||[]).join(', '); $('maq-obs').value=m.obs||'';
+  }
+  $('overlay-maquina').classList.add('open');
+  setTimeout(()=>$('maq-nome').focus(),80);
+}
+
+function closeMaquinaModal(){ $('overlay-maquina').classList.remove('open'); _maqEditId=null; }
+
+function salvarMaquina(){
+  if(!podeEditar()){ toast('Acesso negado.','error'); return; }
+  const nome=$('maq-nome').value.trim();
+  const modelo=$('maq-modelo').value.trim();
+  const tintas=$('maq-tintas').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const obs=$('maq-obs').value.trim();
+  if(!nome){ toast('Informe o nome da máquina.','error'); $('maq-nome').focus(); return; }
+  if(!modelo){ toast('Informe o modelo da máquina.','error'); $('maq-modelo').focus(); return; }
+  const isNew=_maqEditId===null;
+  if(isNew){
+    const m={ id:'maq_'+Date.now(), nome, modelo, tintas, obs, criadoEm:new Date().toLocaleDateString('pt-BR') };
+    MAQUINAS.push(m);
+    registrarAudit('sistema',`Máquina cadastrada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.join(', ')||'—'}`,'🖨');
+    if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
+    toast(`Máquina "${nome}" cadastrada!`,'success');
+  } else {
+    const m=MAQUINAS.find(x=>x.id===_maqEditId); if(!m) return;
+    m.nome=nome; m.modelo=modelo; m.tintas=tintas; m.obs=obs;
+    registrarAudit('sistema',`Máquina editada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.join(', ')||'—'}`,'✏');
+    if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
+    toast(`Máquina "${nome}" atualizada!`,'success');
+  }
+  closeMaquinaModal(); renderMaquinas();
+}
+
+function excluirMaquina(id){
+  if(!podeExcluir()){ toast('Apenas administradores podem excluir máquinas.','error'); return; }
+  const m=MAQUINAS.find(x=>x.id===id); if(!m) return;
+  if(!confirm(`Excluir a máquina "${m.nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  MAQUINAS=MAQUINAS.filter(x=>x.id!==id);
+  registrarAudit('sistema',`Máquina excluída: ${m.nome}`,`Modelo: ${m.modelo||'—'}`,'🗑');
+  if(typeof fbExcluirMaquina==='function') fbExcluirMaquina(id);
+  renderMaquinas();
+  toast(`Máquina "${m.nome}" excluída.`,'success');
+}
+
+
   // ═══════════════════════════════════════════════════════════════
 // MÓDULO: AUDITORIA — Histórico de todas as ações
 // ═══════════════════════════════════════════════════════════════
@@ -4954,23 +5118,26 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 <!-- ══ FIREBASE SDK ══════════════════════════════════════════ -->
 <script type="module">
-import { initializeApp }                         from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, doc, collection,
-         setDoc, getDoc, getDocs, onSnapshot,
-         deleteDoc, serverTimestamp }            from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ── Configuração do projeto Firebase ─────────────────────────
-const firebaseConfig = {
-  apiKey:            "AIzaSyBGuN6uieFgTmIa8mJwiRA3eqB70UPp0xM",
-  authDomain:        "stockops-70ba6.firebaseapp.com",
-  projectId:         "stockops-70ba6",
-  storageBucket:     "stockops-70ba6.firebasestorage.app",
-  messagingSenderId: "1059526294275",
-  appId:             "1:1059526294275:web:8ac9135d6728c65c4c8736"
-};
+// ── Configuração do projeto Supabase ─────────────────────────
+const SUPABASE_URL = "https://xdmzbvadzhyjkeobacoz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kEkM0Q1EfG_hSzi_iuqj_g_q63I4qqZ";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+// ── Helpers genéricos (cada tabela = id texto + data jsonb) ───
+async function _sbLoad(table) {
+  const { data, error } = await sb.from(table).select('id,data');
+  if (error) { console.error('Erro load ' + table + ':', error); return []; }
+  return (data || []).map(r => r.data);
+}
+function _sbRealtime(table, handler) {
+  sb.channel('rt_' + table)
+    .on('postgres_changes', { event: '*', schema: 'public', table }, async () => {
+      handler(await _sbLoad(table));
+    })
+    .subscribe();
+}
 
 // ── Helpers ───────────────────────────────────────────────────
 const COL_PRODUTOS = 'produtos';
@@ -4980,6 +5147,7 @@ const COL_USUARIOS = 'usuarios';
 const COL_CONFIG   = 'config';
 const COL_PEDIDOS  = 'pedidos';
 const COL_AUDIT    = 'auditoria';
+const COL_MAQUINAS = 'maquinas';
 
 // Mostra indicador de sincronização
 function setSyncStatus(status) {
@@ -4995,7 +5163,7 @@ function setSyncStatus(status) {
 window.fbSalvarProduto = async function(p) {
   try {
     setSyncStatus('saving');
-    await setDoc(doc(db, COL_PRODUTOS, p.cod), p);
+    const { error } = await sb.from(COL_PRODUTOS).upsert({ id: p.cod, data: p }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar produto:', e); setSyncStatus('error'); }
 };
@@ -5003,7 +5171,7 @@ window.fbSalvarProduto = async function(p) {
  window.fbExcluirProduto = async function(cod) {
   try {
     setSyncStatus('saving');
-    await deleteDoc(doc(db, COL_PRODUTOS, cod));
+    const { error } = await sb.from(COL_PRODUTOS).delete().eq('id', cod); if (error) throw error;
     setSyncStatus('ok');
     return true;
   } catch(e) {
@@ -5019,7 +5187,7 @@ window.fbSalvarMov = async function(mov) {
   try {
     setSyncStatus('saving');
     const id = 'mov_' + Date.now();
-    await setDoc(doc(db, COL_MOV, id), { ...mov, _id: id, ts: serverTimestamp() });
+    const { error } = await sb.from(COL_MOV).upsert({ id, data: mov }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar mov:', e); setSyncStatus('error'); }
 };
@@ -5028,7 +5196,7 @@ window.fbSalvarMov = async function(mov) {
 window.fbSalvarSolic = async function(s) {
   try {
     setSyncStatus('saving');
-    await setDoc(doc(db, COL_SOLIC, 'solic_' + s.id), s);
+    const { error } = await sb.from(COL_SOLIC).upsert({ id: 'solic_' + s.id, data: s }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar solic:', e); setSyncStatus('error'); }
 };
@@ -5038,7 +5206,7 @@ window.fbSalvarSolic = async function(s) {
 window.fbSalvarPedido = async function(p) {
   try {
     setSyncStatus('saving');
-    await setDoc(doc(db, COL_PEDIDOS, p.id), p);
+    const { error } = await sb.from(COL_PEDIDOS).upsert({ id: p.id, data: p }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar pedido:', e); setSyncStatus('error'); }
 };
@@ -5048,7 +5216,7 @@ window.fbSalvarAudit = async function(entry) {
   try {
     setSyncStatus('saving');
     const docId = 'audit_' + (entry.tsMs || Date.now()) + '_' + entry.id;
-    await setDoc(doc(db, COL_AUDIT, docId), { ...entry, _docId: docId });
+    const { error } = await sb.from(COL_AUDIT).upsert({ id: docId, data: entry }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar audit:', e); setSyncStatus('error'); }
 };
@@ -5057,10 +5225,11 @@ window.fbSalvarAudit = async function(entry) {
 window.fbLimparAuditoria = async function() {
   try {
     setSyncStatus('saving');
-    const snap = await getDocs(collection(db, COL_AUDIT));
-    await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+    const { count } = await sb.from(COL_AUDIT).select('id', { count: 'exact', head: true });
+    const { error } = await sb.from(COL_AUDIT).delete().neq('id', '');
+    if (error) throw error;
     setSyncStatus('ok');
-    return snap.size;
+    return count || 0;
   } catch(e) {
     console.error('Erro ao limpar auditoria:', e);
     setSyncStatus('error');
@@ -5074,9 +5243,27 @@ window.fbSalvarUsuarios = async function(usuarios) {
   try {
     setSyncStatus('saving');
     // Salva sem as senhas em texto — apenas hash
-    await setDoc(doc(db, COL_CONFIG, 'usuarios'), { lista: usuarios, ts: serverTimestamp() });
+    const { error } = await sb.from(COL_CONFIG).upsert({ id: 'usuarios', data: { lista: usuarios, ts: Date.now() } }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar usuários:', e); setSyncStatus('error'); }
+};
+
+// ── SALVAR máquina ────────────────────────────────────────────
+window.fbSalvarMaquina = async function(m) {
+  try {
+    setSyncStatus('saving');
+    const { error } = await sb.from(COL_MAQUINAS).upsert({ id: m.id, data: m }); if (error) throw error;
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar máquina:', e); setSyncStatus('error'); }
+};
+
+// ── EXCLUIR máquina ───────────────────────────────────────────
+window.fbExcluirMaquina = async function(id) {
+  try {
+    setSyncStatus('saving');
+    const { error } = await sb.from(COL_MAQUINAS).delete().eq('id', id); if (error) throw error;
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao excluir máquina:', e); setSyncStatus('error'); }
 };
 
 // ── CARREGAR dados iniciais do Firestore ──────────────────────
@@ -5085,58 +5272,48 @@ async function carregarDadosFirebase() {
   try {
     if (typeof _setBootMsg === 'function') _setBootMsg('Carregando produtos...');
     // Produtos
-    const prodSnap = await getDocs(collection(db, COL_PRODUTOS));
-    if (!prodSnap.empty) {
-      const novosP = [];
-      prodSnap.forEach(d => novosP.push(d.data()));
-      if (novosP.length > 0) {
-        P.length = 0;
-        novosP.forEach(p => P.push(p));
-        aplicarPrecosMimaki();
-      }
+    const novosP = await _sbLoad(COL_PRODUTOS);
+    if (novosP.length > 0) {
+      P.length = 0;
+      novosP.forEach(p => P.push(p));
+      aplicarPrecosMimaki();
     } else {
-      // Primeiro acesso: sobe os produtos padrão para o Firebase
-      for (const p of P) {
-        await setDoc(doc(db, COL_PRODUTOS, p.cod), p);
-      }
+      // Primeiro acesso: sobe os produtos padrão para o Supabase
+      for (const p of P) { await sb.from(COL_PRODUTOS).upsert({ id: p.cod, data: p }); }
     }
 
     if (typeof _setBootMsg === 'function') _setBootMsg('Carregando movimentações...');
     // Movimentações
-    const movSnap = await getDocs(collection(db, COL_MOV));
-    if (!movSnap.empty) {
+    const novosMov = await _sbLoad(COL_MOV);
+    if (novosMov.length) {
       MOV.length = 0;
-      movSnap.forEach(d => { const m = d.data(); delete m.ts; delete m._id; MOV.push(m); });
+      novosMov.forEach(m => MOV.push(m));
       MOV.sort((a,b) => a.data > b.data ? 1 : -1);
     }
 
     if (typeof _setBootMsg === 'function') _setBootMsg('Carregando solicitações...');
     // Solicitações
-    const solicSnap = await getDocs(collection(db, COL_SOLIC));
-    if (!solicSnap.empty) {
+    const novasSolic = await _sbLoad(COL_SOLIC);
+    if (novasSolic.length) {
       SOLIC.length = 0;
-      solicSnap.forEach(d => SOLIC.push(d.data()));
+      novasSolic.forEach(s => SOLIC.push(s));
     }
 
    if (typeof _setBootMsg === 'function') _setBootMsg('Carregando pedidos...');
    // Pedidos
-    const pedSnap = await getDocs(collection(db, COL_PEDIDOS));
-    if (!pedSnap.empty) {
+    const novosPed = await _sbLoad(COL_PEDIDOS);
+    if (novosPed.length) {
       PEDIDOS.length = 0;
-      pedSnap.forEach(d => PEDIDOS.push(d.data()));
+      novosPed.forEach(p => PEDIDOS.push(p));
       PEDIDOS.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
     }
 
     if (typeof _setBootMsg === 'function') _setBootMsg('Carregando auditoria...');
     // Auditoria
-    const auditSnap = await getDocs(collection(db, COL_AUDIT));
-    if (!auditSnap.empty) {
+    const novosAud = await _sbLoad(COL_AUDIT);
+    if (novosAud.length) {
       AUDIT.length = 0;
-      auditSnap.forEach(d => {
-        const a = d.data();
-        delete a._docId;
-        AUDIT.push(a);
-      });
+      novosAud.forEach(a => AUDIT.push(a));
       AUDIT.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
       if (AUDIT.length > 500) AUDIT.length = 500;
       const maxId = AUDIT.reduce((m, a) => Math.max(m, a.id || 0), 0);
@@ -5145,21 +5322,25 @@ async function carregarDadosFirebase() {
 
     if (typeof _setBootMsg === 'function') _setBootMsg('Carregando usuários...');
     // Usuários
-    const usersDoc = await getDoc(doc(db, COL_CONFIG, 'usuarios'));
-    if (usersDoc.exists()) {
-      const lista = usersDoc.data().lista;
-      if (lista && lista.length) {
-        USUARIOS.length = 0;
-        lista.forEach(u => USUARIOS.push(u));
-      }
+    const { data: cfgRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'usuarios').maybeSingle();
+    const listaUsers = cfgRow && cfgRow.data && cfgRow.data.lista;
+    if (listaUsers && listaUsers.length) {
+      USUARIOS.length = 0;
+      listaUsers.forEach(u => USUARIOS.push(u));
     } else {
       // Primeiro acesso: sobe usuários padrão
       await fbSalvarUsuarios(USUARIOS);
     }
 
+    if (typeof _setBootMsg === 'function') _setBootMsg('Carregando máquinas...');
+    // Máquinas
+    const novasMaq = await _sbLoad(COL_MAQUINAS);
+    MAQUINAS.length = 0;
+    novasMaq.forEach(m => MAQUINAS.push(m));
+
     setSyncStatus('ok');
   } catch(e) {
-    console.error('Erro ao carregar Firebase:', e);
+    console.error('Erro ao carregar Supabase:', e);
     setSyncStatus('error');
   }
 
@@ -5195,70 +5376,49 @@ setTimeout(() => {
 }, 15000);
 
 // ── LISTENERS em tempo real ───────────────────────────────────
- onSnapshot(collection(db, COL_PRODUTOS), (snap) => {
-  // Ignora eventos da nossa própria escrita pendente
-  if (snap.metadata.hasPendingWrites) return;
-
-  const novosP = [];
-  snap.forEach(d => {
-    const data = d.data();
-    // Filtra produtos que acabamos de excluir (evita "ressuscitar")
-    if (window._excluidosRecentes && window._excluidosRecentes.has(data.cod)) return;
-    novosP.push(data);
-  });
-
-  // Não atualiza se vier vazio (provavelmente carregamento inicial)
-  if (novosP.length === 0) return;
-
+_sbRealtime(COL_PRODUTOS, (rows) => {
+  if (rows.length === 0) return;
   P.length = 0;
-  novosP.forEach(p => P.push(p));
+  rows.forEach(p => P.push(p));
   aplicarPrecosMimaki();
   populateFornSelect();
   renderAll();
   setSyncStatus('ok');
 });
 
-onSnapshot(collection(db, COL_SOLIC), (snap) => {
-  if (snap.metadata.hasPendingWrites) return;
-  const novasSolic = [];
-  snap.forEach(d => novasSolic.push(d.data()));
+_sbRealtime(COL_SOLIC, (rows) => {
   SOLIC.length = 0;
-  novasSolic.forEach(s => SOLIC.push(s));
+  rows.forEach(s => SOLIC.push(s));
   renderSolicBadge();
   if (currentPage === 'solicitacoes') renderSolicitacoes();
 });
 
-onSnapshot(collection(db, COL_PEDIDOS), (snap) => {
-  if (snap.metadata.hasPendingWrites) return;
-  const novos = [];
-  snap.forEach(d => novos.push(d.data()));
-  if (novos.length === 0) return;
+_sbRealtime(COL_PEDIDOS, (rows) => {
+  if (rows.length === 0) return;
   PEDIDOS.length = 0;
-  novos.forEach(p => PEDIDOS.push(p));
+  rows.forEach(p => PEDIDOS.push(p));
   PEDIDOS.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
   renderHistBadge();
   if (currentPage === 'historico') renderHistorico();
 });
 
-onSnapshot(collection(db, COL_AUDIT), (snap) => {
-  if (snap.metadata.hasPendingWrites) return;
-  const novos = [];
-  snap.forEach(d => {
-    if (window._auditExcluidosRecentes && window._auditExcluidosRecentes.has(d.id)) return;
-    const a = d.data();
-    delete a._docId;
-    novos.push(a);
-  });
+_sbRealtime(COL_AUDIT, (rows) => {
   AUDIT.length = 0;
-  novos.forEach(a => AUDIT.push(a));
+  rows.forEach(a => AUDIT.push(a));
   AUDIT.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
   if (AUDIT.length > 500) AUDIT.length = 500;
   if (currentPage === 'auditoria') renderAuditoria();
 });
 
-  onSnapshot(doc(db, COL_CONFIG, 'usuarios'), (snap) => {
-  if (!snap.exists() || snap.metadata.hasPendingWrites) return;
-  const lista = snap.data().lista;
+_sbRealtime(COL_MAQUINAS, (rows) => {
+  MAQUINAS.length = 0;
+  rows.forEach(m => MAQUINAS.push(m));
+  if (currentPage === 'maquinas') renderMaquinas();
+});
+
+_sbRealtime(COL_CONFIG, async () => {
+  const { data: cfgRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'usuarios').maybeSingle();
+  const lista = cfgRow && cfgRow.data && cfgRow.data.lista;
   if (lista && lista.length) {
     USUARIOS.length = 0;
     lista.forEach(u => USUARIOS.push(u));

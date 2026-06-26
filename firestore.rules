@@ -134,6 +134,18 @@ service cloud.firestore {
                    || (request.resource.data.lista is list);
     }
 
+    // ── MÁQUINAS ───────────────────────────────────────────────────────────
+    // Cadastro interno de equipamentos (Mimaki). ID = id gerado no app.
+    match /maquinas/{id} {
+      allow read: if true;
+
+      allow create, update: if naoVazio(request.resource.data.id)
+                            && naoVazio(request.resource.data.nome)
+                            && naoVazio(request.resource.data.modelo);
+
+      allow delete: if true;
+    }
+
     // ── PADRÃO: NEGAR TUDO O QUE NÃO FOI EXPLICITAMENTE PERMITIDO ──────────
     match /{path=**} {
       allow read, write: if false;
