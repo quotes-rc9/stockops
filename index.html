@@ -1023,13 +1023,19 @@
     </div>
 
     <div class="fg">
-      <label class="fl">Tintas usadas <span style="color:var(--t4);font-weight:400;">(separe por vírgula)</span></label>
-      <input class="fi2" id="maq-tintas" list="maq-tintas-sugestoes" placeholder="Ex: LUS-120, LH-100, PR-200">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <label class="fl" style="margin:0;">Tintas em uso</label>
+        <button type="button" class="nav-btn" style="font-size:11px;padding:2px 10px;" onclick="maqAddTintaRow()">＋ Adicionar tinta</button>
+      </div>
+      <div id="maq-tintas-head" style="display:none;gap:6px;font-size:10px;color:var(--t4);margin-bottom:4px;padding:0 2px;">
+        <span style="flex:2;">Modelo</span><span style="flex:1.1;">Instalada em</span><span style="flex:1.1;">Validade / acaba</span><span style="width:26px;"></span>
+      </div>
+      <div id="maq-tintas-list"></div>
+      <div id="maq-tintas-vazio" class="fhint">Nenhuma tinta. Clique em “＋ Adicionar tinta”.</div>
       <datalist id="maq-tintas-sugestoes">
         <option value="LUS-120"><option value="LUS-150"><option value="LUS-170"><option value="LUS-175">
         <option value="LH-100"><option value="SUV-100"><option value="PR-200"><option value="ECO UV">
       </datalist>
-      <div class="fhint">Modelos de tinta que esta máquina utiliza.</div>
     </div>
 
     <div class="fg">
@@ -4153,7 +4159,16 @@ function renderMaquinas(){
   const ordenadas=[...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
   grid.innerHTML=ordenadas.map(m=>{
     const tintas=(m.tintas&&m.tintas.length)
-      ? m.tintas.map(t=>`<span style="display:inline-block;background:var(--blue-a);color:var(--blue);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r6);margin:0 4px 4px 0;">${_escMaq(t)}</span>`).join('')
+      ? m.tintas.map(t=>{
+          const o=(typeof t==='string')?{modelo:t}:t;
+          const st=_tintaStatus(o.fim);
+          const datas=(o.inicio||o.fim)?`${_fmtData(o.inicio)} → ${_fmtData(o.fim)}`:'';
+          return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;border-top:1px solid var(--b2);">
+            <span style="font-weight:600;font-size:12px;color:var(--t1);">${_escMaq(o.modelo)}</span>
+            ${datas?`<span style="font-size:10px;color:var(--t4);">${datas}</span>`:''}
+            ${st?`<span style="margin-left:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
+          </div>`;
+        }).join('')
       : '<span style="color:var(--t4);font-size:11px;">— sem tintas cadastradas —</span>';
     return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -4164,7 +4179,7 @@ function renderMaquinas(){
         </div>
       </div>
       <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:5px;">Tintas usadas</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;">Tintas em uso</div>
         <div>${tintas}</div>
       </div>
       ${m.obs?`<div style="font-size:11px;color:var(--t3);border-top:1px solid var(--b2);padding-top:8px;white-space:pre-wrap;">${_escMaq(m.obs)}</div>`:''}
@@ -4176,19 +4191,61 @@ function renderMaquinas(){
   }).join('');
 }
 
+function _fmtData(s){ if(!s) return '—'; const p=String(s).split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s; }
+
+function _tintaStatus(fim){
+  if(!fim) return null;
+  const p=String(fim).split('-'); if(p.length!==3) return null;
+  const f=new Date(+p[0], +p[1]-1, +p[2]);
+  const n=new Date(); const hoje=new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const dias=Math.round((f-hoje)/86400000);
+  if(dias<0)   return { txt:`vencida há ${-dias}d`, bg:'var(--red-a)',    fg:'var(--red)' };
+  if(dias===0) return { txt:'vence hoje',           bg:'var(--red-a)',    fg:'var(--red)' };
+  if(dias<=30) return { txt:`vence em ${dias}d`,    bg:'var(--yellow-a)', fg:'var(--yellow)' };
+  return             { txt:`faltam ${dias}d`,      bg:'var(--green-a)',  fg:'var(--green)' };
+}
+
+function _maqTintasUI(){
+  const list=$('maq-tintas-list'); if(!list) return;
+  const has=list.querySelector('.maq-tinta-row');
+  const head=$('maq-tintas-head'); const vazio=$('maq-tintas-vazio');
+  if(head) head.style.display=has?'flex':'none';
+  if(vazio) vazio.style.display=has?'none':'';
+}
+
+function maqAddTintaRow(modelo, inicio, fim){
+  const list=$('maq-tintas-list'); if(!list) return;
+  const row=document.createElement('div');
+  row.className='maq-tinta-row';
+  row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+  row.innerHTML=`
+    <input class="fi2 mt-modelo" list="maq-tintas-sugestoes" placeholder="LUS-120..." style="flex:2;min-width:0;">
+    <input class="fi2 mt-inicio" type="date" title="Instalada em" style="flex:1.1;min-width:0;">
+    <input class="fi2 mt-fim" type="date" title="Validade / acaba em" style="flex:1.1;min-width:0;">
+    <button type="button" title="Remover" onclick="this.closest('.maq-tinta-row').remove(); _maqTintasUI();" style="width:28px;height:34px;flex-shrink:0;background:none;border:1px solid var(--b2);border-radius:var(--r6);color:var(--t3);cursor:pointer;">✕</button>`;
+  list.appendChild(row);
+  if(modelo!=null) row.querySelector('.mt-modelo').value=modelo;
+  if(inicio) row.querySelector('.mt-inicio').value=inicio;
+  if(fim) row.querySelector('.mt-fim').value=fim;
+  _maqTintasUI();
+  if(modelo==null) row.querySelector('.mt-modelo').focus();
+}
+
 function openMaquinaModal(id){
   if(!podeEditar()){ toast('Você não tem permissão para cadastrar máquinas.','error'); return; }
   _maqEditId=id;
   const isNew=id===null;
   $('maq-modal-title').textContent=isNew?'＋ Nova Máquina':'✏ Editar Máquina';
   $('maq-ok').textContent=isNew?'Salvar máquina':'Salvar alterações';
+  $('maq-tintas-list').innerHTML='';
   if(isNew){
-    $('maq-nome').value=''; $('maq-modelo').value=''; $('maq-tintas').value=''; $('maq-obs').value='';
+    $('maq-nome').value=''; $('maq-modelo').value=''; $('maq-obs').value='';
   } else {
     const m=MAQUINAS.find(x=>x.id===id); if(!m) return;
-    $('maq-nome').value=m.nome||''; $('maq-modelo').value=m.modelo||'';
-    $('maq-tintas').value=(m.tintas||[]).join(', '); $('maq-obs').value=m.obs||'';
+    $('maq-nome').value=m.nome||''; $('maq-modelo').value=m.modelo||''; $('maq-obs').value=m.obs||'';
+    (m.tintas||[]).forEach(t=>{ const o=(typeof t==='string')?{modelo:t}:t; maqAddTintaRow(o.modelo, o.inicio, o.fim); });
   }
+  _maqTintasUI();
   $('overlay-maquina').classList.add('open');
   setTimeout(()=>$('maq-nome').focus(),80);
 }
@@ -4199,7 +4256,11 @@ function salvarMaquina(){
   if(!podeEditar()){ toast('Acesso negado.','error'); return; }
   const nome=$('maq-nome').value.trim();
   const modelo=$('maq-modelo').value.trim();
-  const tintas=$('maq-tintas').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const tintas=[...document.querySelectorAll('#maq-tintas-list .maq-tinta-row')].map(r=>({
+    modelo:r.querySelector('.mt-modelo').value.trim(),
+    inicio:r.querySelector('.mt-inicio').value||'',
+    fim:r.querySelector('.mt-fim').value||''
+  })).filter(t=>t.modelo);
   const obs=$('maq-obs').value.trim();
   if(!nome){ toast('Informe o nome da máquina.','error'); $('maq-nome').focus(); return; }
   if(!modelo){ toast('Informe o modelo da máquina.','error'); $('maq-modelo').focus(); return; }
@@ -4207,13 +4268,13 @@ function salvarMaquina(){
   if(isNew){
     const m={ id:'maq_'+Date.now(), nome, modelo, tintas, obs, criadoEm:new Date().toLocaleDateString('pt-BR') };
     MAQUINAS.push(m);
-    registrarAudit('sistema',`Máquina cadastrada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.join(', ')||'—'}`,'🖨');
+    registrarAudit('sistema',`Máquina cadastrada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.map(t=>t.modelo).join(', ')||'—'}`,'🖨');
     if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
     toast(`Máquina "${nome}" cadastrada!`,'success');
   } else {
     const m=MAQUINAS.find(x=>x.id===_maqEditId); if(!m) return;
     m.nome=nome; m.modelo=modelo; m.tintas=tintas; m.obs=obs;
-    registrarAudit('sistema',`Máquina editada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.join(', ')||'—'}`,'✏');
+    registrarAudit('sistema',`Máquina editada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.map(t=>t.modelo).join(', ')||'—'}`,'✏');
     if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
     toast(`Máquina "${nome}" atualizada!`,'success');
   }
