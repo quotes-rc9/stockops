@@ -4240,9 +4240,18 @@ function maqAddTintaRow(modelo, inicio, validade, fim){
       <button type="button" title="Remover tinta" onclick="this.closest('.maq-tinta-row').remove(); _maqTintasUI();" style="width:28px;height:34px;flex-shrink:0;background:none;border:1px solid var(--b2);border-radius:var(--r6);color:var(--t3);cursor:pointer;">✕</button>
     </div>
     <div style="display:flex;gap:6px;">
-      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Instalada em<input class="fi2 mt-inicio" type="date" style="width:100%;"></label>
-      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Validade<input class="fi2 mt-validade" type="date" style="width:100%;"></label>
-      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Acabou em<input class="fi2 mt-acabou" type="date" style="width:100%;"></label>
+      <label style="flex:1;min-width:0;font-size:11.5px;color:var(--t2);font-weight:500;">
+        <span style="display:block;margin-bottom:3px;">📥 Instalada em</span>
+        <input class="fi2 mt-inicio" type="date" style="width:100%;">
+      </label>
+      <label style="flex:1;min-width:0;font-size:11.5px;color:var(--t2);font-weight:500;">
+        <span style="display:block;margin-bottom:3px;">⏱ Validade</span>
+        <input class="fi2 mt-validade" type="date" style="width:100%;">
+      </label>
+      <label style="flex:1;min-width:0;font-size:11.5px;color:var(--t2);font-weight:500;">
+        <span style="display:block;margin-bottom:3px;">🟥 Acabou em</span>
+        <input class="fi2 mt-acabou" type="date" style="width:100%;">
+      </label>
     </div>`;
   list.appendChild(row);
   if(modelo!=null) row.querySelector('.mt-modelo').value=modelo;
