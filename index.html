@@ -1027,9 +1027,6 @@
         <label class="fl" style="margin:0;">Tintas em uso</label>
         <button type="button" class="nav-btn" style="font-size:11px;padding:2px 10px;" onclick="maqAddTintaRow()">＋ Adicionar tinta</button>
       </div>
-      <div id="maq-tintas-head" style="display:none;gap:6px;font-size:10px;color:var(--t4);margin-bottom:4px;padding:0 2px;">
-        <span style="flex:2;">Modelo</span><span style="flex:1.1;">Instalada em</span><span style="flex:1.1;">Validade / acaba</span><span style="width:26px;"></span>
-      </div>
       <div id="maq-tintas-list"></div>
       <div id="maq-tintas-vazio" class="fhint">Nenhuma tinta. Clique em “＋ Adicionar tinta”.</div>
       <datalist id="maq-tintas-sugestoes">
@@ -4158,18 +4155,31 @@ function renderMaquinas(){
   if(empty) empty.style.display='none';
   const ordenadas=[...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
   grid.innerHTML=ordenadas.map(m=>{
-    const tintas=(m.tintas&&m.tintas.length)
-      ? m.tintas.map(t=>{
-          const o=(typeof t==='string')?{modelo:t}:t;
-          const st=_tintaStatus(o.fim);
-          const datas=(o.inicio||o.fim)?`${_fmtData(o.inicio)} → ${_fmtData(o.fim)}`:'';
-          return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:5px 0;border-top:1px solid var(--b2);">
-            <span style="font-weight:600;font-size:12px;color:var(--t1);">${_escMaq(o.modelo)}</span>
-            ${datas?`<span style="font-size:10px;color:var(--t4);">${datas}</span>`:''}
-            ${st?`<span style="margin-left:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
-          </div>`;
-        }).join('')
-      : '<span style="color:var(--t4);font-size:11px;">— sem tintas cadastradas —</span>';
+    const _tArr=(m.tintas||[]).map((t,idx)=>({ o:(typeof t==='string')?{modelo:t}:t, idx }));
+    const _emUso=_tArr.filter(x=>!x.o.fim);
+    const _finalizadas=_tArr.filter(x=>x.o.fim);
+    const _itemEmUso=({o,idx})=>{
+      const st=_tintaStatus(o.validade);
+      const desde=_diasDesde(o.inicio);
+      const meta=[];
+      if(o.inicio) meta.push(`instalada ${_fmtData(o.inicio)}`);
+      if(o.validade) meta.push(`val. ${_fmtData(o.validade)}`);
+      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--b2);">
+        <span style="font-weight:600;font-size:12px;color:var(--t1);">${_escMaq(o.modelo)}</span>
+        ${meta.length?`<span style="font-size:10px;color:var(--t4);">${meta.join(' · ')}</span>`:''}
+        ${st?`<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
+        ${desde!=null?`<span style="font-size:10px;color:var(--t3);">em uso há ${desde}d</span>`:''}
+        <button class="btn-edit" style="margin-left:auto;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>
+      </div>`;
+    };
+    const _itemFinal=({o})=>{
+      const dur=_duracaoDias(o.inicio,o.fim);
+      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--b2);opacity:.7;">
+        <span style="font-weight:600;font-size:12px;color:var(--t2);">${_escMaq(o.modelo)}</span>
+        <span style="font-size:10px;color:var(--t4);">${_fmtData(o.inicio)} → ${_fmtData(o.fim)}</span>
+        ${dur!=null?`<span style="margin-left:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:var(--s3);color:var(--t3);white-space:nowrap;">durou ${dur}d</span>`:'<span style="margin-left:auto;font-size:10px;color:var(--t4);">finalizada</span>'}
+      </div>`;
+    };
     return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:40px;height:40px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🖨</div>
@@ -4180,8 +4190,12 @@ function renderMaquinas(){
       </div>
       <div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;">Tintas em uso</div>
-        <div>${tintas}</div>
+        ${_emUso.length?_emUso.map(_itemEmUso).join(''):'<span style="color:var(--t4);font-size:11px;">— nenhuma tinta em uso —</span>'}
       </div>
+      ${_finalizadas.length?`<div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;">Finalizadas (${_finalizadas.length})</div>
+        ${_finalizadas.map(_itemFinal).join('')}
+      </div>`:''}
       ${m.obs?`<div style="font-size:11px;color:var(--t3);border-top:1px solid var(--b2);padding-top:8px;white-space:pre-wrap;">${_escMaq(m.obs)}</div>`:''}
       <div style="display:flex;gap:6px;margin-top:auto;padding-top:2px;">
         <button class="btn-edit" onclick="openMaquinaModal('${m.id}')">✏ Editar</button>
@@ -4192,6 +4206,9 @@ function renderMaquinas(){
 }
 
 function _fmtData(s){ if(!s) return '—'; const p=String(s).split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s; }
+function _parseData(s){ const p=String(s||'').split('-'); return p.length===3?new Date(+p[0],+p[1]-1,+p[2]):null; }
+function _diasDesde(inicio){ const d=_parseData(inicio); if(!d) return null; const n=new Date(); const hoje=new Date(n.getFullYear(),n.getMonth(),n.getDate()); return Math.max(0, Math.round((hoje-d)/86400000)); }
+function _duracaoDias(inicio,fim){ const di=_parseData(inicio), df=_parseData(fim); if(!di||!df) return null; return Math.max(0, Math.round((df-di)/86400000)); }
 
 function _tintaStatus(fim){
   if(!fim) return null;
@@ -4208,25 +4225,30 @@ function _tintaStatus(fim){
 function _maqTintasUI(){
   const list=$('maq-tintas-list'); if(!list) return;
   const has=list.querySelector('.maq-tinta-row');
-  const head=$('maq-tintas-head'); const vazio=$('maq-tintas-vazio');
-  if(head) head.style.display=has?'flex':'none';
+  const vazio=$('maq-tintas-vazio');
   if(vazio) vazio.style.display=has?'none':'';
 }
 
-function maqAddTintaRow(modelo, inicio, fim){
+function maqAddTintaRow(modelo, inicio, validade, fim){
   const list=$('maq-tintas-list'); if(!list) return;
   const row=document.createElement('div');
   row.className='maq-tinta-row';
-  row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+  row.style.cssText='border:1px solid var(--b2);border-radius:var(--r6);padding:8px;margin-bottom:8px;';
   row.innerHTML=`
-    <input class="fi2 mt-modelo" list="maq-tintas-sugestoes" placeholder="LUS-120..." style="flex:2;min-width:0;">
-    <input class="fi2 mt-inicio" type="date" title="Instalada em" style="flex:1.1;min-width:0;">
-    <input class="fi2 mt-fim" type="date" title="Validade / acaba em" style="flex:1.1;min-width:0;">
-    <button type="button" title="Remover" onclick="this.closest('.maq-tinta-row').remove(); _maqTintasUI();" style="width:28px;height:34px;flex-shrink:0;background:none;border:1px solid var(--b2);border-radius:var(--r6);color:var(--t3);cursor:pointer;">✕</button>`;
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+      <input class="fi2 mt-modelo" list="maq-tintas-sugestoes" placeholder="Modelo (ex: LUS-120 Magenta)" style="flex:1;min-width:0;">
+      <button type="button" title="Remover tinta" onclick="this.closest('.maq-tinta-row').remove(); _maqTintasUI();" style="width:28px;height:34px;flex-shrink:0;background:none;border:1px solid var(--b2);border-radius:var(--r6);color:var(--t3);cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Instalada em<input class="fi2 mt-inicio" type="date" style="width:100%;"></label>
+      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Validade<input class="fi2 mt-validade" type="date" style="width:100%;"></label>
+      <label style="flex:1;min-width:0;font-size:10px;color:var(--t4);display:block;">Acabou em<input class="fi2 mt-acabou" type="date" style="width:100%;"></label>
+    </div>`;
   list.appendChild(row);
   if(modelo!=null) row.querySelector('.mt-modelo').value=modelo;
   if(inicio) row.querySelector('.mt-inicio').value=inicio;
-  if(fim) row.querySelector('.mt-fim').value=fim;
+  if(validade) row.querySelector('.mt-validade').value=validade;
+  if(fim) row.querySelector('.mt-acabou').value=fim;
   _maqTintasUI();
   if(modelo==null) row.querySelector('.mt-modelo').focus();
 }
@@ -4243,7 +4265,7 @@ function openMaquinaModal(id){
   } else {
     const m=MAQUINAS.find(x=>x.id===id); if(!m) return;
     $('maq-nome').value=m.nome||''; $('maq-modelo').value=m.modelo||''; $('maq-obs').value=m.obs||'';
-    (m.tintas||[]).forEach(t=>{ const o=(typeof t==='string')?{modelo:t}:t; maqAddTintaRow(o.modelo, o.inicio, o.fim); });
+    (m.tintas||[]).forEach(t=>{ const o=(typeof t==='string')?{modelo:t}:t; maqAddTintaRow(o.modelo, o.inicio, o.validade, o.fim); });
   }
   _maqTintasUI();
   $('overlay-maquina').classList.add('open');
@@ -4259,7 +4281,8 @@ function salvarMaquina(){
   const tintas=[...document.querySelectorAll('#maq-tintas-list .maq-tinta-row')].map(r=>({
     modelo:r.querySelector('.mt-modelo').value.trim(),
     inicio:r.querySelector('.mt-inicio').value||'',
-    fim:r.querySelector('.mt-fim').value||''
+    validade:r.querySelector('.mt-validade').value||'',
+    fim:r.querySelector('.mt-acabou').value||''
   })).filter(t=>t.modelo);
   const obs=$('maq-obs').value.trim();
   if(!nome){ toast('Informe o nome da máquina.','error'); $('maq-nome').focus(); return; }
@@ -4279,6 +4302,22 @@ function salvarMaquina(){
     toast(`Máquina "${nome}" atualizada!`,'success');
   }
   closeMaquinaModal(); renderMaquinas();
+}
+
+function maqTintaAcabou(maqId, idx){
+  if(!podeEditar()){ toast('Você não tem permissão.','error'); return; }
+  const m=MAQUINAS.find(x=>x.id===maqId); if(!m||!m.tintas||!m.tintas[idx]) return;
+  let t=m.tintas[idx]; if(typeof t==='string'){ t={modelo:t}; m.tintas[idx]=t; }
+  if(t.fim) return;
+  if(!confirm(`Marcar a tinta "${t.modelo}" como acabada hoje?`)) return;
+  const n=new Date();
+  t.fim=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  if(!t.inicio) t.inicio=t.fim;
+  const dur=_duracaoDias(t.inicio,t.fim);
+  registrarAudit('sistema',`Tinta finalizada: ${t.modelo}`,`Máquina: ${m.nome}${dur!=null?` | durou ${dur} dias`:''}`,'🖨');
+  if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
+  renderMaquinas();
+  toast(`Tinta "${t.modelo}" marcada como acabada.`,'success');
 }
 
 function excluirMaquina(id){
