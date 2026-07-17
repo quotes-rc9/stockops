@@ -110,39 +110,7 @@
   <header class="nav">
     <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
     <div class="nav-logo">STOCKOPS</div>
-    <div class="nav-div"></div>
-    <span class="nav-sub">Gestão de Estoque · Impressão Digital</span>
-    <div class="nav-right">
-      <div class="live"><span class="live-dot"></span>Ao vivo</div>
-      <span id="sync-status" style="font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;">☁ Sincronizado</span>
-      <!-- Badge do usuário logado -->
-      <div class="user-badge" id="user-badge" onclick="showPage('auditoria')" title="Histórico de ações">
-        <div class="ub-avatar role-admin" id="ub-avatar">👤</div>
-        <div>
-          <div class="ub-name" id="ub-name">—</div>
-          <div class="ub-role" id="ub-role">—</div>
-        </div>
-      </div>
-      <button class="nav-btn" style="font-size:10px;" onclick="fazerLogout()">⏻ Sair</button>
-      <!-- Seletor de tema -->
-      <div class="theme-selector" title="Trocar tema">
-        <span class="theme-lbl">Tema</span>
-        <button class="theme-btn active" data-t="dark"   onclick="setTheme('dark')"      title="Escuro"></button>
-        <button class="theme-btn"        data-t="light"  onclick="setTheme('light')"     title="Claro"></button>
-        <button class="theme-btn"        data-t="corporate" onclick="setTheme('corporate')" title="Azul corporativo"></button>
-      </div>
-      <div class="nav-div"></div>
-      <button class="nav-btn success" onclick="openModal('entrada')">＋ Entrada</button>
-      <button class="nav-btn danger" onclick="openModal('saida')">－ Saída</button>
-      <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);" id="nav-solic-btn" onclick="showPage('solicitacoes')">📋 Solicitações <span id="nav-solic-count" style="display:none;background:var(--purple);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:2px;"></span></button>
-      <button class="nav-btn primary" onclick="showPage('pedido')">🛒 Gerar Pedido</button>
-      <!-- Sino de notificações -->
-      <button class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" title="Notificações">
-        🔔
-        <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
-      </button>
-      <span class="nav-clock" id="clock"></span>
-    </div>
+    <span class="nav-clock" id="clock"></span>
   </header>
 
   <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileMenu()"></div>
@@ -150,6 +118,42 @@
   <div class="body">
     <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
+      <div class="sb-header">
+        <!-- Badge do usuário logado -->
+        <div class="user-badge" id="user-badge" onclick="showPage('auditoria')" title="Histórico de ações">
+          <div class="ub-avatar role-admin" id="ub-avatar">👤</div>
+          <div>
+            <div class="ub-name" id="ub-name">—</div>
+            <div class="ub-role" id="ub-role">—</div>
+          </div>
+        </div>
+        <div class="sb-status-row">
+          <div class="live"><span class="live-dot"></span>Ao vivo</div>
+          <span id="sync-status" style="font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;">☁ Sincronizado</span>
+          <!-- Sino de notificações -->
+          <button class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" title="Notificações">
+            🔔
+            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+          </button>
+        </div>
+        <!-- Seletor de tema -->
+        <div class="theme-selector" title="Trocar tema">
+          <span class="theme-lbl">Tema</span>
+          <button class="theme-btn active" data-t="dark"   onclick="setTheme('dark')"      title="Escuro"></button>
+          <button class="theme-btn"        data-t="light"  onclick="setTheme('light')"     title="Claro"></button>
+          <button class="theme-btn"        data-t="corporate" onclick="setTheme('corporate')" title="Azul corporativo"></button>
+        </div>
+        <button class="nav-btn sb-logout-btn" onclick="fazerLogout()">⏻ Sair</button>
+      </div>
+      <div class="sb-section">
+        <div class="sb-lbl">Ações rápidas</div>
+        <div class="sb-actions-grid">
+          <button class="sb-action-btn success" onclick="openModal('entrada')">＋ Entrada</button>
+          <button class="sb-action-btn danger" onclick="openModal('saida')">－ Saída</button>
+          <button class="sb-action-btn" id="nav-solic-btn" onclick="showPage('solicitacoes')">📋 Solicitações</button>
+          <button class="sb-action-btn primary" onclick="showPage('pedido')">🛒 Gerar Pedido</button>
+        </div>
+      </div>
       <div class="sb-section">
         <div class="sb-lbl">Painel</div>
         <button class="sb-item active" onclick="showPage('dashboard',this)"><span class="sb-icon">⬛</span>Dashboard</button>
@@ -3015,13 +3019,10 @@ function rejeitarSolic(id) {
 function renderSolicBadge() {
   const pend = SOLIC.filter(s => s.status === 'pendente').length;
   const nb = $('nb-solic');
-  const nc = $('nav-solic-count');
   if (pend > 0) {
     nb.textContent = pend; nb.style.display = 'inline';
-    nc.textContent = pend; nc.style.display = 'inline';
   } else {
     nb.style.display = 'none';
-    nc.style.display = 'none';
   }
 }
 
@@ -3904,14 +3905,14 @@ function aplicarPermissoes() {
   document.querySelectorAll('.btn-edit,.btn-del,.btn-aprovar,.btn-rejeitar,.ac-btn.g,.ac-btn.r').forEach(b=>{
     b.disabled=false;b.style.opacity='';b.style.display='';b.style.pointerEvents='';
   });
-  document.querySelectorAll('.nav-btn.success,.nav-btn.danger').forEach(b=>{
+  document.querySelectorAll('.nav-btn.success,.nav-btn.danger,.sb-action-btn.success,.sb-action-btn.danger').forEach(b=>{
     b.disabled=false;b.style.opacity='';b.style.pointerEvents='';
   });
   document.querySelectorAll('[onclick="openEditModal(null)"]').forEach(b=>{b.style.display='';});
 
   // ── Registrar Entrada/Saída ───────────────────────────────────
   if (!temPermissao('registrar_mov')) {
-    document.querySelectorAll('.nav-btn.success,.nav-btn.danger').forEach(b=>{
+    document.querySelectorAll('.nav-btn.success,.nav-btn.danger,.sb-action-btn.success,.sb-action-btn.danger').forEach(b=>{
       b.disabled=true;b.style.opacity='.3';b.style.pointerEvents='none';
     });
     document.querySelectorAll('.ac-btn.g,.ac-btn.r').forEach(b=>{
@@ -5292,7 +5293,7 @@ function closeMobileMenu() {
 }
 // Fecha automático ao clicar em qualquer item do menu
 document.addEventListener('click', (e) => {
-  if (e.target.closest('.sidebar .sb-item')) closeMobileMenu();
+  if (e.target.closest('.sidebar .sb-item, .sidebar .sb-action-btn, .sidebar #user-badge, .sidebar .sb-logout-btn')) closeMobileMenu();
 });
 
 // ═══════════════════════════════════════════════════════════════
