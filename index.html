@@ -270,27 +270,6 @@
             </div>
           </div>
 
-          <!-- CHARTS -->
-          <div class="charts-row">
-            <div class="chart-card">
-              <div class="cc-title">Consumo mensal estimado</div>
-              <div class="cc-sub">Unidades/mês por categoria</div>
-              <div class="bars-wrap" id="chart-consumo"></div>
-              <div class="bar-xlabels" id="chart-xlabels"></div>
-              <div style="display:flex;gap:12px;margin-top:8px;" id="chart-legend"></div>
-            </div>
-            <div class="chart-card">
-              <div class="cc-title">Curva ABC — valor</div>
-              <div class="cc-sub">% do valor total por classe</div>
-              <div class="donut-row" id="chart-abc"></div>
-            </div>
-            <div class="chart-card">
-              <div class="cc-title">Itens por fornecedor</div>
-              <div class="cc-sub">Distribuição do catálogo</div>
-              <div class="hbars" id="chart-forn"></div>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -1708,54 +1687,6 @@ function renderCatSummary(){
   }).join('');
 }
 
-// ── CHARTS ────────────────────────────────────────────────────
-function renderCharts(){
-  // Consumo mensal por categoria (simulado 6 meses)
-  const meses=['Jan','Fev','Mar','Abr','Mai','Jun'];
-  const base={Insumo:[38,42,35,48,41,45],Peça:[8,10,7,12,9,11],Consumível:[18,20,16,24,19,22]};
-  const cols={Insumo:'var(--blue)',Peça:'var(--purple)',Consumível:'var(--yellow)'};
-  const max=Math.max(...Object.values(base).flat());
-  const cats=Object.keys(base);
-  let bars='',xlbls='';
-  meses.forEach((m,i)=>{
-    bars+=`<div class="bar-g">`;
-    cats.forEach(c=>{ bars+=`<div class="b-bar" style="height:${Math.round(base[c][i]/max*100)}%;background:${cols[c]};" title="${m} ${c}: ${base[c][i]}"></div>`; });
-    bars+='</div>';
-    xlbls+=`<div class="bar-xl">${m}</div>`;
-  });
-  $('chart-consumo').innerHTML=bars;
-  $('chart-xlabels').innerHTML=xlbls;
-  $('chart-legend').innerHTML=cats.map(c=>`<div class="leg-item"><div class="leg-sq" style="background:${cols[c]};"></div><span style="font-size:10px;color:var(--t3);">${c}</span></div>`).join('');
-
-  // ABC donut
-  const abcD=[{cls:'A',pct:80,col:'#e0484a'},{cls:'B',pct:15,col:'#e8a020'},{cls:'C',pct:5,col:'#2db87a'}];
-  let off=0,circles='';
-  abcD.forEach(d=>{
-    const r=36,circ=2*Math.PI*r,dash=circ*d.pct/100,gap=circ-dash,rot=-90+360*off/100;
-    circles+=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${d.col}" stroke-width="16" stroke-dasharray="${dash} ${gap}" transform="rotate(${rot} 50 50)"/>`;
-    off+=d.pct;
-  });
-  $('chart-abc').innerHTML=`
-    <svg viewBox="0 0 100 100" width="90" height="90" style="flex-shrink:0;">
-      <circle cx="50" cy="50" r="36" fill="none" stroke="var(--s3)" stroke-width="16"/>
-      ${circles}
-    </svg>
-    <div class="legend-list">${abcD.map(d=>`<div class="leg-item"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct}%</div>`).join('')}</div>`;
-
-  // Fornecedores hbars
-  const fc={};
-  P.forEach(p=>{ const k=p.forn; fc[k]=(fc[k]||0)+1; });
-  const fSorted=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,7);
-  const fMax=fSorted[0][1];
-  const fCols=['#4a8ff5','#9b71e8','#e8a020','#2db87a','#e0484a','#e87040','#5cc8e8'];
-  $('chart-forn').innerHTML=fSorted.map(([f,n],i)=>`
-    <div class="hb">
-      <div class="hb-lbl">${f}</div>
-      <div class="hb-track"><div class="hb-fill" style="width:${Math.round(n/fMax*100)}%;background:${fCols[i]};"></div></div>
-      <div class="hb-val">${n}</div>
-    </div>`).join('');
-}
-
 // ── Filtro multi-select (checkbox dropdown) ────────────────────
 let _openFiltroDD = null;
 
@@ -2629,7 +2560,7 @@ function tick(){ const n=new Date(); $('clock').textContent=n.toLocaleDateString
 
 // ── MAIN RENDER ────────────────────────────────────────────────
 function renderAll(){
-  renderKPIs(); renderAlertList(); renderValList(); renderCatSummary(); renderCharts();
+  renderKPIs(); renderAlertList(); renderValList(); renderCatSummary();
   if (typeof _atualizarBadgeAuto === 'function') _atualizarBadgeAuto();
   if(currentPage==='pedido')          renderPedido();
   else if(currentPage==='auto')       renderAutoPedido();
