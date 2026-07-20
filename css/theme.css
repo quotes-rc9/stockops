@@ -13,7 +13,7 @@
   --red:#e0484a;--red-a:rgba(224,72,74,0.12);
   --purple:#9b71e8;--purple-a:rgba(155,113,232,0.12);
   --orange:#e87040;--orange-a:rgba(232,112,64,0.1);
-  --r4:4px;--r6:6px;--r8:8px;--r12:12px;
+  --r4:2px;--r6:2px;--r8:3px;--r12:4px;
 }
 
 /* ── Modo escuro automático: respeita prefers-color-scheme se
