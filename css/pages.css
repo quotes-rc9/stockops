@@ -383,6 +383,9 @@
   .ph { padding: 8px 10px; gap: 6px; }
   .ph-right { width: 100%; flex-wrap: wrap; }
   .fi { font-size: 12px; padding: 6px 8px; }
+  .filtro-bar { padding: 8px 10px; gap: 6px; width: 100%; }
+  .filtro-dd-btn { font-size: 11px; padding: 6px 8px; }
+  .filtro-dd-panel { min-width: 160px; max-width: calc(100vw - 40px); }
 
   .fi2 { padding: 10px 12px !important; font-size: 13px !important; }
   .nav-btn { min-height: 32px; }

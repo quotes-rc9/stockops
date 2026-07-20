@@ -25,6 +25,7 @@
 .ph-title{font-size:12px;font-weight:500;}
 .ph-sub{font-size:10px;color:var(--t3);}
 .ph-right{margin-left:auto;display:flex;gap:6px;align-items:center;}
+.filtro-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;background:var(--s1);border-bottom:1px solid var(--b1);flex-shrink:0;}
 
 /* ── Inputs (filtro / formulário) ──────────────────────────── */
 .fi{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r4);color:var(--t1);font-family:'Inter',sans-serif;font-size:11px;padding:4px 8px;outline:none;transition:border .12s;}
@@ -151,6 +152,30 @@ td{padding:7px 10px;font-size:11.5px;white-space:nowrap;vertical-align:middle;}
 .autocomplete-wrap{position:relative;flex:2;}
 .autocomplete-drop{position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);z-index:500;max-height:200px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .autocomplete-drop.open{display:block;}
+
+/* ── Filtro multi-select (checkbox dropdown) ─────────────────── */
+.filtro-dd{position:relative;}
+.filtro-dd-btn{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r4);color:var(--t2);font-family:'Inter',sans-serif;font-size:11px;padding:4px 8px;cursor:pointer;transition:all .12s;}
+.filtro-dd-btn:hover{border-color:var(--blue);color:var(--t1);}
+.filtro-dd-btn.open,.filtro-dd-btn.has-sel{border-color:var(--blue);color:var(--t1);}
+.filtro-dd-btn.open{background:var(--blue-a);}
+.filtro-dd-label{white-space:nowrap;}
+.filtro-dd-arrow{font-size:9px;color:var(--t3);transition:transform .12s;}
+.filtro-dd-btn.open .filtro-dd-arrow{transform:rotate(180deg);}
+.filtro-dd-badge{display:none;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;background:var(--blue);color:#fff;border-radius:8px;font-size:9px;font-weight:700;line-height:16px;}
+
+.filtro-dd-panel{position:absolute;top:calc(100% + 4px);left:0;min-width:180px;max-height:240px;overflow-y:auto;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:500;display:none;padding:4px;}
+.filtro-dd-panel.open{display:block;}
+
+.filtro-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r4);cursor:pointer;transition:all .12s;}
+.filtro-opt:hover{background:var(--blue-a);}
+.filtro-opt.checked{background:var(--green-a);}
+.filtro-opt span{font-size:11px;color:var(--t1);}
+.filtro-cb{width:14px;height:14px;flex-shrink:0;border:2px solid var(--b3);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;background:var(--s3);transition:all .12s;}
+.filtro-opt.checked .filtro-cb{background:var(--green);border-color:var(--green);color:#fff;}
+
+.filtro-dd-clear{margin-top:2px;padding:6px 8px;border-top:1px solid var(--b1);font-size:10px;color:var(--t3);text-align:center;cursor:pointer;border-radius:var(--r4);}
+.filtro-dd-clear:hover{background:var(--s3);color:var(--t1);}
 .ac-opt{padding:8px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--b1);}
 .ac-opt:last-child{border:none;}
 .ac-opt:hover{background:var(--s3);}

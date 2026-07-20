@@ -299,22 +299,51 @@
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
           <span class="ph-title">📦 Estoque completo</span>
           <div class="ph-right">
-            <input class="fi" id="f-search" placeholder="🔍 Buscar código ou nome..." style="width:200px;" oninput="renderEstoque()">
-            <select class="fi" id="f-cat" onchange="renderEstoque()">
-              <option value="">Todas as categorias</option>
-              <option>Insumo</option><option>Peça</option><option>Consumível</option>
-            </select>
-            <select class="fi" id="f-status" onchange="renderEstoque()">
-              <option value="">Todos os status</option>
-              <option>Crítico</option><option>Alerta</option><option>OK</option>
-            </select>
-            <select class="fi" id="f-forn" onchange="renderEstoque()">
-              <option value="">Todos os fornecedores</option>
-            </select>
-            <span style="font-size:10px;color:var(--t3);" id="est-count"></span>
             <button class="nav-btn primary" onclick="openEditModal(null)">＋ Novo Produto</button>
             <button class="btn-export" onclick="exportarEstoquePDF()">📄 PDF</button>
           </div>
+        </div>
+        <div class="filtro-bar">
+          <input class="fi" id="f-search" placeholder="🔍 Buscar código ou nome..." style="width:200px;" oninput="renderEstoque()">
+
+          <div class="filtro-dd" id="f-cat">
+            <button type="button" class="filtro-dd-btn" onclick="toggleFiltroDD('f-cat')">
+              <span class="filtro-dd-label">Categoria</span>
+              <span class="filtro-dd-badge">0</span>
+              <span class="filtro-dd-arrow">▾</span>
+            </button>
+            <div class="filtro-dd-panel">
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-cat',this)" data-value="Insumo"><div class="filtro-cb"></div><span>Insumo</span></div>
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-cat',this)" data-value="Peça"><div class="filtro-cb"></div><span>Peça</span></div>
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-cat',this)" data-value="Consumível"><div class="filtro-cb"></div><span>Consumível</span></div>
+              <div class="filtro-dd-clear" onclick="setFiltroSel('f-cat',[]);renderEstoque();">✕ Limpar</div>
+            </div>
+          </div>
+
+          <div class="filtro-dd" id="f-status">
+            <button type="button" class="filtro-dd-btn" onclick="toggleFiltroDD('f-status')">
+              <span class="filtro-dd-label">Status</span>
+              <span class="filtro-dd-badge">0</span>
+              <span class="filtro-dd-arrow">▾</span>
+            </button>
+            <div class="filtro-dd-panel">
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-status',this)" data-value="Crítico"><div class="filtro-cb"></div><span>Crítico</span></div>
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-status',this)" data-value="Alerta"><div class="filtro-cb"></div><span>Alerta</span></div>
+              <div class="filtro-opt" onclick="toggleFiltroOpt('f-status',this)" data-value="OK"><div class="filtro-cb"></div><span>OK</span></div>
+              <div class="filtro-dd-clear" onclick="setFiltroSel('f-status',[]);renderEstoque();">✕ Limpar</div>
+            </div>
+          </div>
+
+          <div class="filtro-dd" id="f-forn">
+            <button type="button" class="filtro-dd-btn" onclick="toggleFiltroDD('f-forn')">
+              <span class="filtro-dd-label">Fornecedor</span>
+              <span class="filtro-dd-badge">0</span>
+              <span class="filtro-dd-arrow">▾</span>
+            </button>
+            <div class="filtro-dd-panel"><!-- populado por populateFornSelect() --></div>
+          </div>
+
+          <span style="font-size:10px;color:var(--t3);margin-left:auto;" id="est-count"></span>
         </div>
         <!-- RESUMO INTELIGENTE DE FILTRO -->
         <div id="filtro-resumo-bar" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--s2);border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -1727,18 +1756,80 @@ function renderCharts(){
     </div>`).join('');
 }
 
+// ── Filtro multi-select (checkbox dropdown) ────────────────────
+let _openFiltroDD = null;
+
+function getFiltroSel(id){
+  const box = document.getElementById(id);
+  if(!box) return [];
+  return [...box.querySelectorAll('.filtro-opt.checked')].map(el=>el.dataset.value);
+}
+
+function updateFiltroBadge(id){
+  const box = document.getElementById(id);
+  if(!box) return;
+  const n = box.querySelectorAll('.filtro-opt.checked').length;
+  const badge = box.querySelector('.filtro-dd-badge');
+  if(badge){ badge.textContent = n; badge.style.display = n>0 ? 'inline-flex' : 'none'; }
+  box.querySelector('.filtro-dd-btn')?.classList.toggle('has-sel', n>0);
+}
+
+function setFiltroSel(id, valores){
+  const box = document.getElementById(id);
+  if(!box) return;
+  box.querySelectorAll('.filtro-opt').forEach(el=>{
+    const on = valores.includes(el.dataset.value);
+    el.classList.toggle('checked', on);
+    const cb = el.querySelector('.filtro-cb');
+    if(cb) cb.textContent = on ? '✓' : '';
+  });
+  updateFiltroBadge(id);
+}
+
+function toggleFiltroOpt(id, el){
+  el.classList.toggle('checked');
+  const cb = el.querySelector('.filtro-cb');
+  if(cb) cb.textContent = el.classList.contains('checked') ? '✓' : '';
+  updateFiltroBadge(id);
+  renderEstoque();
+}
+
+function toggleFiltroDD(id){
+  const box = document.getElementById(id);
+  if(!box) return;
+  const panel = box.querySelector('.filtro-dd-panel');
+  const wasOpen = panel.classList.contains('open');
+  document.querySelectorAll('.filtro-dd-panel.open').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.filtro-dd-btn.open').forEach(b=>b.classList.remove('open'));
+  if(!wasOpen){
+    panel.classList.add('open');
+    box.querySelector('.filtro-dd-btn')?.classList.add('open');
+    _openFiltroDD = id;
+  } else {
+    _openFiltroDD = null;
+  }
+}
+
+document.addEventListener('click', e => {
+  if (_openFiltroDD && !e.target.closest('#'+_openFiltroDD)) {
+    document.querySelectorAll('.filtro-dd-panel.open').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.filtro-dd-btn.open').forEach(b=>b.classList.remove('open'));
+    _openFiltroDD = null;
+  }
+});
+
 // ── ESTOQUE TABLE ─────────────────────────────────────────────
 function renderEstoque(){
   const s=(document.getElementById('f-search')?.value||'').toLowerCase();
-  const fc=document.getElementById('f-cat')?.value||'';
-  const fs=document.getElementById('f-status')?.value||'';
-  const ff=document.getElementById('f-forn')?.value||'';
-  const filtroAtivo = !!(s||fc||fs||ff);
+  const fc=getFiltroSel('f-cat');
+  const fs=getFiltroSel('f-status');
+  const ff=getFiltroSel('f-forn');
+  const filtroAtivo = !!(s || fc.length || fs.length || ff.length);
 
   const f=P.filter(p=>{
-    if(fc&&p.cat!==fc) return false;
-    if(fs&&status(p)!==fs) return false;
-    if(ff&&p.forn!==ff) return false;
+    if(fc.length&&!fc.includes(p.cat)) return false;
+    if(fs.length&&!fs.includes(status(p))) return false;
+    if(ff.length&&!ff.includes(p.forn)) return false;
     if(s&&!p.nome.toLowerCase().includes(s)&&!p.cod.toLowerCase().includes(s)) return false;
     return true;
   });
@@ -1815,18 +1906,29 @@ function renderEstoque(){
 }
 
 function limparFiltros(){
-  const ids=['f-search','f-cat','f-status','f-forn'];
-  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const el = document.getElementById('f-search');
+  if(el) el.value = '';
+  ['f-cat','f-status','f-forn'].forEach(id=>setFiltroSel(id, []));
+  document.querySelectorAll('.filtro-dd-panel.open').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.filtro-dd-btn.open').forEach(b=>b.classList.remove('open'));
+  _openFiltroDD = null;
   renderEstoque();
 }
 
 function populateFornSelect(){
-  const sel=document.getElementById('f-forn');
-  if(!sel) return;
-  // Fornecedores reais do sistema
-  const FORNS_FIXOS = ['MIMAKI Brasil', 'Roland', 'Local/Mercado'];
-  sel.innerHTML='<option value="">Todos os fornecedores</option>'+
-    FORNS_FIXOS.map(f=>`<option>${f}</option>`).join('');
+  const box = document.getElementById('f-forn');
+  if(!box) return;
+  const panel = box.querySelector('.filtro-dd-panel');
+  if(!panel) return;
+  const preSelecionados = getFiltroSel('f-forn');
+  const fornecedores = [...new Set(P.map(p=>p.forn).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  panel.innerHTML = fornecedores.map(f=>{
+    const on = preSelecionados.includes(f);
+    return `<div class="filtro-opt ${on?'checked':''}" onclick="toggleFiltroOpt('f-forn',this)" data-value="${f}">
+      <div class="filtro-cb">${on?'✓':''}</div><span>${f}</span>
+    </div>`;
+  }).join('') + `<div class="filtro-dd-clear" onclick="setFiltroSel('f-forn',[]);renderEstoque();">✕ Limpar</div>`;
+  updateFiltroBadge('f-forn');
 }
 
 // ── VALIDADE PAGE ─────────────────────────────────────────────
@@ -2463,21 +2565,17 @@ function kpiClick(pagina, filtroTipo, filtroValor) {
   if (filtroTipo && filtroValor) {
     setTimeout(() => {
       if (filtroTipo === 'status') {
-        const sel = document.getElementById('f-status');
-        if (sel) { sel.value = filtroValor; renderEstoque(); }
+        const box = document.getElementById('f-status');
+        if (box) { setFiltroSel('f-status', [filtroValor]); renderEstoque(); }
       }
       if (filtroTipo === 'cat') {
-        const sel = document.getElementById('f-cat');
-        if (sel) { sel.value = filtroValor; renderEstoque(); }
+        const box = document.getElementById('f-cat');
+        if (box) { setFiltroSel('f-cat', [filtroValor]); renderEstoque(); }
       }
     }, 100);
   } else if (pagina === 'estoque') {
     // Limpa filtros ao ver estoque completo
-    setTimeout(() => {
-      const ids = ['f-search','f-cat','f-status','f-forn'];
-      ids.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-      renderEstoque();
-    }, 100);
+    setTimeout(() => { limparFiltros(); }, 100);
   }
 
   // Feedback visual no KPI clicado
@@ -4896,13 +4994,13 @@ function exportarPDF(titulo, colunas, linhas, opcoes = {}) {
 // ── Exportar Estoque PDF ─────────────────────────────────────
 function exportarEstoquePDF() {
   const s = (document.getElementById('f-search')?.value || '').toLowerCase();
-  const fc = document.getElementById('f-cat')?.value || '';
-  const fs = document.getElementById('f-status')?.value || '';
-  const ff = document.getElementById('f-forn')?.value || '';
+  const fc = getFiltroSel('f-cat');
+  const fs = getFiltroSel('f-status');
+  const ff = getFiltroSel('f-forn');
   const f = P.filter(p => {
-    if(fc&&p.cat!==fc) return false;
-    if(fs&&status(p)!==fs) return false;
-    if(ff&&p.forn!==ff) return false;
+    if(fc.length&&!fc.includes(p.cat)) return false;
+    if(fs.length&&!fs.includes(status(p))) return false;
+    if(ff.length&&!ff.includes(p.forn)) return false;
     if(s&&!p.nome.toLowerCase().includes(s)&&!p.cod.toLowerCase().includes(s)) return false;
     return true;
   });
