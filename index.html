@@ -1817,7 +1817,10 @@ function renderEstoque(){
       : sBadge(st);
     return `<tr>
       <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
-      <td style="font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;" title="${p.funcao||''}">${p.nome}${mimakiTag(p)}</td>
+      <td style="max-width:240px;">
+        <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}${mimakiTag(p)}</div>
+        ${p.funcao ? `<div style="font-size:9.5px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;" title="${p.funcao}">${p.funcao}</div>` : ''}
+      </td>
       <td>${catBadge(p.cat)}</td>
       <td style="color:var(--t3);font-size:11px;">${p.forn}</td>
       <td style="text-align:center;font-weight:700;color:${stColor};">${p.estoque}</td>
