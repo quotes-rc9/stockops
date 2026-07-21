@@ -207,19 +207,6 @@
 .audit-meta{font-size:10px;color:var(--t3);margin-top:2px;}
 .audit-time{font-size:9px;color:var(--t4);flex-shrink:0;margin-top:3px;font-family:'JetBrains Mono',monospace;}
 
-/* ── Relatórios ────────────────────────────────────────────── */
-.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;overflow:hidden;padding:0 14px 14px;}
-.report-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);display:flex;flex-direction:column;overflow:hidden;}
-.report-head{padding:10px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;}
-.report-title{font-size:12px;font-weight:600;}
-.report-body{flex:1;overflow-y:auto;}
-.report-row{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--b1);}
-.report-row:last-child{border:none;}
-.report-row:hover{background:var(--s2);}
-.report-rank{width:18px;height:18px;border-radius:50%;background:var(--s3);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--t3);flex-shrink:0;}
-.report-bar-wrap{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
-.report-bar{height:100%;border-radius:2px;transition:width .3s;}
-.report-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--t1);flex-shrink:0;min-width:80px;text-align:right;}
 
 /* ── User cards (gerenciamento) ────────────────────────────── */
 .user-card{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r8);padding:16px;display:flex;flex-direction:column;gap:10px;position:relative;transition:border-color .15s;}

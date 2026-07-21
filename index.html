@@ -165,7 +165,6 @@
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Compras</div>
-        <button class="sb-item" onclick="showPage('auto',this)"><span class="sb-icon">🤖</span>Pedido Automático<span class="sb-badge sbb-r" id="nb-auto" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('pedido',this)"><span class="sb-icon">🛒</span>Pedido de Compra</button>
         <button class="sb-item" onclick="showPage('historico',this)"><span class="sb-icon">📜</span>Histórico de Pedidos<span class="sb-badge sbb-p" id="nb-hist" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('abc',this)"><span class="sb-icon">📊</span>Análise ABC</button>
@@ -179,7 +178,6 @@
         <div class="sb-lbl">Sistema</div>
         <button class="sb-item" onclick="showPage('notificacoes',this)"><span class="sb-icon">🔔</span>Notificações<span class="sb-badge sbb-r" id="nb-notif" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('auditoria',this)"><span class="sb-icon">📋</span>Histórico / Auditoria</button>
-        <button class="sb-item" onclick="showPage('relatorios',this)"><span class="sb-icon">📊</span>Relatórios</button>
         <button class="sb-item admin-only" onclick="showPage('usuarios',this)"><span class="sb-icon">👥</span>Gerenciar Usuários</button>
         <button class="sb-item" onclick="exportarBackup()"><span class="sb-icon">💾</span>Exportar backup</button>
       </div>
@@ -225,11 +223,11 @@
               <div class="kpi-sub">Unidades com validade próxima</div>
               <div class="kpi-click-hint">Clique para ver validades →</div>
             </div>
-            <div class="kpi green" onclick="kpiClick('relatorios','','')" title="Ver relatório financeiro">
+            <div class="kpi green" onclick="kpiClick('estoque','','')" title="Ver estoque completo">
               <div class="kpi-lbl">💰 Valor em estoque</div>
               <div class="kpi-val" id="k-valor" style="font-size:16px;">—</div>
               <div class="kpi-sub">Custo total do inventário</div>
-              <div class="kpi-click-hint">Clique para ver relatório →</div>
+              <div class="kpi-click-hint">Clique para ver estoque →</div>
             </div>
             <div class="kpi" style="border-top:2px solid var(--purple);background:var(--s1);" onclick="kpiClick('estoque','','')" title="Ver todos os produtos">
               <div class="kpi-lbl" style="color:var(--purple);">📊 Itens cadastrados</div>
@@ -517,57 +515,6 @@
               </table>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- ══ PEDIDO AUTOMÁTICO ════════════════════════════════ -->
-      <div class="page" id="page-auto">
-        <div class="ph" style="flex-shrink:0;padding:10px 14px;flex-wrap:wrap;gap:8px;">
-          <span class="ph-title">🤖 Pedido Automático</span>
-          <span class="ph-sub">Identifica itens críticos e em alerta e sugere quantidades de compra</span>
-          <div class="ph-right">
-            <select class="fi" id="auto-filter-cat" onchange="renderAutoPedido()" style="font-size:11px;">
-              <option value="">Todas categorias</option>
-              <option value="Insumo">Insumo</option>
-              <option value="Peça">Peça</option>
-              <option value="Consumível">Consumível</option>
-            </select>
-            <select class="fi" id="auto-filter-forn" onchange="renderAutoPedido()" style="font-size:11px;">
-              <option value="">Todos fornecedores</option>
-            </select>
-            <select class="fi" id="auto-filter-urg" onchange="renderAutoPedido()" style="font-size:11px;">
-              <option value="">Críticos + Alertas</option>
-              <option value="Crítico">Só Críticos</option>
-              <option value="Alerta">Só Alertas</option>
-            </select>
-            <button class="btn-export" onclick="renderAutoPedido()" style="background:var(--blue-a);border-color:rgba(74,143,245,.3);color:var(--blue);">🔄 Atualizar</button>
-          </div>
-        </div>
-
-        <!-- KPI cards mini -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px;flex-shrink:0;">
-          <div class="kpi red" style="cursor:default;padding:10px 12px;"><div class="kpi-lbl">Itens críticos</div><div class="kpi-val" id="auto-kpi-crit">0</div></div>
-          <div class="kpi yellow" style="cursor:default;padding:10px 12px;"><div class="kpi-lbl">Itens em alerta</div><div class="kpi-val" id="auto-kpi-alert">0</div></div>
-          <div class="kpi blue" style="cursor:default;padding:10px 12px;"><div class="kpi-lbl">Fornecedores</div><div class="kpi-val" id="auto-kpi-forn">0</div></div>
-          <div class="kpi green" style="cursor:default;padding:10px 12px;"><div class="kpi-lbl">Total estimado</div><div class="kpi-val" id="auto-kpi-total" style="font-size:18px;">R$ 0,00</div></div>
-        </div>
-
-        <!-- Ações em massa -->
-        <div class="ph" style="flex-shrink:0;padding:8px 14px;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);background:var(--s2);gap:8px;flex-wrap:wrap;">
-          <button class="nav-btn" onclick="autoMarcarTodos(true)" style="font-size:10.5px;">☑ Marcar todos</button>
-          <button class="nav-btn" onclick="autoMarcarTodos(false)" style="font-size:10.5px;">☐ Desmarcar todos</button>
-          <span style="font-size:10.5px;color:var(--t3);" id="auto-selecionados">0 itens selecionados</span>
-          <div class="ph-right">
-            <button class="btn-export" onclick="autoExportarCSV()">⬇ Excel/CSV</button>
-            <button class="btn-export" onclick="autoExportarPDF()">📄 PDF</button>
-            <button class="nav-btn success" onclick="autoEnviarParaCarrinho()" style="font-size:11px;">🛒 Enviar p/ Carrinho</button>
-            <button class="btn-wpp" onclick="autoEnviarWhatsApp()">💬 WhatsApp</button>
-          </div>
-        </div>
-
-        <!-- Tabela agrupada por fornecedor -->
-        <div class="tbl-wrap" style="flex:1;padding:0 14px 14px;">
-          <div id="auto-grupos"></div>
         </div>
       </div>
 
@@ -864,60 +811,6 @@
             </tr></thead>
             <tbody id="audit-tbody"></tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- ══ RELATÓRIOS ════════════════════════════════════════ -->
-      <div class="page" id="page-relatorios">
-        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">📊 Relatórios Automáticos</span>
-          <div class="ph-right">
-            <select class="fi" id="rep-forn-filter" onchange="renderRelatorios()" style="width:160px;">
-              <option value="">Todos os fornecedores</option>
-              <option value="MIMAKI Brasil">MIMAKI Brasil</option>
-              <option value="Roland">Roland</option>
-            </select>
-            <button class="btn-export" onclick="exportarRelatorioCSV('todos')">⬇ Exportar CSV</button>
-          </div>
-        </div>
-        <div class="report-grid">
-
-          <!-- Duração estimada em estoque -->
-          <div class="report-card">
-            <div class="report-head">
-              <span class="report-title">⏱ Tempo de duração em estoque</span>
-              <button class="btn-export" onclick="exportarRelatorioCSV('duracao')">⬇ CSV</button>
-            </div>
-            <div class="report-body" id="rep-duracao"></div>
-          </div>
-
-          <!-- Valor por categoria -->
-          <div class="report-card">
-            <div class="report-head">
-              <span class="report-title">💰 Valor em estoque por categoria</span>
-              <button class="btn-export" onclick="exportarRelatorioCSV('categoria')">⬇ CSV</button>
-            </div>
-            <div class="report-body" id="rep-categoria"></div>
-          </div>
-
-          <!-- Itens críticos melhorado -->
-          <div class="report-card">
-            <div class="report-head">
-              <span class="report-title">⚠ Itens que precisam de reposição</span>
-              <button class="btn-export" onclick="exportarRelatorioCSV('criticos')">⬇ CSV</button>
-            </div>
-            <div class="report-body" id="rep-criticos"></div>
-          </div>
-
-          <!-- Consumo registrado -->
-          <div class="report-card">
-            <div class="report-head">
-              <span class="report-title">📈 Consumo mensal estimado</span>
-              <span style="font-size:10px;color:var(--t4);">baseado nas movimentações</span>
-            </div>
-            <div class="report-body" id="rep-consumo"></div>
-          </div>
-
         </div>
       </div>
 
@@ -2056,307 +1949,6 @@ function renderPrevisao(){
   }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PEDIDO AUTOMÁTICO — Sugestão por fornecedor de itens em alerta/crítico
-// ═══════════════════════════════════════════════════════════════
-
-// Estado: { cod: { incluido: bool, qtySugerida: number } }
-window._autoState = window._autoState || {};
-
-// Atualiza apenas o badge da sidebar (chamada em renderAll, independente da página atual)
-function _atualizarBadgeAuto() {
-  const badge = document.getElementById('nb-auto');
-  if (!badge) return;
-  const total = P.filter(p => status(p) !== 'OK').length;
-  if (total > 0) { badge.style.display = ''; badge.textContent = total; }
-  else { badge.style.display = 'none'; }
-}
-
-// Calcula quantidade sugerida pra trazer ao ponto de reposição + buffer de 1 mês
-function _autoQtdSugerida(p) {
-  const alvo = Math.max(p.repo || 0, p.min || 0);
-  const buffer = Math.ceil(p.consumo || 0); // 1 mês de consumo
-  const sug = Math.max(1, (alvo - p.estoque) + buffer);
-  return sug;
-}
-
-function _autoItensCandidatos() {
-  const ft = (document.getElementById('auto-filter-cat')?.value) || '';
-  const ff = (document.getElementById('auto-filter-forn')?.value) || '';
-  const fu = (document.getElementById('auto-filter-urg')?.value) || '';
-  return P.filter(p => {
-    const st = status(p);
-    if (st === 'OK') return false;
-    if (fu && st !== fu) return false;
-    if (ft && p.cat !== ft) return false;
-    if (ff && p.forn !== ff) return false;
-    return true;
-  });
-}
-
-function renderAutoPedido() {
-  const cont = document.getElementById('auto-grupos');
-  if (!cont) return;
-
-  // Popula select de fornecedores (todos que têm itens em alerta/crítico)
-  const fornSel = document.getElementById('auto-filter-forn');
-  if (fornSel) {
-    const fornsComAlerta = [...new Set(P.filter(p => status(p) !== 'OK').map(p => p.forn))].sort();
-    const cur = fornSel.value;
-    fornSel.innerHTML = '<option value="">Todos fornecedores</option>' +
-      fornsComAlerta.map(f => `<option${cur===f?' selected':''}>${f}</option>`).join('');
-  }
-
-  const itens = _autoItensCandidatos();
-
-  // Inicializa estado para novos itens (default: incluido = true)
-  itens.forEach(p => {
-    if (!window._autoState[p.cod]) {
-      window._autoState[p.cod] = { incluido: true, qtySugerida: _autoQtdSugerida(p) };
-    }
-  });
-
-  // Agrupa por fornecedor
-  const grupos = {};
-  itens.forEach(p => {
-    const f = p.forn || '(sem fornecedor)';
-    if (!grupos[f]) grupos[f] = [];
-    grupos[f].push(p);
-  });
-
-  // KPIs
-  const nCrit = itens.filter(p => status(p) === 'Crítico').length;
-  const nAlert = itens.filter(p => status(p) === 'Alerta').length;
-  const nForn = Object.keys(grupos).length;
-  const totalSelecionado = itens.reduce((acc, p) => {
-    const st = window._autoState[p.cod];
-    if (!st?.incluido) return acc;
-    return acc + (st.qtySugerida * (p.custo || 0));
-  }, 0);
-  if ($('auto-kpi-crit'))  $('auto-kpi-crit').textContent  = nCrit;
-  if ($('auto-kpi-alert')) $('auto-kpi-alert').textContent = nAlert;
-  if ($('auto-kpi-forn'))  $('auto-kpi-forn').textContent  = nForn;
-  if ($('auto-kpi-total')) $('auto-kpi-total').textContent = R(totalSelecionado);
-
-  // Badge da sidebar é atualizado pela _atualizarBadgeAuto() chamada em renderAll
-  _atualizarBadgeAuto();
-
-  // Atualiza contagem de selecionados
-  _autoAtualizarSelecionados();
-
-  if (!itens.length) {
-    cont.innerHTML = `<div style="text-align:center;padding:48px 16px;color:var(--green);font-size:13px;">
-      ✅ Nenhum item em alerta ou crítico no momento — estoque saudável!
-    </div>`;
-    return;
-  }
-
-  // Renderiza grupo a grupo
-  cont.innerHTML = Object.keys(grupos).sort().map(forn => {
-    const lista = grupos[forn].sort((a,b) => {
-      // Críticos primeiro, depois ordem alfabética
-      const sa = status(a), sb = status(b);
-      if (sa !== sb) return sa === 'Crítico' ? -1 : 1;
-      return a.nome.localeCompare(b.nome);
-    });
-    const totalForn = lista.reduce((acc, p) => {
-      const st = window._autoState[p.cod];
-      if (!st?.incluido) return acc;
-      return acc + (st.qtySugerida * (p.custo || 0));
-    }, 0);
-    const linhas = lista.map(p => {
-      const st = window._autoState[p.cod];
-      const stProd = status(p);
-      const stClass = stProd === 'Crítico' ? 'b-crit' : 'b-warn';
-      const stDot = stProd === 'Crítico' ? 'bd-crit' : 'bd-warn';
-      const subTotal = (st.qtySugerida || 0) * (p.custo || 0);
-      return `<tr data-cod="${p.cod}">
-        <td style="text-align:center;width:30px;">
-          <input type="checkbox" ${st.incluido ? 'checked' : ''} onchange="autoToggle('${p.cod}', this.checked)" style="cursor:pointer;width:16px;height:16px;">
-        </td>
-        <td class="mono" style="color:var(--blue);font-size:10.5px;">${p.cod}</td>
-        <td style="font-weight:500;font-size:11.5px;">${p.nome}</td>
-        <td style="text-align:center;">${catBadge(p.cat)}</td>
-        <td style="text-align:center;"><span class="badge ${stClass}"><span class="b-dot ${stDot}"></span>${stProd}</span></td>
-        <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t2);">${p.estoque}</td>
-        <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);">${p.min}/${p.repo}</td>
-        <td style="text-align:center;">
-          <input type="number" min="1" value="${st.qtySugerida}" class="qty-input" onchange="autoSetQty('${p.cod}', this.value)">
-        </td>
-        <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${R(p.custo || 0)}</td>
-        <td style="text-align:right;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:11.5px;">${R(subTotal)}</td>
-      </tr>`;
-    }).join('');
-    return `<div style="margin-top:14px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);overflow:hidden;">
-      <div style="padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div>
-          <span style="font-weight:600;font-size:12px;">📦 ${forn}</span>
-          <span style="font-size:10.5px;color:var(--t3);margin-left:8px;">${lista.length} item${lista.length>1?'s':''}</span>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span style="font-size:10px;color:var(--t3);">Subtotal:</span>
-          <span style="font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:13px;">${R(totalForn)}</span>
-        </div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;">
-          <thead><tr>
-            <th style="width:30px;"></th>
-            <th>Código</th><th>Produto</th>
-            <th style="text-align:center;">Cat</th>
-            <th style="text-align:center;">Status</th>
-            <th style="text-align:center;">Estoque</th>
-            <th style="text-align:center;">Min/Repo</th>
-            <th style="text-align:center;">Qtd sugerida</th>
-            <th style="text-align:right;">Custo un.</th>
-            <th style="text-align:right;">Subtotal</th>
-          </tr></thead>
-          <tbody>${linhas}</tbody>
-        </table>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function _autoAtualizarSelecionados() {
-  const itens = _autoItensCandidatos();
-  const n = itens.filter(p => window._autoState[p.cod]?.incluido).length;
-  const el = $('auto-selecionados');
-  if (el) el.textContent = `${n} item${n!==1?'s':''} selecionado${n!==1?'s':''}`;
-}
-
-function autoToggle(cod, incluido) {
-  if (!window._autoState[cod]) window._autoState[cod] = { incluido: true, qtySugerida: 1 };
-  window._autoState[cod].incluido = incluido;
-  renderAutoPedido();
-}
-
-function autoSetQty(cod, qty) {
-  const q = Math.max(1, parseInt(qty) || 1);
-  if (!window._autoState[cod]) window._autoState[cod] = { incluido: true, qtySugerida: q };
-  window._autoState[cod].qtySugerida = q;
-  renderAutoPedido();
-}
-
-function autoMarcarTodos(marcar) {
-  _autoItensCandidatos().forEach(p => {
-    if (!window._autoState[p.cod]) window._autoState[p.cod] = { incluido: marcar, qtySugerida: _autoQtdSugerida(p) };
-    else window._autoState[p.cod].incluido = marcar;
-  });
-  renderAutoPedido();
-}
-
-function _autoItensSelecionados() {
-  return _autoItensCandidatos()
-    .filter(p => window._autoState[p.cod]?.incluido)
-    .map(p => ({
-      ...p,
-      qtySugerida: window._autoState[p.cod].qtySugerida,
-      subtotal: window._autoState[p.cod].qtySugerida * (p.custo || 0)
-    }));
-}
-
-// ── Enviar para o carrinho de pedido manual ──────────────────
-function autoEnviarParaCarrinho() {
-  const sel = _autoItensSelecionados();
-  if (!sel.length) { toast('Nenhum item selecionado.', 'error'); return; }
-  if (!confirm(`Adicionar ${sel.length} item(ns) ao carrinho de Pedido de Compra?`)) return;
-  // Limpa carrinho atual (opcional) — manter aditivo por enquanto
-  sel.forEach(p => {
-    // Reaproveita estrutura do CART existente
-    if (typeof CART !== 'undefined') {
-      // Evita duplicação: se já existe, atualiza quantidade
-      const ex = CART.find(c => c.cod === p.cod && !c.livre);
-      if (ex) {
-        ex.qty = p.qtySugerida;
-      } else {
-        CART.push({
-          cod: p.cod, nome: p.nome, forn: p.forn,
-          qty: p.qtySugerida, custo: p.custo || 0, livre: false
-        });
-      }
-    }
-  });
-  toast(`✅ ${sel.length} itens adicionados ao carrinho`, 'success');
-  showPage('pedido');
-  if (typeof renderCart === 'function') renderCart();
-}
-
-// ── Exportar CSV (compatível com Excel) ──────────────────────
-function autoExportarCSV() {
-  const sel = _autoItensSelecionados();
-  if (!sel.length) { toast('Nenhum item selecionado.', 'error'); return; }
-  // BOM UTF-8 + separador ; (padrão Excel pt-BR)
-  let csv = '﻿Fornecedor;Código;Produto;Categoria;Status;Estoque atual;Mín;Reposição;Qtd sugerida;Custo unitário (R$);Subtotal (R$)\n';
-  sel.sort((a,b) => (a.forn||'').localeCompare(b.forn||'') || a.nome.localeCompare(b.nome));
-  let total = 0;
-  sel.forEach(p => {
-    const st = status(p);
-    total += p.subtotal;
-    csv += `"${p.forn||''}";"${p.cod}";"${p.nome.replace(/"/g,'""')}";"${p.cat}";"${st}";${p.estoque};${p.min};${p.repo};${p.qtySugerida};${(p.custo||0).toFixed(2).replace('.',',')};${p.subtotal.toFixed(2).replace('.',',')}\n`;
-  });
-  csv += `;;;;;;;;TOTAL;;${total.toFixed(2).replace('.',',')}\n`;
-  const nome = `stockops_pedido_automatico_${new Date().toISOString().slice(0,10)}.csv`;
-  downloadCSV(nome, csv);
-  registrarAudit('pedido', `Pedido automático exportado (CSV)`, `${sel.length} itens · Total: ${R(total)}`, '⬇');
-}
-
-// ── Exportar PDF agrupado por fornecedor ─────────────────────
-function autoExportarPDF() {
-  const sel = _autoItensSelecionados();
-  if (!sel.length) { toast('Nenhum item selecionado.', 'error'); return; }
-  // Agrupa por fornecedor para o título visual
-  const grupos = {};
-  sel.forEach(p => { (grupos[p.forn||'(sem fornecedor)'] = grupos[p.forn||'(sem fornecedor)'] || []).push(p); });
-  const linhas = [];
-  let total = 0;
-  Object.keys(grupos).sort().forEach(forn => {
-    grupos[forn].forEach(p => {
-      total += p.subtotal;
-      linhas.push([
-        forn,
-        p.cod,
-        p.nome,
-        p.cat,
-        status(p),
-        String(p.estoque),
-        `${p.min}/${p.repo}`,
-        String(p.qtySugerida),
-        R(p.custo || 0),
-        R(p.subtotal)
-      ]);
-    });
-  });
-  // Linha total
-  linhas.push(['', '', '', '', '', '', '', 'TOTAL', '', R(total)]);
-  exportarPDF('Pedido Automático', ['Fornecedor','Código','Produto','Cat.','Status','Estoque','Min/Rep','Qtd','Custo un.','Subtotal'], linhas);
-}
-
-// ── Envia pelo WhatsApp (agrupado por fornecedor) ────────────
-function autoEnviarWhatsApp() {
-  const sel = _autoItensSelecionados();
-  if (!sel.length) { toast('Nenhum item selecionado.', 'error'); return; }
-  const grupos = {};
-  sel.forEach(p => { (grupos[p.forn||'(sem fornecedor)'] = grupos[p.forn||'(sem fornecedor)'] || []).push(p); });
-  let msg = `*PEDIDO DE COMPRA — STOCKOPS*\n`;
-  msg += `_${new Date().toLocaleDateString('pt-BR')} — ${CURRENT_USER?.nome || 'Sistema'}_\n\n`;
-  let total = 0;
-  Object.keys(grupos).sort().forEach(forn => {
-    msg += `*━━ ${forn} ━━*\n`;
-    grupos[forn].forEach(p => {
-      total += p.subtotal;
-      msg += `• ${p.qtySugerida}x ${p.nome} _(${p.cod})_ — ${R(p.subtotal)}\n`;
-    });
-    msg += '\n';
-  });
-  msg += `*TOTAL: ${R(total)}*`;
-  // Copia pra clipboard e abre WhatsApp Web
-  navigator.clipboard?.writeText(msg).then(() => {
-    toast('Mensagem copiada! Abrindo WhatsApp...', 'success');
-  });
-  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-  registrarAudit('pedido', `Pedido automático enviado via WhatsApp`, `${sel.length} itens · Total: ${R(total)}`, '💬');
-}
 
 // ── MODAL ─────────────────────────────────────────────────────
 function openModal(tipo){
@@ -2555,7 +2147,6 @@ function showPage(id, el){
   if(el) el.classList.add('active');
   currentPage=id;
   if(id==='pedido')          renderPedido();
-  if(id==='auto')            renderAutoPedido();
   if(id==='abc')             renderABC();
   if(id==='previsao')        renderPrevisao();
   if(id==='validade')        renderValidade();
@@ -2565,7 +2156,6 @@ function showPage(id, el){
   if(id==='solicitacoes')    renderSolicitacoes();
   if(id==='notificacoes')    renderNotifPage();
   if(id==='auditoria')       renderAuditoria();
-  if(id==='relatorios')      renderRelatorios();
   if(id==='historico')       renderHistorico();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
@@ -2659,9 +2249,7 @@ function renderCharts(){
 
 function renderAll(){
   renderKPIs(); renderAlertList(); renderValList(); renderCatSummary(); renderCharts();
-  if (typeof _atualizarBadgeAuto === 'function') _atualizarBadgeAuto();
   if(currentPage==='pedido')          renderPedido();
-  else if(currentPage==='auto')       renderAutoPedido();
   else if(currentPage==='abc')        renderABC();
   else if(currentPage==='previsao')   renderPrevisao();
   else if(currentPage==='validade')   renderValidade();
@@ -2671,7 +2259,6 @@ function renderAll(){
   else if(currentPage==='solicitacoes') renderSolicitacoes();
   else if(currentPage==='notificacoes') renderNotifPage();
   else if(currentPage==='auditoria')  renderAuditoria();
-  else if(currentPage==='relatorios') renderRelatorios();
   else if(currentPage==='historico')  renderHistorico();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
   if(typeof renderHistBadge === 'function') renderHistBadge();
@@ -4019,9 +3606,7 @@ function aplicarPermissoes() {
     'page-mov':          'ver_mov',
     'page-solicitacoes': 'ver_solicitacoes',
     'page-pedido':       'ver_pedidos',
-    'page-auto':         'ver_pedidos',
     'page-historico':    'ver_pedidos',
-    'page-relatorios':   'ver_relatorios',
     'page-abc':          'ver_abc',
     'page-previsao':     'ver_previsao',
     'page-auditoria':    'ver_auditoria',
@@ -4121,8 +3706,7 @@ const TODAS_PERMISSOES = [
   { id:'ver_alertas',        icon:'🚨', label:'Ver Alertas',              desc:'Itens críticos e em alerta' },
   { id:'ver_mov',            icon:'↕',  label:'Ver Movimentações',        desc:'Histórico de entradas e saídas' },
   { id:'ver_solicitacoes',   icon:'📋', label:'Ver Solicitações',         desc:'Solicitações pendentes e histórico' },
-  { id:'ver_pedidos',        icon:'🛒', label:'Ver Pedidos de Compra',    desc:'Pedidos automáticos e manuais' },
-  { id:'ver_relatorios',     icon:'📈', label:'Ver Relatórios',           desc:'Relatórios e exportação CSV' },
+  { id:'ver_pedidos',        icon:'🛒', label:'Ver Pedidos de Compra',    desc:'Pedidos manuais' },
   { id:'ver_abc',            icon:'🏷', label:'Ver Análise ABC',          desc:'Classificação de produtos' },
   { id:'ver_previsao',       icon:'🔮', label:'Ver Previsão de Compra',   desc:'Previsão e sugestões automáticas' },
   { id:'registrar_mov',      icon:'✏',  label:'Registrar Entrada/Saída',  desc:'Movimentar estoque diretamente' },
@@ -4739,161 +4323,6 @@ function exportarAuditCSV() {
     `"${a.ts}","${a.user}","${ROLE_LABELS[a.role]||a.role}","${a.acao}","${a.detalhe}","${a.tipo}"`
   ).join('\n');
   downloadCSV('stockops_auditoria.csv', header + rows);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MÓDULO: RELATÓRIOS AUTOMÁTICOS
-// ═══════════════════════════════════════════════════════════════
-function renderRelatorios() {
-  const filtroForn = document.getElementById('rep-forn-filter')?.value || '';
-  const prodsFiltrados = filtroForn ? P.filter(p => p.forn === filtroForn) : P;
-  renderRepDuracao(prodsFiltrados);
-  renderRepCategoria(prodsFiltrados);
-  renderRepCriticos(prodsFiltrados);
-  renderRepConsumo(prodsFiltrados);
-}
-
-function renderRepDuracao(prods) {
-  const el = $('rep-duracao'); if (!el) return;
-  const sorted = prods.filter(p => p.consumo > 0 && p.estoque > 0)
-    .map(p => ({ ...p, dias: Math.round((p.estoque / p.consumo) * 30) }))
-    .sort((a,b) => a.dias - b.dias);
-  if (!sorted.length) { el.innerHTML = '<div style="padding:16px;color:var(--t3);text-align:center;">Sem dados.</div>'; return; }
-  el.innerHTML = sorted.slice(0,15).map(p => {
-    const cor = p.dias <= 15 ? 'var(--red)' : p.dias <= 30 ? 'var(--yellow)' : p.dias <= 60 ? 'var(--orange)' : 'var(--green)';
-    const label = p.dias <= 7 ? '🔴 URGENTE' : p.dias <= 15 ? '🟠 Crítico' : p.dias <= 30 ? '🟡 Atenção' : '🟢 OK';
-    const meses = p.dias >= 30 ? `(${(p.dias/30).toFixed(1)} meses)` : '';
-    return `<div class="report-row">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</div>
-        <div style="font-size:9px;color:var(--t3);">${p.forn} · Est: ${p.estoque} un · Consumo: ${p.consumo}/mês</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:12px;font-weight:700;color:${cor};">${p.dias} dias ${meses}</div>
-        <div style="font-size:9px;color:${cor};">${label}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderRepCategoria(prods) {
-  const el = $('rep-categoria'); if (!el) return;
-  const cats = {};
-  prods.forEach(p => {
-    if (!cats[p.cat]) cats[p.cat] = { qtd:0, valor:0 };
-    cats[p.cat].qtd++; cats[p.cat].valor += p.estoque * p.custo;
-  });
-  const entries = Object.entries(cats).sort((a,b) => b[1].valor - a[1].valor);
-  const max = entries[0]?.[1].valor || 1;
-  const cores = {Insumo:'var(--blue)',Peça:'var(--purple)',Consumível:'var(--yellow)'};
-  el.innerHTML = entries.map(([cat,d]) => `
-    <div class="report-row">
-      <div style="width:70px;font-size:11px;font-weight:600;color:${cores[cat]||'var(--t1)'};">${cat}</div>
-      <div style="flex:1;">
-        <div class="report-bar-wrap"><div class="report-bar" style="width:${Math.round(d.valor/max*100)}%;background:${cores[cat]||'var(--blue)'};"></div></div>
-        <div style="font-size:10px;color:var(--t3);margin-top:2px;">${d.qtd} produto${d.qtd!==1?'s':''}</div>
-      </div>
-      <div class="report-val">${R(d.valor)}</div>
-    </div>`).join('');
-}
-
-function renderRepCriticos(prods) {
-  const el = $('rep-criticos'); if (!el) return;
-  const criticos = prods.filter(p => status(p) !== 'OK')
-    .sort((a,b) => (a.estoque/Math.max(1,a.min)) - (b.estoque/Math.max(1,b.min)));
-  if (!criticos.length) {
-    el.innerHTML = '<div style="padding:16px;color:var(--green);text-align:center;">✓ Todos os itens em nível OK</div>';
-    return;
-  }
-  el.innerHTML = criticos.map(p => {
-    const st = status(p);
-    const cor = st==='Crítico'?'var(--red)':'var(--yellow)';
-    const sug = Math.max(1, (p.min*2)-p.estoque+Math.ceil(p.consumo));
-    const dias = p.consumo > 0 ? Math.round((p.estoque/p.consumo)*30) : '—';
-    return `<div class="report-row" style="flex-direction:column;align-items:stretch;gap:4px;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:${cor};flex-shrink:0;"></div>
-        <div style="flex:1;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</div>
-        <div style="font-size:10px;font-weight:700;color:${cor};">${st}</div>
-      </div>
-      <div style="display:flex;gap:12px;padding-left:16px;font-size:10px;color:var(--t3);">
-        <span>Est: <b style="color:var(--t1);">${p.estoque}</b></span>
-        <span>Mín: ${p.min}</span>
-        <span>Duração: <b style="color:${cor};">${dias} dias</b></span>
-        <span style="margin-left:auto;color:var(--blue);">Sugerir: <b>${sug} un</b></span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderRepConsumo(prods) {
-  const el = $('rep-consumo'); if (!el) return;
-  // Consumo real baseado em MOV (últimos 30 dias)
-  const hoje = new Date();
-  const limite = new Date(hoje - 30*24*60*60*1000);
-  const consumoReal = {};
-  MOV.filter(m => m.tipo === 'SAÍDA').forEach(m => {
-    const partes = m.data.split(' ')[0].split('/');
-    if (partes.length === 3) {
-      const data = new Date(+partes[2], +partes[1]-1, +partes[0]);
-      if (data >= limite) {
-        consumoReal[m.cod] = (consumoReal[m.cod] || 0) + m.qty;
-      }
-    }
-  });
-  const lista = prods.filter(p => p.consumo > 0)
-    .map(p => ({ ...p, consumoRealMes: consumoReal[p.cod] || 0 }))
-    .sort((a,b) => b.consumoRealMes - a.consumoRealMes || b.consumo - a.consumo)
-    .slice(0, 15);
-  if (!lista.length) { el.innerHTML = '<div style="padding:16px;color:var(--t3);text-align:center;">Sem dados de consumo.</div>'; return; }
-  const max = Math.max(...lista.map(p => Math.max(p.consumoRealMes, p.consumo)));
-  el.innerHTML = lista.map((p,i) => `
-    <div class="report-row">
-      <div class="report-rank">${i+1}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</div>
-        <div style="display:flex;gap:6px;margin-top:3px;">
-          <div style="flex:1;height:4px;background:var(--blue-a);border-radius:2px;overflow:hidden;">
-            <div style="height:100%;width:${Math.round(p.consumoRealMes/max*100)}%;background:var(--blue);border-radius:2px;"></div>
-          </div>
-        </div>
-        <div style="font-size:9px;color:var(--t3);margin-top:2px;">Real (30d): ${p.consumoRealMes} un · Estimado: ${p.consumo}/mês</div>
-      </div>
-      <div class="report-val" style="min-width:70px;">${p.consumoRealMes>0?p.consumoRealMes+' un':p.consumo+' est.'}</div>
-    </div>`).join('');
-}
-
-function exportarRelatorioCSV(tipo) {
-  let csv = '', nome = 'stockops_relatorio.csv';
-  if (tipo === 'consumo' || tipo === 'todos') {
-    csv += 'CONSUMO MENSAL\nProduto,Código,Fornecedor,Consumo (un/mês),Estoque Atual,Prev. (dias)\n';
-    [...P].sort((a,b)=>b.consumo-a.consumo).forEach(p=>
-      csv += `"${p.nome}","${p.cod}","${p.forn}",${p.consumo},${p.estoque},${diasEst(p)}\n`);
-    csv += '\n';
-  }
-  if (tipo === 'categoria' || tipo === 'todos') {
-    csv += 'VALOR POR CATEGORIA\nCategoria,Qtd Produtos,Valor Total\n';
-    const cats = {};
-    P.forEach(p=>{if(!cats[p.cat])cats[p.cat]={n:0,v:0};cats[p.cat].n++;cats[p.cat].v+=p.estoque*p.custo;});
-    Object.entries(cats).forEach(([c,d])=>csv+=`"${c}",${d.n},"${R(d.v)}"\n`);
-    csv += '\n';
-  }
-  if (tipo === 'fornecedor' || tipo === 'todos') {
-    csv += 'VALOR POR FORNECEDOR\nFornecedor,Qtd Produtos,Valor Total\n';
-    const forns = {};
-    P.forEach(p=>{if(!forns[p.forn])forns[p.forn]={n:0,v:0};forns[p.forn].n++;forns[p.forn].v+=p.estoque*p.custo;});
-    Object.entries(forns).sort((a,b)=>b[1].v-a[1].v).forEach(([f,d])=>csv+=`"${f}",${d.n},"${R(d.v)}"\n`);
-    csv += '\n';
-  }
-  if (tipo === 'criticos' || tipo === 'todos') {
-    csv += 'ITENS CRÍTICOS/ALERTA\nProduto,Código,Status,Estoque,Mínimo,Reposição,Sugestão Compra\n';
-    P.filter(p=>status(p)!=='OK').forEach(p=>{
-      const sug=Math.max(1,(p.min*2)-p.estoque+Math.ceil(p.consumo));
-      csv+=`"${p.nome}","${p.cod}","${status(p)}",${p.estoque},${p.min},${p.repo},${sug}\n`;
-    });
-  }
-  nome = tipo==='todos'?'stockops_relatorio_completo.csv':`stockops_${tipo}.csv`;
-  downloadCSV(nome, '\uFEFF'+csv); // BOM para Excel reconhecer UTF-8
 }
 
 // ── Exportar Backup ───────────────────────────────────────────
