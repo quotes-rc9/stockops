@@ -708,9 +708,9 @@
       <!-- ══ ANÁLISE ABC ════════════════════════════════════════ -->
       <div class="page" id="page-abc">
 <div class="ph" style="flex-shrink:0;padding:10px 14px;"><span class="ph-title">📊 Análise ABC</span><div class="ph-right"><button class="btn-export" onclick="exportarABCPDF()">📄 PDF</button></div></div>        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 14px;flex-shrink:0;">
-          <div class="panel" style="border-color:rgba(224,72,74,.2);" id="abc-a-card"></div>
-          <div class="panel" style="border-color:rgba(232,160,32,.2);" id="abc-b-card"></div>
-          <div class="panel" style="border-color:rgba(45,184,122,.2);" id="abc-c-card"></div>
+          <div class="panel" style="border-color:rgba(224,72,74,.2);cursor:pointer;" id="abc-a-card" onclick="toggleAbcFiltro('A')"></div>
+          <div class="panel" style="border-color:rgba(232,160,32,.2);cursor:pointer;" id="abc-b-card" onclick="toggleAbcFiltro('B')"></div>
+          <div class="panel" style="border-color:rgba(45,184,122,.2);cursor:pointer;" id="abc-c-card" onclick="toggleAbcFiltro('C')"></div>
         </div>
         <div class="tbl-wrap" style="flex:1;padding:10px 14px 0;">
           <table>
@@ -1992,22 +1992,31 @@ function calcularABCPorValor(){
 }
 
 // ── ABC ────────────────────────────────────────────────────────
+let _abcFiltro = null;
+function toggleAbcFiltro(cls){
+  _abcFiltro = (_abcFiltro === cls) ? null : cls;
+  renderABC();
+}
 function renderABC(){
   const sorted=calcularABCPorValor();
   ['A','B','C'].forEach(cls=>{
     const g=sorted.filter(p=>p.abc2===cls);
     const v=g.reduce((a,p)=>a+p.vt,0);
     const cols={A:'var(--red)',B:'var(--yellow)',C:'var(--green)'};
+    const colsA={A:'var(--red-a)',B:'var(--yellow-a)',C:'var(--green-a)'};
     const desc={A:'Controle semanal · fornecedor prioritário · lead time mapeado',B:'Revisão quinzenal · 2 fornecedores homologados',C:'Lote mensal · processo simplificado'};
+    const ativo = _abcFiltro === cls;
+    $(`abc-${cls.toLowerCase()}-card`).style.background = ativo ? colsA[cls] : '';
     $(`abc-${cls.toLowerCase()}-card`).innerHTML=`
-      <div class="ph"><span class="abc-${cls.toLowerCase()}" style="width:22px;height:22px;line-height:22px;font-size:12px;">${cls}</span><span class="ph-title" style="color:${cols[cls]};">Classe ${cls}</span></div>
+      <div class="ph"><span class="abc-${cls.toLowerCase()}" style="width:22px;height:22px;line-height:22px;font-size:12px;">${cls}</span><span class="ph-title" style="color:${cols[cls]};">Classe ${cls}</span>${ativo?'<span style="margin-left:auto;font-size:9px;color:'+cols[cls]+';">✕ limpar</span>':''}</div>
       <div style="padding:12px;">
         <div style="font-size:26px;font-weight:700;color:${cols[cls]};">${g.length}</div>
         <div style="font-size:10px;color:var(--t3);margin-top:2px;">${g.length} itens · ${R(v)}</div>
         <div style="font-size:10px;color:var(--t3);margin-top:8px;">${desc[cls]}</div>
       </div>`;
   });
-  $('abc-tbody').innerHTML=sorted.map(p=>`<tr>
+  const itensTabela = _abcFiltro ? sorted.filter(p=>p.abc2===_abcFiltro) : sorted;
+  $('abc-tbody').innerHTML=itensTabela.map(p=>`<tr>
     <td>${abcChip(p.abc2)}</td>
     <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
     <td style="font-weight:500;">${p.nome}</td>
