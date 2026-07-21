@@ -270,6 +270,22 @@
             </div>
           </div>
 
+          <!-- CHARTS -->
+          <div class="charts-row">
+            <div class="chart-card">
+              <div class="cc-title">Consumo real</div>
+              <div class="cc-sub">Saídas por categoria — últimos 6 meses</div>
+              <div class="bars-wrap" id="chart-consumo"></div>
+              <div class="bar-xlabels" id="chart-xlabels"></div>
+              <div style="display:flex;gap:12px;margin-top:8px;" id="chart-legend"></div>
+            </div>
+            <div class="chart-card">
+              <div class="cc-title">Curva ABC — valor</div>
+              <div class="cc-sub">% do valor total por classe</div>
+              <div class="donut-row" id="chart-abc"></div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1963,12 +1979,18 @@ function renderPedido(){
   switchPedTab('manual');
 }
 
-// ── ABC ────────────────────────────────────────────────────────
-function renderABC(){
+// ── ABC helper (compartilhado entre página Análise ABC e dashboard) ──
+function calcularABCPorValor(){
   const sorted=[...P].map(p=>({...p,vt:p.estoque*p.custo})).sort((a,b)=>b.vt-a.vt);
   const tv=sorted.reduce((a,p)=>a+p.vt,0);
   let acum=0;
   sorted.forEach(p=>{ acum+=p.vt; p.pct=tv>0?p.vt/tv*100:0; p.acumPct=tv>0?acum/tv*100:0; p.abc2=p.acumPct<=80?'A':p.acumPct<=95?'B':'C'; });
+  return sorted;
+}
+
+// ── ABC ────────────────────────────────────────────────────────
+function renderABC(){
+  const sorted=calcularABCPorValor();
   ['A','B','C'].forEach(cls=>{
     const g=sorted.filter(p=>p.abc2===cls);
     const v=g.reduce((a,p)=>a+p.vt,0);
@@ -2559,8 +2581,72 @@ function $(id){ return document.getElementById(id); }
 function tick(){ const n=new Date(); $('clock').textContent=n.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'})+' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 
 // ── MAIN RENDER ────────────────────────────────────────────────
+// ── DASHBOARD CHARTS (dados reais) ──────────────────────────────
+function renderCharts(){
+  // Consumo real: saídas (MOV tipo SAÍDA) por categoria, últimos 6 meses
+  const cats=['Insumo','Peça','Consumível'];
+  const cols={Insumo:'var(--blue)',Peça:'var(--purple)',Consumível:'var(--yellow)'};
+  const nomesMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  const buckets=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(HOJE.getFullYear(), HOJE.getMonth()-i, 1);
+    buckets.push({y:d.getFullYear(), m:d.getMonth(), label:nomesMes[d.getMonth()]});
+  }
+  const dados={}; cats.forEach(c=>dados[c]=buckets.map(()=>0));
+
+  MOV.forEach(mv=>{
+    if(mv.tipo!=='SAÍDA') return;
+    const prod=P.find(p=>p.cod===mv.cod);
+    if(!prod || !cats.includes(prod.cat)) return;
+    const dt=parseDate(mv.data.split(' ')[0]);
+    const idx=buckets.findIndex(b=>b.y===dt.getFullYear() && b.m===dt.getMonth());
+    if(idx===-1) return;
+    dados[prod.cat][idx]+=mv.qty;
+  });
+
+  const max=Math.max(1, ...cats.flatMap(c=>dados[c]));
+  let bars='', xlbls='';
+  buckets.forEach((b,i)=>{
+    bars+='<div class="bar-g">';
+    cats.forEach(c=>{
+      const v=dados[c][i];
+      bars+=`<div class="b-bar" style="height:${Math.round(v/max*100)}%;background:${cols[c]};" title="${b.label} ${c}: ${N(v)} un" onclick="kpiClick('estoque','cat','${c}')"></div>`;
+    });
+    bars+='</div>';
+    xlbls+=`<div class="bar-xl">${b.label}</div>`;
+  });
+  $('chart-consumo').innerHTML=bars;
+  $('chart-xlabels').innerHTML=xlbls;
+  $('chart-legend').innerHTML=cats.map(c=>
+    `<div class="leg-item" onclick="kpiClick('estoque','cat','${c}')" title="Ver ${c} no estoque"><div class="leg-sq" style="background:${cols[c]};"></div><span style="font-size:10px;color:var(--t3);">${c}</span></div>`
+  ).join('');
+
+  // ABC donut — dados reais via helper compartilhado
+  const abcSorted=calcularABCPorValor();
+  const tv=abcSorted.reduce((a,p)=>a+p.vt,0);
+  const classCols={A:'var(--red)',B:'var(--yellow)',C:'var(--green)'};
+  const abcD=['A','B','C'].map(cls=>{
+    const g=abcSorted.filter(p=>p.abc2===cls);
+    const v=g.reduce((a,p)=>a+p.vt,0);
+    return {cls, pct: tv>0? v/tv*100 : 0, v, col:classCols[cls]};
+  });
+  let off=0, circles='';
+  abcD.forEach(d=>{
+    const r=36, circ=2*Math.PI*r, dash=circ*d.pct/100, gap=circ-dash, rot=-90+360*off/100;
+    circles+=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${d.col}" stroke-width="16" stroke-dasharray="${dash} ${gap}" transform="rotate(${rot} 50 50)"/>`;
+    off+=d.pct;
+  });
+  $('chart-abc').innerHTML=`
+    <svg viewBox="0 0 100 100" width="90" height="90" style="flex-shrink:0;cursor:pointer;" onclick="showPage('abc')" title="Ver Análise ABC completa">
+      <circle cx="50" cy="50" r="36" fill="none" stroke="var(--s3)" stroke-width="16"/>
+      ${circles}
+    </svg>
+    <div class="legend-list">${abcD.map(d=>`<div class="leg-item" onclick="showPage('abc')" title="Ver Análise ABC completa"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct.toFixed(1)}% (${R(d.v)})</div>`).join('')}</div>`;
+}
+
 function renderAll(){
-  renderKPIs(); renderAlertList(); renderValList(); renderCatSummary();
+  renderKPIs(); renderAlertList(); renderValList(); renderCatSummary(); renderCharts();
   if (typeof _atualizarBadgeAuto === 'function') _atualizarBadgeAuto();
   if(currentPage==='pedido')          renderPedido();
   else if(currentPage==='auto')       renderAutoPedido();
