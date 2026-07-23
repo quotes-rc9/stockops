@@ -151,7 +151,7 @@
           <button class="sb-action-btn success" onclick="openModal('entrada')">＋ Entrada</button>
           <button class="sb-action-btn danger" onclick="openModal('saida')">－ Saída</button>
           <button class="sb-action-btn" id="nav-solic-btn" onclick="showPage('solicitacoes')">📋 Solicitações</button>
-          <button class="sb-action-btn primary" onclick="showPage('pedido')">🛒 Gerar Pedido</button>
+          <button class="sb-action-btn primary" onclick="showPage('compras')">🛒 Gerar Pedido</button>
         </div>
       </div>
       <div class="sb-section">
@@ -165,8 +165,7 @@
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Compras</div>
-        <button class="sb-item" onclick="showPage('pedido',this)"><span class="sb-icon">🛒</span>Pedido de Compra</button>
-        <button class="sb-item" onclick="showPage('historico',this)"><span class="sb-icon">📜</span>Histórico de Pedidos<span class="sb-badge sbb-p" id="nb-hist" style="display:none;">0</span></button>
+        <button class="sb-item" onclick="showPage('compras',this)"><span class="sb-icon">🛒</span>Compras<span class="sb-badge sbb-p" id="nb-hist" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('abc',this)"><span class="sb-icon">📊</span>Análise ABC</button>
         <button class="sb-item" onclick="showPage('previsao',this)"><span class="sb-icon">📈</span>Previsão de Compra</button>
       </div>
@@ -258,7 +257,7 @@
                 <div class="ac-title">⚡ Ações rápidas</div>
                 <button class="ac-btn g" onclick="openModal('entrada')"><span class="ac-dot" style="background:var(--green);"></span>Registrar entrada</button>
                 <button class="ac-btn r" onclick="openModal('saida')"><span class="ac-dot" style="background:var(--red);"></span>Registrar saída</button>
-                <button class="ac-btn b" onclick="showPage('pedido')"><span class="ac-dot" style="background:var(--blue);"></span>Gerar pedido de compra</button>
+                <button class="ac-btn b" onclick="showPage('compras')"><span class="ac-dot" style="background:var(--blue);"></span>Gerar pedido de compra</button>
                 <button class="ac-btn y" onclick="showPage('previsao')"><span class="ac-dot" style="background:var(--yellow);"></span>Ver previsão de compra</button>
               </div>
               <div class="action-card" style="flex:1;">
@@ -400,7 +399,7 @@
       <div class="page" id="page-alertas">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
           <span class="ph-title">🔔 Alertas de Estoque</span>
-          <button class="nav-btn primary" style="margin-left:auto;" onclick="showPage('pedido')">Gerar pedido →</button>
+          <button class="nav-btn primary" style="margin-left:auto;" onclick="showPage('compras')">Gerar pedido →</button>
           <button class="btn-export" style="margin-left:8px;" onclick="exportarAlertasPDF()">📄 PDF</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;overflow:hidden;padding:0 14px 14px;">
@@ -518,47 +517,26 @@
         </div>
       </div>
 
-      <!-- ══ PEDIDO DE COMPRA ═══════════════════════════════════ -->
-      <div class="page" id="page-pedido">
+      <!-- ══ COMPRAS ════════════════════════════════════════════ -->
+      <div class="page" id="page-compras">
 
-        <!-- CABEÇALHO SIMPLIFICADO - SÓ MANUAL -->
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">🛒 Solicitar Pedido de Compra</span>
-          <span class="ph-sub" id="ped-total-label"></span>
-          <div class="ph-right">
-            <button class="nav-btn danger" onclick="limparCarrinho()" style="font-size:10px;">🗑 Limpar</button>
+          <span class="ph-title">🛒 Compras</span>
+        </div>
+
+        <div class="ped-tabs">
+          <button class="ped-tab active" id="ctab-novo" onclick="switchComprasTab('novo')">🛒 Novo Pedido</button>
+          <button class="ped-tab" id="ctab-historico" onclick="switchComprasTab('historico')">📜 Histórico</button>
+        </div>
+
+        <!-- ── PAINEL: NOVO PEDIDO ──────────────────────────────── -->
+        <div id="compras-panel-novo" style="display:flex;flex:1;overflow:hidden;flex-direction:column;">
+          <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+            <span style="font-size:11px;color:var(--blue);">
+              💡 Monte o pedido abaixo e envie via WhatsApp para o responsável aprovar a compra.
+            </span>
           </div>
-        </div>
-        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
-          <span style="font-size:11px;color:var(--blue);">
-            💡 Monte o pedido abaixo e envie via WhatsApp para o responsável aprovar a compra.
-          </span>
-        </div>
 
-        <div class="ped-tabs" style="display:none;">
-          <button class="ped-tab active" id="tab-auto" onclick="switchPedTab('auto')">auto</button>
-          <button class="ped-tab" id="tab-manual" onclick="switchPedTab('manual')">manual</button>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-bottom:4px;">
-            <span style="font-size:11px;color:var(--green);font-weight:600;" id="ped-total-label"></span>
-            <button class="btn-wpp" onclick="openWpp('auto')" style="background:linear-gradient(135deg,#25d366,#128c7e);">
-              <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:#fff;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Enviar via WhatsApp
-            </button>
-            <button class="nav-btn primary" onclick="window.print()">⬇ Imprimir</button>
-          </div>
-        </div>
-
-        <!-- ── ABA AUTOMÁTICO (oculto) ──────────────────────────── -->
-        <div id="ped-auto-panel" style="display:none;">
-          <div id="ped-subtitle"></div>
-          <tbody id="ped-tbody"></tbody>
-          <tr id="ped-tfoot"></tr>
-          <tbody id="ped-forn-tbody"></tbody>
-          <div id="ped-resumo"></div>
-        </div>
-
-        <!-- ── PEDIDO MANUAL ────────────────────────────────────── -->
-        <div id="ped-manual-panel" style="display:flex;flex:1;overflow:hidden;">
           <div class="cart-layout">
             <div class="cart-left">
               <!-- Instrução -->
@@ -592,7 +570,22 @@
                 <button class="mbtn mbtn-ok" style="flex-shrink:0;height:34px;align-self:flex-end;padding:0 16px;" onclick="addToCart()">＋ Adicionar</button>
               </div>
 
-              <!-- Tabela do carrinho SEM valores -->
+              <div class="cart-add-bar">
+                <div class="fg" style="flex:1;">
+                  <label class="fl">💰 Valor da peça (unit.)</label>
+                  <input class="fi2" id="cart-custo" type="number" min="0" step="0.01" placeholder="0,00">
+                </div>
+                <div class="fg" style="flex:2;">
+                  <label class="fl">📝 Descrição</label>
+                  <input class="fi2" id="cart-descricao" placeholder="Detalhes do item (opcional)">
+                </div>
+                <div class="fg" style="flex:1;">
+                  <label class="fl">📅 Chegada prevista</label>
+                  <input class="fi2" id="cart-chegada" type="date">
+                </div>
+              </div>
+
+              <!-- Tabela do carrinho -->
               <div class="cart-table">
                 <div class="ph" style="flex-shrink:0;">
                   <span class="ph-title">🛒 Itens da solicitação</span>
@@ -606,11 +599,13 @@
                     <thead><tr>
                       <th>#</th><th>Produto</th><th>Fornecedor</th>
                       <th style="text-align:center;">Estoque atual</th>
+                      <th style="text-align:center;">Valor</th>
+                      <th style="text-align:center;">Chegada prev.</th>
                       <th style="text-align:center;">Qtd solicitada</th>
                       <th></th>
                     </tr></thead>
                     <tbody id="cart-tbody"></tbody>
-                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="6" style="text-align:center;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
+                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="8" style="text-align:center;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
                   </table>
                 </div>
               </div>
@@ -650,88 +645,59 @@
           </div>
         </div>
 
-      </div>
+        <!-- realocado, inerte (não referenciado pelas novas abas) -->
+        <div id="ped-auto-panel" style="display:none;">
+          <div id="ped-subtitle"></div>
+          <tbody id="ped-tbody"></tbody>
+          <tr id="ped-tfoot"></tr>
+          <tbody id="ped-forn-tbody"></tbody>
+          <div id="ped-resumo"></div>
+        </div>
 
-      <!-- ══ ANÁLISE ABC ════════════════════════════════════════ -->
-      <div class="page" id="page-abc">
-<div class="ph" style="flex-shrink:0;padding:10px 14px;"><span class="ph-title">📊 Análise ABC</span><div class="ph-right"><button class="btn-export" onclick="exportarABCPDF()">📄 PDF</button></div></div>        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 14px;flex-shrink:0;">
-          <div class="panel" style="border-color:rgba(224,72,74,.2);cursor:pointer;" id="abc-a-card" onclick="toggleAbcFiltro('A')"></div>
-          <div class="panel" style="border-color:rgba(232,160,32,.2);cursor:pointer;" id="abc-b-card" onclick="toggleAbcFiltro('B')"></div>
-          <div class="panel" style="border-color:rgba(45,184,122,.2);cursor:pointer;" id="abc-c-card" onclick="toggleAbcFiltro('C')"></div>
-        </div>
-        <div class="tbl-wrap" style="flex:1;padding:10px 14px 0;">
-          <table>
-            <thead><tr><th>ABC</th><th>Código</th><th>Nome</th><th>Cat.</th><th style="text-align:center;">Estoque</th><th>Custo Unit.</th><th>Valor total</th><th style="text-align:center;">% portfólio</th></tr></thead>
-            <tbody id="abc-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ══ PREVISÃO DE COMPRA ═════════════════════════════════ -->
-      <div class="page" id="page-previsao">
-        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">📈 Previsão de Compra</span>
-          <span class="ph-sub">Baseada no consumo médio mensal registrado</span>
-          <div class="ph-right"><button class="btn-export" onclick="exportarPrevisaoPDF()">📄 PDF</button></div>
-        </div>
-        <div class="tbl-wrap" style="flex:1;">
-          <table>
-            <thead><tr>
-              <th>Código</th><th>Nome</th><th>Cat.</th>
-              <th style="text-align:center;">Estoque</th>
-              <th style="text-align:center;">Consumo/mês</th>
-              <th style="text-align:center;">Dias restantes</th>
-              <th style="text-align:center;">Data estimada ruptura</th>
-              <th style="text-align:center;">Qtd compra sugerida</th>
-              <th>Urgência</th>
-            </tr></thead>
-            <tbody id="prev-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-    <!-- ══ HISTÓRICO DE PEDIDOS ════════════════════════════════ -->
-      <div class="page" id="page-historico">
-        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">📜 Histórico de Pedidos de Compra</span>
-          <span class="ph-sub" id="hist-count"></span>
-          <div class="ph-right">
-            <select class="fi" id="hist-filter-status" onchange="renderHistorico()">
-              <option value="">Todos os status</option>
-              <option value="enviado">📤 Enviados</option>
-              <option value="recebido">✅ Recebidos</option>
-              <option value="cancelado">❌ Cancelados</option>
-            </select>
-            <select class="fi" id="hist-filter-user" onchange="renderHistorico()">
-              <option value="">Todos solicitantes</option>
-            </select>
-            <input class="fi" type="text" id="hist-search" placeholder="🔍 Buscar nº pedido..." style="width:160px;" oninput="renderHistorico()">
-            <button class="btn-export" onclick="exportarHistoricoCSV()">⬇ CSV</button>
-            <button class="btn-export" onclick="exportarHistoricoPDF()">📄 PDF</button>
+        <!-- ── PAINEL: HISTÓRICO ────────────────────────────────── -->
+        <div id="compras-panel-historico" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+          <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+            <span class="ph-title">📜 Histórico de Pedidos</span>
+            <span class="ph-sub" id="hist-count"></span>
+            <div class="ph-right">
+              <select class="fi" id="hist-filter-status" onchange="renderHistorico()">
+                <option value="">Todos os status</option>
+                <option value="enviado">📤 Enviados</option>
+                <option value="recebido">✅ Recebidos</option>
+                <option value="cancelado">❌ Cancelados</option>
+              </select>
+              <select class="fi" id="hist-filter-user" onchange="renderHistorico()">
+                <option value="">Todos solicitantes</option>
+              </select>
+              <input class="fi" type="text" id="hist-search" placeholder="🔍 Buscar nº pedido..." style="width:160px;" oninput="renderHistorico()">
+              <button class="btn-export" onclick="exportarHistoricoCSV()">⬇ CSV</button>
+              <button class="btn-export" onclick="exportarHistoricoPDF()">📄 PDF</button>
+            </div>
+          </div>
+          <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+            <span style="font-size:11px;color:var(--blue);">
+              💡 <b>Como funciona:</b> Todo pedido enviado via WhatsApp é salvo aqui. Marque cada item como <b>✅ Chegou</b> no detalhe do pedido pra somar automaticamente no estoque, ou use <b>✅ Marcar Recebido</b> pro pedido inteiro de uma vez.
+            </span>
+          </div>
+          <div class="tbl-wrap" style="flex:1;">
+            <table>
+              <thead><tr>
+                <th>Nº Pedido</th>
+                <th>Data</th>
+                <th>Solicitante</th>
+                <th style="text-align:center;">Itens</th>
+                <th style="text-align:center;">Chegada</th>
+                <th>Fornecedores</th>
+                <th style="text-align:right;">Valor Total</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr></thead>
+              <tbody id="hist-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
-          <span style="font-size:11px;color:var(--blue);">
-            💡 <b>Como funciona:</b> Todo pedido enviado via WhatsApp é salvo aqui. Quando o pedido chegar, clique em <b>✅ Marcar Recebido</b> para registrar.
-          </span>
-        </div>
-        <div class="tbl-wrap" style="flex:1;">
-          <table>
-            <thead><tr>
-              <th>Nº Pedido</th>
-              <th>Data</th>
-              <th>Solicitante</th>
-              <th style="text-align:center;">Itens</th>
-              <th>Fornecedores</th>
-              <th style="text-align:right;">Valor Total</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr></thead>
-            <tbody id="hist-tbody"></tbody>
-          </table>
-        </div>
-      </div>
 
+      </div>
       <!-- MODAL DETALHES DO PEDIDO -->
       <div class="overlay" id="overlay-pedido-det" onclick="if(event.target===this)closePedidoDet()">
         <div class="modal" style="width:600px;max-height:85vh;overflow-y:auto;">
@@ -1357,7 +1323,7 @@ let _pedDetId  = null;
 // Carrinho manual
 let CART      = [];
 let _cartIdCnt = 1;
-let _pedTab   = 'auto';
+let _comprasTab = 'novo';
 
 // Notificações
 let NOTIFS         = [];
@@ -1878,10 +1844,9 @@ function renderMov(){
   }).join('');
 }
 
-// ── PEDIDO ────────────────────────────────────────────────────
-function renderPedido(){
-  // Pedido é sempre manual agora
-  switchPedTab('manual');
+// ── COMPRAS ───────────────────────────────────────────────────
+function renderCompras(){
+  switchComprasTab(_comprasTab || 'novo');
 }
 
 // ── ABC helper (compartilhado entre página Análise ABC e dashboard) ──
@@ -2155,7 +2120,7 @@ function showPage(id, el){
   if(pg) pg.classList.add('active');
   if(el) el.classList.add('active');
   currentPage=id;
-  if(id==='pedido')          renderPedido();
+  if(id==='compras')         renderCompras();
   if(id==='abc')             renderABC();
   if(id==='previsao')        renderPrevisao();
   if(id==='validade')        renderValidade();
@@ -2165,7 +2130,6 @@ function showPage(id, el){
   if(id==='solicitacoes')    renderSolicitacoes();
   if(id==='notificacoes')    renderNotifPage();
   if(id==='auditoria')       renderAuditoria();
-  if(id==='historico')       renderHistorico();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
   if(typeof _notifPanelOpen !== 'undefined' && _notifPanelOpen){
@@ -2258,7 +2222,7 @@ function renderCharts(){
 
 function renderAll(){
   renderKPIs(); renderAlertList(); renderValList(); renderCatSummary(); renderCharts();
-  if(currentPage==='pedido')          renderPedido();
+  if(currentPage==='compras')         renderCompras();
   else if(currentPage==='abc')        renderABC();
   else if(currentPage==='previsao')   renderPrevisao();
   else if(currentPage==='validade')   renderValidade();
@@ -2268,7 +2232,6 @@ function renderAll(){
   else if(currentPage==='solicitacoes') renderSolicitacoes();
   else if(currentPage==='notificacoes') renderNotifPage();
   else if(currentPage==='auditoria')  renderAuditoria();
-  else if(currentPage==='historico')  renderHistorico();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
   if(typeof renderHistBadge === 'function') renderHistBadge();
   if(typeof atualizarBadgeNotif === 'function') atualizarBadgeNotif();
@@ -2875,19 +2838,21 @@ function renderSolicitacoes() {
 // (declarado no topo)
 // (declarado no topo)
 
-function switchPedTab(tab) {
-  _pedTab = tab;
-  document.getElementById('tab-auto').classList.toggle('active', tab === 'auto');
-  document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
-  document.getElementById('ped-auto-panel').style.display  = tab === 'auto'   ? 'flex' : 'none';
-  document.getElementById('ped-manual-panel').style.display = tab === 'manual' ? 'flex' : 'none';
-  if (tab === 'auto') renderPedido();
-  if (tab === 'manual') {
+function switchComprasTab(tab) {
+  _comprasTab = tab;
+  ['novo', 'historico'].forEach(t => {
+    const btn = document.getElementById('ctab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  document.getElementById('compras-panel-novo').style.display = tab === 'novo' ? 'flex' : 'none';
+  document.getElementById('compras-panel-historico').style.display = tab === 'historico' ? 'flex' : 'none';
+  if (tab === 'novo') {
     // Pré-preenche o responsável com o usuário logado
     const cartResp = document.getElementById('cart-resp');
     if (cartResp && !cartResp.value && CURRENT_USER) cartResp.value = CURRENT_USER.nome;
     renderCart();
   }
+  if (tab === 'historico') renderHistorico();
 }
 
 // ── Autocomplete ──────────────────────────────────────────────
@@ -2946,6 +2911,10 @@ function addToCart() {
   const qty      = parseInt(document.getElementById('cart-qty').value) || 1;
   const forn     = document.getElementById('cart-forn').value.trim();
   const selCod   = searchEl.dataset.selectedCod || '';
+  const custoInput = parseFloat(document.getElementById('cart-custo').value) || 0;
+  const descricao  = document.getElementById('cart-descricao').value.trim();
+  const chegadaRaw = document.getElementById('cart-chegada').value; // yyyy-mm-dd ou ''
+  const chegadaPrevista = chegadaRaw ? chegadaRaw.split('-').reverse().join('/') : '';
 
   if (!rawText) { toast('Informe o produto', 'error'); return; }
   if (qty <= 0)  { toast('Quantidade inválida', 'error'); return; }
@@ -2953,21 +2922,21 @@ function addToCart() {
   if (selCod && P.find(x => x.cod === selCod)) {
     // Produto existente no estoque
     const p = P.find(x => x.cod === selCod);
-    const custo = p.custo || 0;
+    const custo = custoInput > 0 ? custoInput : (p.custo || 0);
     const existing = CART.find(c => c.cod === p.cod);
     if (existing) {
       existing.qty += qty;
       toast(`Quantidade de "${p.nome}" atualizada no carrinho.`, 'success');
     } else {
       CART.push({ id: _cartIdCnt++, cod: p.cod, nome: p.nome, forn: forn || p.forn,
-        estoque: p.estoque, qty, custo, livre: false });
+        estoque: p.estoque, qty, custo, livre: false, descricao, chegadaPrevista });
       toast(`"${p.nome}" adicionado ao carrinho.`, 'success');
     }
   } else {
     // Produto livre (não cadastrado)
     const nome = rawText;
     CART.push({ id: _cartIdCnt++, cod: '—', nome, forn: forn || '—',
-      estoque: '—', qty, custo: 0, livre: true });
+      estoque: '—', qty, custo: custoInput, livre: true, descricao, chegadaPrevista });
     toast(`"${nome}" adicionado como item livre.`, 'success');
   }
 
@@ -2976,6 +2945,9 @@ function addToCart() {
   searchEl.dataset.selectedCod = '';
   document.getElementById('cart-qty').value  = '1';
   document.getElementById('cart-forn').value = '';
+  document.getElementById('cart-custo').value = '';
+  document.getElementById('cart-descricao').value = '';
+  document.getElementById('cart-chegada').value = '';
   renderCart();
 }
 
@@ -3018,7 +2990,7 @@ function renderCart() {
 
   if (!CART.length) {
     tbody.innerHTML = '';
-    $('cart-tfoot').innerHTML = `<td colspan="9" style="text-align:center;color:var(--t3);font-style:italic;padding:24px;">Carrinho vazio — adicione itens acima.</td>`;
+    $('cart-tfoot').innerHTML = `<td colspan="8" style="text-align:center;color:var(--t3);font-style:italic;padding:24px;">Carrinho vazio — adicione itens acima.</td>`;
     $('cart-total-val').textContent = 'R$ 0,00';
     $('cart-total-sub').textContent = '0 itens · 0 fornecedores';
     $('cart-forn-resumo').innerHTML = '';
@@ -3027,9 +2999,14 @@ function renderCart() {
 
   tbody.innerHTML = CART.map((c, i) => `<tr>
     <td style="color:var(--t3);">${i + 1}</td>
-    <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${c.nome}${c.livre ? ' <span style="font-size:9px;color:var(--orange);background:var(--orange-a);padding:1px 5px;border-radius:4px;">livre</span>' : ''}</td>
+    <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;">
+      ${c.nome}${c.livre ? ' <span style="font-size:9px;color:var(--orange);background:var(--orange-a);padding:1px 5px;border-radius:4px;">livre</span>' : ''}
+      ${c.descricao ? `<div style="font-size:9px;color:var(--t3);white-space:normal;">${c.descricao}</div>` : ''}
+    </td>
     <td style="color:var(--t3);font-size:11px;">${c.forn||'—'}</td>
     <td style="text-align:center;color:var(--t3);">${c.estoque !== '—' ? c.estoque+' un' : '—'}</td>
+    <td style="text-align:center;font-size:11px;color:var(--green);">${c.custo ? R(c.custo) : '—'}</td>
+    <td style="text-align:center;font-size:10px;color:var(--t3);">${c.chegadaPrevista || '—'}</td>
     <td style="text-align:center;">
       <input class="qty-input" type="number" value="${c.qty}" min="1"
         oninput="updateCartQty(${c.id}, this.value)" onchange="updateCartQty(${c.id}, this.value)">
@@ -3044,12 +3021,6 @@ function renderCartTotals() {
   const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
   const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
 
-  // Atualiza totais por linha
-  CART.forEach(c => {
-    const el = $(`cart-row-total-${c.id}`);
-    if (el) el.textContent = c.custo ? R(c.custo * c.qty) : '—';
-  });
-
   if ($('cart-total-val')) $('cart-total-val').textContent = R(total);
   if ($('cart-total-sub')) $('cart-total-sub').textContent =
     `${CART.length} ${CART.length === 1 ? 'item' : 'itens'} · ${forns.length} fornecedor${forns.length !== 1 ? 'es' : ''}`;
@@ -3057,9 +3028,9 @@ function renderCartTotals() {
   // Tfoot
   const tfoot = $('cart-tfoot');
   if (tfoot) tfoot.innerHTML = `
-    <td colspan="7" style="text-align:right;font-weight:600;color:var(--t2);">TOTAL</td>
+    <td colspan="4" style="text-align:right;font-weight:600;color:var(--t2);">TOTAL</td>
     <td style="font-weight:700;color:var(--green);">${R(total)}</td>
-    <td></td>`;
+    <td colspan="3"></td>`;
 
   // Resumo por fornecedor
   const fr = $('cart-forn-resumo');
@@ -3076,10 +3047,6 @@ function renderCartTotals() {
         <span style="font-weight:600;color:var(--green);flex-shrink:0;">${R(d.v)}</span>
       </div>`).join('');
   }
-
-  // Atualiza label do header
-  if ($('ped-total-label') && _pedTab === 'manual')
-    $('ped-total-label').textContent = CART.length ? 'Total: ' + R(total) : '';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3617,8 +3584,7 @@ function aplicarPermissoes() {
     'page-alertas':      'ver_alertas',
     'page-mov':          'ver_mov',
     'page-solicitacoes': 'ver_solicitacoes',
-    'page-pedido':       'ver_pedidos',
-    'page-historico':    'ver_pedidos',
+    'page-compras':      'ver_pedidos',
     'page-abc':          'ver_abc',
     'page-previsao':     'ver_previsao',
     'page-auditoria':    'ver_auditoria',
@@ -4623,7 +4589,8 @@ function salvarPedidoNoHistorico(solicitante, mensagemWpp) {
   const obs = ($('cart-obs')?.value || '').trim();
   const itens = CART.map(c => ({
     cod: c.cod, nome: c.nome, forn: c.forn,
-    qty: c.qty, custo: c.custo, livre: c.livre || false
+    qty: c.qty, custo: c.custo, livre: c.livre || false,
+    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '', dataChegadaReal: ''
   }));
   const pedido = {
     id: 'ped_' + Date.now(),
@@ -4651,7 +4618,7 @@ function salvarPedidoNoHistorico(solicitante, mensagemWpp) {
   if ($('cart-num')) $('cart-num').value = '';
   renderCart();
   renderHistBadge();
-  if (currentPage === 'historico') renderHistorico();
+  if (currentPage === 'compras') renderHistorico();
 }
 
 function renderHistBadge() {
@@ -4686,7 +4653,7 @@ function renderHistorico() {
   const tbody = $('hist-tbody');
   if (!tbody) return;
   if (!f.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:32px;">
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
       <div style="font-size:24px;margin-bottom:8px;">📭</div>
       Nenhum pedido encontrado.<br>
       <span style="font-size:10px;">Os pedidos aparecem aqui após serem enviados via WhatsApp.</span>
@@ -4699,11 +4666,19 @@ function renderHistorico() {
     if (s === 'cancelado') return `<span class="badge b-crit">❌ Cancelado</span>`;
     return `<span class="badge b-info">${s}</span>`;
   };
+  const chegadaBadge = (p) => {
+    const total = p.itens.length;
+    const chegaram = p.itens.filter(it => it.dataChegadaReal).length;
+    if (chegaram === 0) return `<span style="color:var(--t4);">—</span>`;
+    if (chegaram < total) return `<span class="badge b-warn">⏳ ${chegaram}/${total}</span>`;
+    return `<span class="badge b-ok">✅ completo</span>`;
+  };
   tbody.innerHTML = f.map(p => `<tr>
     <td class="mono" style="color:var(--blue);font-size:11px;font-weight:600;">${p.num}</td>
     <td class="mono" style="font-size:10px;color:var(--t3);">${p.data}</td>
     <td style="font-weight:500;">${p.solicitante}</td>
     <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
+    <td style="text-align:center;">${chegadaBadge(p)}</td>
     <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
     <td style="text-align:right;font-weight:700;color:var(--green);">${p.total > 0 ? R(p.total) : '—'}</td>
     <td>${statusBadge(p.status)}</td>
@@ -4732,10 +4707,17 @@ function abrirPedidoDet(id) {
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:500;">${it.nome}${it.livre ? ' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>' : ''}</div>
         <div style="font-size:9px;color:var(--t3);">${it.cod !== '—' ? it.cod + ' · ' : ''}${it.forn || '—'}</div>
+        ${it.descricao ? `<div style="font-size:9px;color:var(--t3);">${it.descricao}</div>` : ''}
+        ${it.chegadaPrevista ? `<div style="font-size:9px;color:var(--t4);">📅 Previsto: ${it.chegadaPrevista}</div>` : ''}
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
         ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${R(it.custo * it.qty)}</div>` : ''}
+      </div>
+      <div style="flex-shrink:0;">
+        ${it.dataChegadaReal
+          ? `<span class="badge b-ok" style="font-size:9px;">✅ ${it.dataChegadaReal}</span>`
+          : `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`}
       </div>
     </div>`).join('');
   if (p.obs) {
@@ -4760,23 +4742,91 @@ function closePedidoDet() {
   _pedDetId = null;
 }
 
+function marcarItemChegou(pedidoId, itemIndex) {
+  const p = PEDIDOS.find(x => x.id === pedidoId);
+  if (!p) return;
+  const it = p.itens[itemIndex];
+  if (!it || it.dataChegadaReal) return;
+  const agora = new Date();
+  it.dataChegadaReal = agora.toLocaleDateString('pt-BR');
+
+  if (!it.livre && it.cod && it.cod !== '—') {
+    const prod = P.find(x => x.cod === it.cod);
+    if (prod) {
+      prod.estoque += it.qty;
+      if (it.custo > 0) prod.custo = it.custo;
+      MOV.push({
+        cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
+        resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: [],
+        data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      });
+      registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}`, '📥');
+      if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length - 1]);
+      if (typeof fbSalvarProduto === 'function') fbSalvarProduto(prod);
+      toast(`"${prod.nome}" chegou — estoque atualizado (+${it.qty} un).`, 'success');
+    } else {
+      toast(`"${it.nome}" marcado como chegou, mas o produto não foi encontrado no catálogo — estoque não alterado.`, 'error');
+    }
+  } else {
+    toast(`"${it.nome}" marcado como chegou (item livre — estoque não alterado).`, 'success');
+  }
+
+  const todosChegaram = p.itens.every(x => x.dataChegadaReal);
+  if (todosChegaram && p.status === 'enviado') {
+    p.status = 'recebido';
+    p.historicoStatus = p.historicoStatus || [];
+    p.historicoStatus.push({ status: 'recebido', data: agora.toLocaleString('pt-BR'), por: CURRENT_USER?.nome || 'Sistema' });
+    registrarAudit('pedido', `Pedido ${p.num} marcado como recebido`, `Todos os itens chegaram`, '✅');
+    pushNotif('pedido', `Pedido ${p.num} recebido`, `Todos os itens chegaram`, '✅', 'ni-ok');
+  }
+
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
+  renderHistBadge();
+  renderAll();
+  if (_pedDetId === pedidoId) abrirPedidoDet(pedidoId);
+}
+
 function marcarRecebido(id) {
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
-  if (!confirm(`Confirmar que o pedido ${p.num} foi RECEBIDO?\n\nIsso marca o pedido como concluído no histórico.`)) return;
+  if (!confirm(`Confirmar que o pedido ${p.num} foi RECEBIDO?\n\nIsso marca o pedido como concluído e soma no estoque os itens que ainda não foram marcados como chegados individualmente.`)) return;
+
+  const agora = new Date();
+  let qtdAtualizados = 0;
+  p.itens.forEach(it => {
+    if (it.dataChegadaReal) return; // já contabilizado individualmente, evita contar em dobro
+    it.dataChegadaReal = agora.toLocaleDateString('pt-BR');
+    if (!it.livre && it.cod && it.cod !== '—') {
+      const prod = P.find(x => x.cod === it.cod);
+      if (prod) {
+        prod.estoque += it.qty;
+        if (it.custo > 0) prod.custo = it.custo;
+        MOV.push({
+          cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
+          resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: [],
+          data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+        });
+        registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}`, '📥');
+        if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length - 1]);
+        if (typeof fbSalvarProduto === 'function') fbSalvarProduto(prod);
+        qtdAtualizados++;
+      }
+    }
+  });
+
   p.status = 'recebido';
   p.historicoStatus = p.historicoStatus || [];
   p.historicoStatus.push({
     status: 'recebido',
-    data: new Date().toLocaleString('pt-BR'),
+    data: agora.toLocaleString('pt-BR'),
     por: CURRENT_USER?.nome || 'Sistema'
   });
   if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
   registrarAudit('pedido', `Pedido ${p.num} marcado como recebido`, `Por: ${CURRENT_USER?.nome}`, '✅');
   closePedidoDet();
   renderHistBadge();
-  renderHistorico();
-  toast(`Pedido ${p.num} marcado como recebido!`, 'success');
+  renderAll();
+  toast(`Pedido ${p.num} marcado como recebido!${qtdAtualizados ? ` Estoque atualizado (${qtdAtualizados} ${qtdAtualizados===1?'item':'itens'}).` : ''}`, 'success');
   pushNotif('pedido', `Pedido ${p.num} recebido`, `Por: ${CURRENT_USER?.nome}`, '✅', 'ni-ok');
 }
 
@@ -5233,7 +5283,7 @@ _sbRealtime(COL_PEDIDOS, (rows) => {
   rows.forEach(p => PEDIDOS.push(p));
   PEDIDOS.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
   renderHistBadge();
-  if (currentPage === 'historico') renderHistorico();
+  if (currentPage === 'compras') renderHistorico();
 });
 
 _sbRealtime(COL_AUDIT, (rows) => {
