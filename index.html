@@ -636,9 +636,11 @@
                   <label class="fl">Seu nome</label>
                   <input class="fi2" id="cart-resp" placeholder="Quem está fazendo o pedido">
                 </div>
-                <button class="btn-wpp" style="width:100%;justify-content:center;padding:10px;font-size:12px;" onclick="openWpp('manual')">
-                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  📋 Copiar e Enviar via WhatsApp
+                <button class="mbtn mbtn-ok green" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-bottom:6px;" onclick="registrarCompra('entrada')">
+                  📥 Somar ao Estoque
+                </button>
+                <button class="mbtn mbtn-ok red" style="width:100%;justify-content:center;padding:10px;font-size:12px;" onclick="registrarCompra('saida')">
+                  📤 Subtrair do Estoque
                 </button>
               </div>
             </div>
@@ -1186,7 +1188,7 @@
         <input class="fi2" id="ep-repo" type="number" min="0" placeholder="0">
       </div>
     </div>
-    <div class="frow" style="margin-bottom:4px;">
+    <div class="frow3" style="margin-bottom:4px;">
       <div class="fg" style="margin-bottom:0;">
         <label class="fl">Custo unitário (R$)</label>
         <input class="fi2" id="ep-custo" type="number" min="0" step="0.01" placeholder="0,00">
@@ -1194,6 +1196,10 @@
       <div class="fg" style="margin-bottom:0;">
         <label class="fl">Consumo médio (un/mês)</label>
         <input class="fi2" id="ep-consumo" type="number" min="0" step="0.1" placeholder="0.0">
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Unid. por caixa</label>
+        <input class="fi2" id="ep-caixa" type="number" min="0" placeholder="Ex: 10">
       </div>
     </div>
 
@@ -1254,42 +1260,6 @@
   <div class="notif-list" id="notif-panel-list"></div>
 </div>
 
-<!-- MODAL WHATSAPP -->
-<div class="overlay" id="overlay-wpp" onclick="if(event.target===this)closeWpp()">
-  <div class="modal" style="width:500px;">
-    <div class="m-head">
-      <div class="m-title" style="display:flex;align-items:center;gap:8px;">
-        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#25d366;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Enviar Pedido via WhatsApp
-      </div>
-      <button class="m-close" onclick="closeWpp()">✕</button>
-    </div>
-    <div class="fg">
-      <label class="fl">Solicitante <span style="color:var(--red);">*</span></label>
-      <input class="fi2" id="wpp-solicitante" placeholder="Seu nome completo" oninput="regenerarMsgWpp()">
-      <div class="fhint">Obrigatório — será incluído na mensagem do pedido.</div>
-    </div>
-    <div class="fg">
-      <label class="fl">Mensagem gerada</label>
-      <textarea class="fi2" id="wpp-msg" rows="11" style="resize:none;font-size:11px;font-family:'JetBrains Mono',monospace;line-height:1.5;"></textarea>
-    </div>
-    <div class="fhint" style="margin-bottom:10px;">✏ Você pode editar a mensagem acima antes de enviar.</div>
-    <!-- Instrução clara -->
-    <div style="background:var(--green-a);border:1px solid rgba(45,184,122,.25);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--green);margin-bottom:12px;line-height:1.6;">
-      <strong>Como enviar:</strong><br>
-      1. Clique em <strong>📋 Copiar mensagem</strong><br>
-      2. Clique em <strong>Abrir WhatsApp</strong><br>
-      3. Escolha o contato e cole com <strong>Ctrl+V</strong>
-    </div>
-    <div class="m-foot">
-      <button class="mbtn mbtn-cancel" onclick="closeWpp()">Cancelar</button>
-      <button class="mbtn mbtn-ok" onclick="copiarEAbrirWpp()" style="background:var(--green);border-color:var(--green);color:#fff;font-size:12px;padding:8px 20px;">
-        📋 Copiar e Abrir WhatsApp
-      </button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1329,9 +1299,6 @@ let _comprasTab = 'novo';
 let NOTIFS         = [];
 let _notifIdCnt    = 1;
 let _notifPanelOpen = false;
-
-// WhatsApp
-let _wppSource = 'auto';
 
 // ═══════════════════════════════════════════════════════════════
 // DADOS — 100% validados das imagens fornecidas
@@ -1691,7 +1658,10 @@ function renderEstoque(){
       </td>
       <td>${catBadge(p.cat)}</td>
       <td style="color:var(--t3);font-size:11px;">${p.forn}</td>
-      <td style="text-align:center;font-weight:700;color:${stColor};">${p.estoque}</td>
+      <td style="text-align:center;">
+        <div style="font-weight:700;color:${stColor};">${p.estoque}</div>
+        ${p.caixa ? `<div style="font-size:8.5px;color:var(--t4);">cx: ${p.caixa}un</div>` : ''}
+      </td>
       <td style="text-align:center;color:var(--t3);">${p.min}</td>
       <td style="text-align:center;">${barRow(p)}</td>
       <td style="text-align:center;">${abcChip(p.abc)}</td>
@@ -2274,6 +2244,7 @@ function openEditModal(cod) {
     document.getElementById('ep-repo').value = '2';
     document.getElementById('ep-custo').value = '';
     document.getElementById('ep-consumo').value = '0.5';
+    document.getElementById('ep-caixa').value = '';
     document.getElementById('ep-val-lista').innerHTML = '';
   } else {
     const p = P.find(x => x.cod === cod);
@@ -2300,6 +2271,7 @@ function openEditModal(cod) {
     document.getElementById('ep-repo').value = p.repo;
     document.getElementById('ep-custo').value = p.custo || '';
     document.getElementById('ep-consumo').value = p.consumo || '0.5';
+    document.getElementById('ep-caixa').value = p.caixa || '';
     // Carrega validades existentes
     document.getElementById('ep-val-lista').innerHTML = '';
     (p.val || []).forEach(v => epAdicionarVal(v));
@@ -2324,7 +2296,7 @@ function closeEditModal() {
 const _CAMPO_LABELS = {
   cod: 'Código', nome: 'Nome', funcao: 'Função', obs: 'Observação', cat: 'Categoria', forn: 'Fornecedor',
   abc: 'ABC', estoque: 'Estoque', min: 'Mínimo', repo: 'Reposição',
-  custo: 'Custo (R$)', consumo: 'Consumo/mês', val: 'Validades'
+  custo: 'Custo (R$)', consumo: 'Consumo/mês', caixa: 'Unid./caixa', val: 'Validades'
 };
 
 function abrirHistoricoProduto() {
@@ -2382,6 +2354,7 @@ function salvarProduto() {
   const repo    = parseInt(document.getElementById('ep-repo').value) || 0;
   const custo   = parseFloat(document.getElementById('ep-custo').value) || 0;
   const consumo = parseFloat(document.getElementById('ep-consumo').value) || 0.5;
+  const caixa   = parseInt(document.getElementById('ep-caixa').value) || 0;
   const validades = epGetValidadesList();
   if (!cod)  { toast('Informe o código do produto', 'error'); return; }
   if (!nome) { toast('Informe o nome do produto', 'error'); return; }
@@ -2389,7 +2362,7 @@ function salvarProduto() {
   const isNovo = _editCod === null;
   if (isNovo) {
     if (P.find(x => x.cod === cod)) { toast('Já existe um produto com esse código!', 'error'); return; }
-    P.push({ cod, nome, funcao, obs, cat, forn, estoque, min, repo, custo, consumo, abc, val: validades });
+    P.push({ cod, nome, funcao, obs, cat, forn, estoque, min, repo, custo, consumo, caixa, abc, val: validades });
     toast(`Produto "${nome}" criado com sucesso!`, 'success');
     registrarAudit('produto', `Produto criado: ${nome}`, `Cód: ${cod} | Cat: ${cat} | Forn: ${forn}`, '📦');
     if (typeof fbSalvarProduto === 'function') fbSalvarProduto(P[P.length-1]);
@@ -2415,10 +2388,10 @@ function salvarProduto() {
     const antes = {
       cod: p.cod, nome: p.nome, funcao: p.funcao || '', obs: p.obs || '', cat: p.cat, forn: p.forn, abc: p.abc,
       estoque: p.estoque, min: p.min, repo: p.repo, custo: p.custo,
-      consumo: p.consumo, val: JSON.stringify(p.val || [])
+      consumo: p.consumo, caixa: p.caixa || 0, val: JSON.stringify(p.val || [])
     };
     const depois = {
-      cod, nome, funcao, obs, cat, forn, abc, estoque, min, repo, custo, consumo,
+      cod, nome, funcao, obs, cat, forn, abc, estoque, min, repo, custo, consumo, caixa,
       val: JSON.stringify(validades)
     };
     // Constrói o diff (apenas campos que mudaram)
@@ -2430,7 +2403,7 @@ function salvarProduto() {
     });
 
     p.cod = cod; p.nome=nome; p.funcao=funcao; p.obs=obs; p.cat=cat; p.forn=forn; p.abc=abc;
-    p.estoque=estoque; p.min=min; p.repo=repo; p.custo=custo; p.consumo=consumo;
+    p.estoque=estoque; p.min=min; p.repo=repo; p.custo=custo; p.consumo=consumo; p.caixa=caixa;
     p.val = validades;
 
     // Persiste o histórico de versões (somente se algo mudou)
@@ -3201,126 +3174,6 @@ function gerarNotifsSistema() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MÓDULO: WHATSAPP — melhorado com solicitante obrigatório
-// ═══════════════════════════════════════════════════════════════
-// (declarado no topo)
-
-function openWpp(source) {
-  _wppSource = source;
-  const solEl = $('wpp-solicitante');
-  const userName = CURRENT_USER ? CURRENT_USER.nome : '';
-  if (solEl) { solEl.value = userName; solEl.classList.remove('wpp-solicitante-required'); }
-  $('wpp-msg').value = _buildWppMsg(source, userName);
-  $('overlay-wpp').classList.add('open');
-  setTimeout(() => { if (solEl && !userName) solEl.focus(); }, 80);
-}
-
-function regenerarMsgWpp() {
-  const nome = ($('wpp-solicitante')?.value || '').trim();
-  $('wpp-msg').value = _buildWppMsg(_wppSource, nome);
-}
-
-function _buildWppMsg(source, solicitante) {
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  // Pega o nº do pedido do campo (manual) ou gera automático
-  const numCampo = (document.getElementById('cart-num')?.value || '').trim();
-  const numAuto = 'PC-' + String(HOJE.getFullYear()).slice(2) + String(HOJE.getMonth()+1).padStart(2,'0') + '-' + String(Date.now()).slice(-4);
-  const numPed = numCampo || numAuto;
-  // Salva o nº gerado para uso no salvarPedido
-  window._ultimoNumPedido = numPed;
-
-  let msg = `🛒 *PEDIDO DE COMPRA*\n`;
-  msg += `🔢 Nº: *${numPed}*\n`;
-  msg += `📅 Data: ${hoje}\n`;
-  if (solicitante) msg += `👤 Solicitante: *${solicitante}*\n`;
-  msg += `${'─'.repeat(30)}\n\n`;
-  msg += `*Itens:*\n`;
-
-  if (source === 'auto') {
-    const items = P.filter(p => status(p) !== 'OK')
-      .map(p => ({ ...p, sug: Math.max(1, (p.min * 2) - p.estoque + Math.ceil(p.consumo)), st: status(p) }))
-      .sort((a,b) => (a.st==='Crítico'?0:1) - (b.st==='Crítico'?0:1));
-    const total = items.reduce((a,i) => a + i.sug * i.custo, 0);
-    items.forEach(p => {
-      const emoji = p.st === 'Crítico' ? '🔴' : '🟡';
-      msg += `${emoji} ${p.nome} — *${p.sug} un*\n`;
-    });
-    msg += `\n${'─'.repeat(30)}\n`;
-    msg += `📦 Total de itens: ${items.length}\n`;
-    if (total > 0) msg += `💰 Total estimado: *${R(total)}*\n`;
-  } else {
-    if (!CART.length) return 'Carrinho vazio. Adicione itens antes de enviar.';
-    const total = CART.reduce((a,c) => a + (c.custo * c.qty || 0), 0);
-    CART.forEach(c => {
-      msg += `• ${c.nome} — *${c.qty} un*`;
-      if (c.custo) msg += ` (${R(c.custo * c.qty)})`;
-      msg += `\n`;
-    });
-    msg += `\n${'─'.repeat(30)}\n`;
-    msg += `📦 Total de itens: ${CART.length}\n`;
-    if (total > 0) msg += `💰 Total estimado: *${R(total)}*\n`;
-    const obs = $('cart-obs')?.value?.trim();
-    if (obs) msg += `📝 Obs: ${obs}\n`;
-  }
-
-  msg += `\n_StockOps · Impressão Digital_`;
-  return msg;
-}
-
-function closeWpp() {
-  $('overlay-wpp').classList.remove('open');
-}
-
-function copiarEAbrirWpp() {
-  const solicitante = ($('wpp-solicitante')?.value || '').trim();
-  const solEl = $('wpp-solicitante');
-  if (!solicitante) {
-    if (solEl) { solEl.classList.add('wpp-solicitante-required'); solEl.focus(); }
-    toast('Informe o nome do solicitante', 'error');
-    return;
-  }
-  if (solEl) solEl.classList.remove('wpp-solicitante-required');
-  const msg = $('wpp-msg').value;
-  if (!msg.trim()) { toast('Mensagem vazia', 'error'); return; }
-
-  // 💾 SALVA O PEDIDO NO HISTÓRICO ANTES DE ABRIR WHATSAPP
-  if (_wppSource === 'manual' && CART.length > 0) {
-    salvarPedidoNoHistorico(solicitante, msg);
-  }
-
-  // Copia a mensagem
-  navigator.clipboard.writeText(msg).then(() => {
-    toast('✅ Pedido salvo e copiado! Escolha o contato no WhatsApp.', 'success');
-  }).catch(() => {
-    try { $('wpp-msg').select(); document.execCommand('copy'); } catch(e) {}
-    toast('✅ Pedido salvo e copiado!', 'success');
-  });
-
-  // Abre WhatsApp Web após 600ms
-  setTimeout(() => {
-    window.open('https://web.whatsapp.com', '_blank');
-  }, 600);
-
-  registrarAudit('pedido', `Pedido enviado via WhatsApp`, `Solicitante: ${solicitante}`, '💬');
-  closeWpp();
-  pushNotif('wpp', 'Pedido enviado e salvo no histórico', `Solicitante: ${solicitante}`, '💬', 'ni-ok');
-}
-
-// Mantém compatibilidade
-function abrirWhatsApp() { copiarEAbrirWpp(); }
-
-function copiarMsgWpp() {
-  const msg = $('wpp-msg').value;
-  navigator.clipboard.writeText(msg).then(() => {
-    toast('Mensagem copiada!', 'success');
-  }).catch(() => {
-    $('wpp-msg').select();
-    document.execCommand('copy');
-    toast('Mensagem copiada!', 'success');
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════
 // MÓDULO: PREÇOS MIMAKI — atualização automática
 // ═══════════════════════════════════════════════════════════════
 const MIMAKI_PRICES = [
@@ -3643,9 +3496,9 @@ function aplicarPermissoes() {
     document.querySelectorAll('[onclick*="openSolicModal"]').forEach(b=>{b.style.display='none';});
   }
 
-  // ── Gerar pedido / WhatsApp ───────────────────────────────────
+  // ── Gerar pedido / Registrar compra ────────────────────────────
   if (!temPermissao('gerar_pedido')) {
-    document.querySelectorAll('[onclick*="openWpp"],[onclick="addToCart()"],[onclick="limparCarrinho()"]').forEach(b=>{
+    document.querySelectorAll('[onclick*="registrarCompra"],[onclick="addToCart()"],[onclick="limparCarrinho()"]').forEach(b=>{
       b.disabled=true;b.style.opacity='.3';b.style.pointerEvents='none';
     });
   }
@@ -4581,44 +4434,83 @@ function exportarAuditPDF() {
 // ═══════════════════════════════════════════════════════════════
 
 
-function salvarPedidoNoHistorico(solicitante, mensagemWpp) {
+function registrarCompra(tipo) {
+  // tipo: 'entrada' (soma no estoque) ou 'saida' (subtrai do estoque)
+  if (!podeEditar()) { toast('Acesso negado: apenas Admin e Operador podem registrar compras.', 'error'); return; }
+  if (!CART.length) { toast('Carrinho vazio. Adicione itens antes de registrar.', 'error'); return; }
+  const resp = ($('cart-resp')?.value || '').trim();
+  if (!resp) { toast('Informe seu nome em "Seu nome".', 'error'); $('cart-resp')?.focus(); return; }
+
+  if (tipo === 'saida') {
+    for (const c of CART) {
+      if (c.livre) continue;
+      const prod = P.find(x => x.cod === c.cod);
+      if (prod && c.qty > prod.estoque) {
+        toast(`Estoque insuficiente para "${prod.nome}" (disponível: ${prod.estoque}).`, 'error');
+        return;
+      }
+    }
+  }
+
   const agora = new Date();
-  const num = window._ultimoNumPedido || ('PC-' + Date.now().toString().slice(-6));
+  const dataStr = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  let atualizados = 0;
+  CART.forEach(c => {
+    if (c.livre || c.cod === '—') return; // item livre não tem produto cadastrado pra mexer no estoque
+    const prod = P.find(x => x.cod === c.cod);
+    if (!prod) return;
+    prod.estoque += tipo === 'entrada' ? c.qty : -c.qty;
+    if (c.custo > 0) prod.custo = c.custo;
+    MOV.push({
+      cod: prod.cod, nome: prod.nome, tipo: tipo === 'entrada' ? 'ENTRADA' : 'SAÍDA',
+      qty: c.qty, custo: c.custo || 0, resp, obs: c.descricao || `Compra${c.forn && c.forn !== '—' ? ' — ' + c.forn : ''}`, val: [],
+      data: dataStr
+    });
+    registrarAudit('estoque', `${tipo === 'entrada' ? 'Entrada' : 'Saída'}: ${prod.nome}`,
+      `Qtd: ${c.qty} un | Est.: ${prod.estoque} | Resp: ${resp}`, tipo === 'entrada' ? '📥' : '📤');
+    if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length - 1]);
+    if (typeof fbSalvarProduto === 'function') fbSalvarProduto(prod);
+    atualizados++;
+  });
+
+  const num = ($('cart-num')?.value || '').trim() || ('PC-' + Date.now().toString().slice(-6));
   const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
   const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
   const obs = ($('cart-obs')?.value || '').trim();
   const itens = CART.map(c => ({
     cod: c.cod, nome: c.nome, forn: c.forn,
     qty: c.qty, custo: c.custo, livre: c.livre || false,
-    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '', dataChegadaReal: ''
+    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '',
+    dataChegadaReal: tipo === 'entrada' ? agora.toLocaleDateString('pt-BR') : ''
   }));
   const pedido = {
     id: 'ped_' + Date.now(),
     num,
-    data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    data: dataStr,
     dataISO: agora.toISOString(),
-    solicitante,
+    solicitante: resp,
     itens,
     total,
     fornecedores: forns,
     obs,
-    mensagemWpp,
-    status: 'enviado',
+    direcao: tipo,
+    status: 'recebido',
     criadoPor: CURRENT_USER?.nome || 'Sistema',
     historicoStatus: [
-      { status: 'enviado', data: agora.toLocaleString('pt-BR'), por: CURRENT_USER?.nome || 'Sistema' }
+      { status: 'recebido', data: agora.toLocaleString('pt-BR'), por: resp }
     ]
   };
   PEDIDOS.unshift(pedido);
   if (typeof fbSalvarPedido === 'function') fbSalvarPedido(pedido);
-  registrarAudit('pedido', `Pedido ${num} criado`,
-    `${itens.length} itens · ${R(total)} · ${solicitante}`, '🛒');
+  registrarAudit('pedido', `Compra registrada ${num}`,
+    `${itens.length} itens · ${R(total)} · ${resp}`, '🛒');
   CART = [];
   if ($('cart-obs')) $('cart-obs').value = '';
   if ($('cart-num')) $('cart-num').value = '';
   renderCart();
   renderHistBadge();
-  if (currentPage === 'compras') renderHistorico();
+  renderAll();
+  toast(`Compra registrada!${atualizados ? ` Estoque ${tipo === 'entrada' ? 'somado' : 'subtraído'} em ${atualizados} ${atualizados===1?'item':'itens'}.` : ''}`, 'success');
 }
 
 function renderHistBadge() {
@@ -4698,6 +4590,7 @@ function abrirPedidoDet(id) {
     <div><b>📅 Data:</b> ${p.data}</div>
     <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
     <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
+    ${p.direcao ? `<div><b>📦 Tipo:</b> ${p.direcao === 'saida' ? '📤 Saída de estoque' : '📥 Entrada de estoque'}</div>` : ''}
     <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor:</b> ${R(p.total)}</div>
     ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
     ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
@@ -4717,7 +4610,9 @@ function abrirPedidoDet(id) {
       <div style="flex-shrink:0;">
         ${it.dataChegadaReal
           ? `<span class="badge b-ok" style="font-size:9px;">✅ ${it.dataChegadaReal}</span>`
-          : `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`}
+          : (p.status === 'enviado'
+              ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`
+              : '')}
       </div>
     </div>`).join('');
   if (p.obs) {
