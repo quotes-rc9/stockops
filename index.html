@@ -801,6 +801,72 @@
           </div>
         </div>
       </div>
+      <!-- ══ ANÁLISE ABC ════════════════════════════════════════ -->
+      <div class="page" id="page-abc">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">📊 Análise ABC</span>
+          <div class="ph-right">
+            <button class="btn-export" onclick="exportarABCPDF()">📄 PDF</button>
+          </div>
+        </div>
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--blue);">
+            💡 <b>Como funciona:</b> os produtos são ordenados por valor em estoque (estoque × custo). Classe <b>A</b> = itens que somam até 80% do valor total (maior prioridade), <b>B</b> = até 95%, <b>C</b> = o restante. Clique num card pra filtrar a tabela.
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 14px;flex-shrink:0;">
+          <div class="panel" id="abc-a-card" style="cursor:pointer;" onclick="toggleAbcFiltro('A')"></div>
+          <div class="panel" id="abc-b-card" style="cursor:pointer;" onclick="toggleAbcFiltro('B')"></div>
+          <div class="panel" id="abc-c-card" style="cursor:pointer;" onclick="toggleAbcFiltro('C')"></div>
+        </div>
+        <div class="tbl-wrap" style="flex:1;">
+          <table>
+            <thead><tr>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('abc2')">Classe <span id="abc-arrow-abc2"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('cod')">Código <span id="abc-arrow-cod"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('nome')">Nome <span id="abc-arrow-nome"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('cat')">Categoria <span id="abc-arrow-cat"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAbcBy('estoque')">Estoque <span id="abc-arrow-estoque"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('custo')">Custo <span id="abc-arrow-custo"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('vt')">Valor total <span id="abc-arrow-vt"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAbcBy('pct')">% do portfólio <span id="abc-arrow-pct"></span></th>
+            </tr></thead>
+            <tbody id="abc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ PREVISÃO DE COMPRA ═════════════════════════════════ -->
+      <div class="page" id="page-previsao">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">📈 Previsão de Compra</span>
+          <div class="ph-right">
+            <button class="btn-export" onclick="exportarPrevisaoPDF()">📄 PDF</button>
+          </div>
+        </div>
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--blue);">
+            💡 <b>Como funciona:</b> com base no consumo médio mensal de cada produto, estima quantos dias faltam até o estoque zerar (ruptura) e sugere uma quantidade de reposição. Mostra só itens com ruptura prevista em até 180 dias.
+          </span>
+        </div>
+        <div class="tbl-wrap" style="flex:1;">
+          <table>
+            <thead><tr>
+              <th style="cursor:pointer;user-select:none;" onclick="sortPrevBy('cod')">Código <span id="prev-arrow-cod"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortPrevBy('nome')">Nome <span id="prev-arrow-nome"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortPrevBy('cat')">Categoria <span id="prev-arrow-cat"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortPrevBy('estoque')">Estoque <span id="prev-arrow-estoque"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortPrevBy('consumo')">Consumo médio <span id="prev-arrow-consumo"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortPrevBy('dias')">Dias até ruptura <span id="prev-arrow-dias"></span></th>
+              <th style="text-align:center;">Data prevista</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortPrevBy('sugestao')">Sugestão de compra <span id="prev-arrow-sugestao"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortPrevBy('urg')">Urgência <span id="prev-arrow-urg"></span></th>
+            </tr></thead>
+            <tbody id="prev-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ══ NOTIFICAÇÕES ═══════════════════════════════════════ -->
       <div class="page" id="page-notificacoes">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
@@ -2071,8 +2137,14 @@ function calcularABCPorValor(){
 
 // ── ABC ────────────────────────────────────────────────────────
 let _abcFiltro = null;
+let _abcSort = { campo: null, dir: 'asc' };
 function toggleAbcFiltro(cls){
   _abcFiltro = (_abcFiltro === cls) ? null : cls;
+  renderABC();
+}
+function sortAbcBy(campo) {
+  if (_abcSort.campo === campo) _abcSort.dir = _abcSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _abcSort.campo = campo; _abcSort.dir = 'asc'; }
   renderABC();
 }
 function renderABC(){
@@ -2093,7 +2165,13 @@ function renderABC(){
         <div style="font-size:10px;color:var(--t3);margin-top:8px;">${desc[cls]}</div>
       </div>`;
   });
-  const itensTabela = _abcFiltro ? sorted.filter(p=>p.abc2===_abcFiltro) : sorted;
+  let itensTabela = _abcFiltro ? sorted.filter(p=>p.abc2===_abcFiltro) : sorted;
+  const abcSortVal = (p, campo) => {
+    if (campo === 'abc2' || campo === 'cod' || campo === 'nome' || campo === 'cat') return p[campo];
+    return p[campo] || 0;
+  };
+  itensTabela = _sortArr(itensTabela, _abcSort, abcSortVal);
+  _atualizarSetas('abc', ['abc2','cod','nome','cat','estoque','custo','vt','pct'], _abcSort);
   $('abc-tbody').innerHTML=itensTabela.map(p=>`<tr>
     <td>${abcChip(p.abc2)}</td>
     <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
@@ -2112,8 +2190,22 @@ function renderABC(){
 }
 
 // ── PREVISÃO ──────────────────────────────────────────────────
+let _prevSort = { campo: null, dir: 'asc' };
+function sortPrevBy(campo) {
+  if (_prevSort.campo === campo) _prevSort.dir = _prevSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _prevSort.campo = campo; _prevSort.dir = 'asc'; }
+  renderPrevisao();
+}
 function renderPrevisao(){
-  const sorted=[...P].map(p=>({...p,d:diasEst(p)})).filter(p=>p.d<180).sort((a,b)=>a.d-b.d);
+  let sorted=[...P].map(p=>({...p,d:diasEst(p)})).filter(p=>p.d<180).sort((a,b)=>a.d-b.d);
+  const prevSortVal = (p, campo) => {
+    if (campo === 'cod' || campo === 'nome' || campo === 'cat') return p[campo];
+    if (campo === 'dias' || campo === 'urg') return p.d;
+    if (campo === 'sugestao') return Math.max(1,(p.min*2)-p.estoque+Math.ceil(p.consumo));
+    return p[campo] || 0;
+  };
+  sorted = _sortArr(sorted, _prevSort, prevSortVal);
+  _atualizarSetas('prev', ['cod','nome','cat','estoque','consumo','dias','sugestao','urg'], _prevSort);
   $('prev-tbody').innerHTML=sorted.map(p=>{
     const rupDate=new Date(HOJE.getTime()+p.d*864e5);
     const rupStr=p.d>=999?'—':rupDate.toLocaleDateString('pt-BR');
