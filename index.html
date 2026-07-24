@@ -335,7 +335,9 @@
             <div class="filtro-dd-panel"><!-- populado por populateFornSelect() --></div>
           </div>
 
-          <span style="font-size:10px;color:var(--t3);margin-left:auto;" id="est-count"></span>
+          <button class="nav-btn" style="font-size:10px;margin-left:auto;" onclick="_estColapsados = new Set(['Peça','Insumo','Consumível','Outros']); renderEstoque();">▸ Recolher tudo</button>
+          <button class="nav-btn" style="font-size:10px;" onclick="_estColapsados = new Set(); renderEstoque();">▾ Expandir tudo</button>
+          <span style="font-size:10px;color:var(--t3);" id="est-count"></span>
         </div>
         <!-- RESUMO INTELIGENTE DE FILTRO -->
         <div id="filtro-resumo-bar" style="display:none;flex-shrink:0;padding:6px 14px;background:var(--s2);border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -1587,6 +1589,14 @@ function sortEstoqueBy(campo) {
   renderEstoque();
 }
 
+// ── Recolher/expandir blocos de categoria no Estoque ────────────
+let _estColapsados = new Set();
+function toggleEstoqueGrupo(cat) {
+  if (_estColapsados.has(cat)) _estColapsados.delete(cat);
+  else _estColapsados.add(cat);
+  renderEstoque();
+}
+
 function getFiltroSel(id){
   const box = document.getElementById(id);
   if(!box) return [];
@@ -1763,8 +1773,14 @@ function renderEstoque(){
 
   $('estoque-tbody').innerHTML = grupos.map(g => {
     const meta = CAT_META[g.cat] || { emoji: '📁', color: 'var(--t3)', bg: 'var(--s3)', label: 'Outros' };
-    const header = `<tr class="cat-section-row"><td colspan="13" style="padding:6px 14px;font-size:10px;font-weight:700;color:${meta.color};text-transform:uppercase;letter-spacing:.05em;background:${meta.bg};">${meta.emoji} ${meta.label} (${g.itens.length})</td></tr>`;
-    return header + g.itens.map(rowHtml).join('');
+    const colapsado = _estColapsados.has(g.cat);
+    const seta = colapsado ? '▸' : '▾';
+    const header = `<tr class="cat-section-row" onclick="toggleEstoqueGrupo('${g.cat}')" style="cursor:pointer;">
+      <td colspan="13" style="padding:6px 14px;font-size:10px;font-weight:700;color:${meta.color};text-transform:uppercase;letter-spacing:.05em;background:${meta.bg};user-select:none;">
+        ${seta} ${meta.emoji} ${meta.label} (${g.itens.length})
+      </td>
+    </tr>`;
+    return header + (colapsado ? '' : g.itens.map(rowHtml).join(''));
   }).join('');
 
   // ── Rodapé com totais da listagem ─────────────────────────────
