@@ -352,12 +352,14 @@
           <table>
             <thead><tr>
               <th>Código</th><th>Nome</th><th>Cat.</th><th>Fornecedor</th>
-              <th style="text-align:center;">Estoque</th><th style="text-align:center;">Mín.</th>
-              <th style="text-align:center;">Nível</th><th>ABC</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('estoque')">Estoque <span id="est-arrow-estoque"></span></th>
+              <th style="text-align:center;">Mín.</th>
+              <th style="text-align:center;">Nível</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('abc')">ABC <span id="est-arrow-abc"></span></th>
               <th style="text-align:center;">Prev. (dias)</th>
               <th>Validade mais próxima</th>
               <th style="text-align:right;">Valor Total</th>
-              <th>Status</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortEstoqueBy('status')">Status <span id="est-arrow-status"></span></th>
               <th>Ações</th>
             </tr></thead>
             <tbody id="estoque-tbody"></tbody>
@@ -1573,6 +1575,18 @@ function renderCatSummary(){
 // ── Filtro multi-select (checkbox dropdown) ────────────────────
 let _openFiltroDD = null;
 
+// ── Ordenação da tabela de Estoque ──────────────────────────────
+let _estSort = { campo: null, dir: 'asc' };
+function sortEstoqueBy(campo) {
+  if (_estSort.campo === campo) {
+    _estSort.dir = _estSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _estSort.campo = campo;
+    _estSort.dir = 'asc';
+  }
+  renderEstoque();
+}
+
 function getFiltroSel(id){
   const box = document.getElementById(id);
   if(!box) return [];
@@ -1671,8 +1685,45 @@ function renderEstoque(){
     }
   }
 
-  // ── Tabela ────────────────────────────────────────────────────
-  $('estoque-tbody').innerHTML=f.map(p=>{
+  // ── Tabela (agrupada por categoria, com ordenação por coluna) ──
+  const CAT_ORDER = ['Peça', 'Insumo', 'Consumível'];
+  const CAT_META = {
+    'Peça':       { emoji: '⚙',  color: '#b89aff', bg: 'var(--purple-a)', label: 'Peças' },
+    'Insumo':     { emoji: '🧪', color: '#7db5ff', bg: 'var(--blue-a)',   label: 'Insumos' },
+    'Consumível': { emoji: '📦', color: '#e8a020', bg: 'var(--yellow-a)', label: 'Consumíveis' },
+  };
+  const grupos = [];
+  CAT_ORDER.forEach(cat => {
+    const itens = f.filter(p => p.cat === cat);
+    if (itens.length) grupos.push({ cat, itens });
+  });
+  const outras = f.filter(p => !CAT_ORDER.includes(p.cat));
+  if (outras.length) grupos.push({ cat: 'Outros', itens: outras });
+
+  if (_estSort.campo) {
+    const dirMul = _estSort.dir === 'asc' ? 1 : -1;
+    const statusRank = { 'Crítico': 0, 'Alerta': 1, 'OK': 2 };
+    const sortVal = (p, campo) => {
+      if (campo === 'estoque') return p.estoque;
+      if (campo === 'abc') return p.abc || 'Z';
+      if (campo === 'status') return statusRank[status(p)] ?? 3;
+      return 0;
+    };
+    grupos.forEach(g => {
+      g.itens = [...g.itens].sort((a, b) => {
+        const va = sortVal(a, _estSort.campo), vb = sortVal(b, _estSort.campo);
+        if (va < vb) return -1 * dirMul;
+        if (va > vb) return 1 * dirMul;
+        return 0;
+      });
+    });
+  }
+  ['estoque', 'abc', 'status'].forEach(campo => {
+    const el = $('est-arrow-' + campo);
+    if (el) el.textContent = _estSort.campo === campo ? (_estSort.dir === 'asc' ? '▲' : '▼') : '';
+  });
+
+  const rowHtml = p => {
     const st=status(p),d=diasEst(p),mv=minVal(p.val||[]);
     const stColor=st==='Crítico'?'var(--red)':st==='Alerta'?'var(--yellow)':'var(--t1)';
     const valorTotal = p.estoque * p.custo;
@@ -1708,6 +1759,12 @@ function renderEstoque(){
         <button class="btn-del" onclick="confirmDelete('${p.cod}')">✕</button>
       </td>
     </tr>`;
+  };
+
+  $('estoque-tbody').innerHTML = grupos.map(g => {
+    const meta = CAT_META[g.cat] || { emoji: '📁', color: 'var(--t3)', bg: 'var(--s3)', label: 'Outros' };
+    const header = `<tr class="cat-section-row"><td colspan="13" style="padding:6px 14px;font-size:10px;font-weight:700;color:${meta.color};text-transform:uppercase;letter-spacing:.05em;background:${meta.bg};">${meta.emoji} ${meta.label} (${g.itens.length})</td></tr>`;
+    return header + g.itens.map(rowHtml).join('');
   }).join('');
 
   // ── Rodapé com totais da listagem ─────────────────────────────
