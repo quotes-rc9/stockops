@@ -353,14 +353,17 @@
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
-              <th>Código</th><th>Nome</th><th>Cat.</th><th>Fornecedor</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortEstoqueBy('cod')">Código <span id="est-arrow-cod"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortEstoqueBy('nome')">Nome <span id="est-arrow-nome"></span></th>
+              <th>Cat.</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortEstoqueBy('forn')">Fornecedor <span id="est-arrow-forn"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('estoque')">Estoque <span id="est-arrow-estoque"></span></th>
-              <th style="text-align:center;">Mín.</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('min')">Mín. <span id="est-arrow-min"></span></th>
               <th style="text-align:center;">Nível</th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('abc')">ABC <span id="est-arrow-abc"></span></th>
-              <th style="text-align:center;">Prev. (dias)</th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('dias')">Prev. (dias) <span id="est-arrow-dias"></span></th>
               <th>Validade mais próxima</th>
-              <th style="text-align:right;">Valor Total</th>
+              <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortEstoqueBy('valor')">Valor Total <span id="est-arrow-valor"></span></th>
               <th style="cursor:pointer;user-select:none;" onclick="sortEstoqueBy('status')">Status <span id="est-arrow-status"></span></th>
               <th>Ações</th>
             </tr></thead>
@@ -387,12 +390,15 @@
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
-              <th>Código</th><th>Nome</th><th>Fornecedor</th>
-              <th style="text-align:center;">Estoque</th>
-              <th>Validade</th><th style="text-align:center;">Dias restantes</th>
-              <th style="text-align:right;">Custo Unit.</th>
-              <th style="text-align:right;">Valor Total</th>
-              <th>Status</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortValBy('cod')">Código <span id="val-arrow-cod"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortValBy('nome')">Nome <span id="val-arrow-nome"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortValBy('forn')">Fornecedor <span id="val-arrow-forn"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortValBy('estoque')">Estoque <span id="val-arrow-estoque"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortValBy('validade')">Validade <span id="val-arrow-validade"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortValBy('dias')">Dias restantes <span id="val-arrow-dias"></span></th>
+              <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortValBy('custo')">Custo Unit. <span id="val-arrow-custo"></span></th>
+              <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortValBy('valor')">Valor Total <span id="val-arrow-valor"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortValBy('status')">Status <span id="val-arrow-status"></span></th>
             </tr></thead>
             <tbody id="val-tbody"></tbody>
           </table>
@@ -413,7 +419,13 @@
               <span class="ph-sub" id="al-crit-count"></span>
             </div>
             <div class="tbl-wrap"><table>
-              <thead><tr><th>Código</th><th>Nome</th><th style="text-align:center;">Estoque</th><th style="text-align:center;">Mínimo</th><th style="text-align:center;">Repor</th></tr></thead>
+              <thead><tr>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAlCritBy('cod')">Código <span id="alcrit-arrow-cod"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAlCritBy('nome')">Nome <span id="alcrit-arrow-nome"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAlCritBy('estoque')">Estoque <span id="alcrit-arrow-estoque"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAlCritBy('min')">Mínimo <span id="alcrit-arrow-min"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAlCritBy('repor')">Repor <span id="alcrit-arrow-repor"></span></th>
+              </tr></thead>
               <tbody id="al-crit-tbody"></tbody>
             </table></div>
           </div>
@@ -423,7 +435,13 @@
               <span class="ph-sub" id="al-warn-count"></span>
             </div>
             <div class="tbl-wrap"><table>
-              <thead><tr><th>Código</th><th>Nome</th><th style="text-align:center;">Estoque</th><th style="text-align:center;" title="Quantidade mínima para disparar pedido de compra">Pedir quando atingir ⓘ</th><th style="text-align:center;" title="Quantidade sugerida para repor o estoque">Sugestão de compra ⓘ</th></tr></thead>
+              <thead><tr>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAlWarnBy('cod')">Código <span id="alwarn-arrow-cod"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAlWarnBy('nome')">Nome <span id="alwarn-arrow-nome"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAlWarnBy('estoque')">Estoque <span id="alwarn-arrow-estoque"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" title="Quantidade mínima para disparar pedido de compra" onclick="sortAlWarnBy('min')">Pedir quando atingir ⓘ <span id="alwarn-arrow-min"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" title="Quantidade sugerida para repor o estoque" onclick="sortAlWarnBy('sugestao')">Sugestão de compra ⓘ <span id="alwarn-arrow-sugestao"></span></th>
+              </tr></thead>
               <tbody id="al-warn-tbody"></tbody>
             </table></div>
           </div>
@@ -451,10 +469,14 @@
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
-              <th>Data/Hora</th><th>Produto</th><th>Tipo</th>
-              <th style="text-align:center;">Quantidade</th>
-              <th>Valor Unit.</th><th>Total</th>
-              <th>Responsável</th><th>Observação</th><th>Ações</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('data')">Data/Hora <span id="mov-arrow-data"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('nome')">Produto <span id="mov-arrow-nome"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('tipo')">Tipo <span id="mov-arrow-tipo"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortMovBy('qty')">Quantidade <span id="mov-arrow-qty"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('custo')">Valor Unit. <span id="mov-arrow-custo"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('total')">Total <span id="mov-arrow-total"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortMovBy('resp')">Responsável <span id="mov-arrow-resp"></span></th>
+              <th>Observação</th><th>Ações</th>
             </tr></thead>
             <tbody id="mov-tbody"></tbody>
           </table>
@@ -495,7 +517,14 @@
           <div id="stab-panel-aprov" style="display:none;flex:1;overflow:hidden;">
             <div class="tbl-wrap" style="flex:1;">
               <table>
-                <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th style="text-align:center;">Qtd</th><th>Solicitante</th><th>Status</th></tr></thead>
+                <thead><tr>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('data')">Data <span id="solicaprov-arrow-data"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('nome')">Produto <span id="solicaprov-arrow-nome"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('tipo')">Tipo <span id="solicaprov-arrow-tipo"></span></th>
+                  <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortSolicBy('qty')">Qtd <span id="solicaprov-arrow-qty"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('resp')">Solicitante <span id="solicaprov-arrow-resp"></span></th>
+                  <th>Status</th>
+                </tr></thead>
                 <tbody id="solic-aprov-tbody"></tbody>
               </table>
             </div>
@@ -504,7 +533,14 @@
           <div id="stab-panel-rejeit" style="display:none;flex:1;overflow:hidden;">
             <div class="tbl-wrap" style="flex:1;">
               <table>
-                <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th style="text-align:center;">Qtd</th><th>Solicitante</th><th>Status</th></tr></thead>
+                <thead><tr>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('data')">Data <span id="solicrejeit-arrow-data"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('nome')">Produto <span id="solicrejeit-arrow-nome"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('tipo')">Tipo <span id="solicrejeit-arrow-tipo"></span></th>
+                  <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortSolicBy('qty')">Qtd <span id="solicrejeit-arrow-qty"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('resp')">Solicitante <span id="solicrejeit-arrow-resp"></span></th>
+                  <th>Status</th>
+                </tr></thead>
                 <tbody id="solic-rejeit-tbody"></tbody>
               </table>
             </div>
@@ -513,7 +549,15 @@
           <div id="stab-panel-todas" style="display:none;flex:1;overflow:hidden;">
             <div class="tbl-wrap" style="flex:1;">
               <table>
-                <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th style="text-align:center;">Qtd</th><th>Solicitante</th><th>Obs</th><th>Status</th></tr></thead>
+                <thead><tr>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('data')">Data <span id="solichist-arrow-data"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('nome')">Produto <span id="solichist-arrow-nome"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('tipo')">Tipo <span id="solichist-arrow-tipo"></span></th>
+                  <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortSolicBy('qty')">Qtd <span id="solichist-arrow-qty"></span></th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('resp')">Solicitante <span id="solichist-arrow-resp"></span></th>
+                  <th>Obs</th>
+                  <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('status')">Status <span id="solichist-arrow-status"></span></th>
+                </tr></thead>
                 <tbody id="solic-hist-tbody"></tbody>
               </table>
             </div>
@@ -692,14 +736,14 @@
           <div class="tbl-wrap" style="flex:1;">
             <table>
               <thead><tr>
-                <th>Nº Pedido</th>
-                <th>Data</th>
-                <th>Solicitante</th>
-                <th style="text-align:center;">Itens</th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortHistBy('num')">Nº Pedido <span id="hist-arrow-num"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortHistBy('data')">Data <span id="hist-arrow-data"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortHistBy('solicitante')">Solicitante <span id="hist-arrow-solicitante"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortHistBy('itens')">Itens <span id="hist-arrow-itens"></span></th>
                 <th style="text-align:center;">Chegada</th>
                 <th>Fornecedores</th>
-                <th style="text-align:right;">Valor Total</th>
-                <th>Status</th>
+                <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortHistBy('total')">Valor Total <span id="hist-arrow-total"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortHistBy('status')">Status <span id="hist-arrow-status"></span></th>
                 <th>Ações</th>
               </tr></thead>
               <tbody id="hist-tbody"></tbody>
@@ -813,7 +857,12 @@
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
-              <th>Data/Hora</th><th>Usuário</th><th>Perfil</th><th>Ação</th><th>Detalhe</th><th>Tipo</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAuditBy('ts')">Data/Hora <span id="audit-arrow-ts"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAuditBy('user')">Usuário <span id="audit-arrow-user"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAuditBy('role')">Perfil <span id="audit-arrow-role"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAuditBy('acao')">Ação <span id="audit-arrow-acao"></span></th>
+              <th>Detalhe</th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAuditBy('tipo')">Tipo <span id="audit-arrow-tipo"></span></th>
             </tr></thead>
             <tbody id="audit-tbody"></tbody>
           </table>
@@ -1577,6 +1626,36 @@ function renderCatSummary(){
 // ── Filtro multi-select (checkbox dropdown) ────────────────────
 let _openFiltroDD = null;
 
+// ── Helpers genéricos de ordenação de tabela ────────────────────
+function _parseDataBR(str) {
+  if (!str) return 0;
+  const [datePart, timePart] = String(str).split(' ');
+  const [d, m, a] = (datePart || '').split('/').map(Number);
+  if (!d || !m || !a) return 0;
+  let h = 0, min = 0;
+  if (timePart) { const [hh, mm] = timePart.split(':').map(Number); h = hh || 0; min = mm || 0; }
+  return new Date(a, m - 1, d, h, min).getTime();
+}
+function _sortArr(arr, sortState, valueFn) {
+  if (!sortState.campo) return arr;
+  const dirMul = sortState.dir === 'asc' ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    let va = valueFn(a, sortState.campo), vb = valueFn(b, sortState.campo);
+    if (va == null) va = '';
+    if (vb == null) vb = '';
+    if (typeof va === 'string' && typeof vb === 'string') return va.localeCompare(vb, 'pt-BR') * dirMul;
+    if (va < vb) return -1 * dirMul;
+    if (va > vb) return 1 * dirMul;
+    return 0;
+  });
+}
+function _atualizarSetas(prefix, campos, sortState) {
+  campos.forEach(c => {
+    const el = $(prefix + '-arrow-' + c);
+    if (el) el.textContent = sortState.campo === c ? (sortState.dir === 'asc' ? '▲' : '▼') : '⇅';
+  });
+}
+
 // ── Ordenação da tabela de Estoque ──────────────────────────────
 let _estSort = { campo: null, dir: 'asc' };
 function sortEstoqueBy(campo) {
@@ -1710,28 +1789,21 @@ function renderEstoque(){
   const outras = f.filter(p => !CAT_ORDER.includes(p.cat));
   if (outras.length) grupos.push({ cat: 'Outros', itens: outras });
 
-  if (_estSort.campo) {
-    const dirMul = _estSort.dir === 'asc' ? 1 : -1;
-    const statusRank = { 'Crítico': 0, 'Alerta': 1, 'OK': 2 };
-    const sortVal = (p, campo) => {
-      if (campo === 'estoque') return p.estoque;
-      if (campo === 'abc') return p.abc || 'Z';
-      if (campo === 'status') return statusRank[status(p)] ?? 3;
-      return 0;
-    };
-    grupos.forEach(g => {
-      g.itens = [...g.itens].sort((a, b) => {
-        const va = sortVal(a, _estSort.campo), vb = sortVal(b, _estSort.campo);
-        if (va < vb) return -1 * dirMul;
-        if (va > vb) return 1 * dirMul;
-        return 0;
-      });
-    });
-  }
-  ['estoque', 'abc', 'status'].forEach(campo => {
-    const el = $('est-arrow-' + campo);
-    if (el) el.textContent = _estSort.campo === campo ? (_estSort.dir === 'asc' ? '▲' : '▼') : '';
-  });
+  const statusRank = { 'Crítico': 0, 'Alerta': 1, 'OK': 2 };
+  const estSortVal = (p, campo) => {
+    if (campo === 'cod') return p.cod;
+    if (campo === 'nome') return p.nome;
+    if (campo === 'forn') return p.forn;
+    if (campo === 'estoque') return p.estoque;
+    if (campo === 'min') return p.min;
+    if (campo === 'abc') return p.abc || 'Z';
+    if (campo === 'dias') return diasEst(p);
+    if (campo === 'valor') return p.estoque * p.custo;
+    if (campo === 'status') return statusRank[status(p)] ?? 3;
+    return 0;
+  };
+  grupos.forEach(g => { g.itens = _sortArr(g.itens, _estSort, estSortVal); });
+  _atualizarSetas('est', ['cod','nome','forn','estoque','min','abc','dias','valor','status'], _estSort);
 
   const rowHtml = p => {
     const st=status(p),d=diasEst(p),mv=minVal(p.val||[]);
@@ -1827,11 +1899,31 @@ function populateFornSelect(){
 }
 
 // ── VALIDADE PAGE ─────────────────────────────────────────────
+let _valSort = { campo: null, dir: 'asc' };
+function sortValBy(campo) {
+  if (_valSort.campo === campo) _valSort.dir = _valSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _valSort.campo = campo; _valSort.dir = 'asc'; }
+  renderValidade();
+}
 function renderValidade(){
   const dias=parseInt(document.getElementById('fv-filter')?.value||'30');
   const rows=[];
   P.forEach(p=>(p.val||[]).forEach(v=>{const d=diasAteVal(v);rows.push({p,v,d});}));
-  const f=rows.filter(r=>r.d<=dias).sort((a,b)=>a.d-b.d);
+  let f=rows.filter(r=>r.d<=dias).sort((a,b)=>a.d-b.d);
+  const valSortVal = (r, campo) => {
+    if (campo === 'cod') return r.p.cod;
+    if (campo === 'nome') return r.p.nome;
+    if (campo === 'forn') return r.p.forn;
+    if (campo === 'estoque') return r.p.estoque;
+    if (campo === 'validade') return _parseDataBR(r.v);
+    if (campo === 'dias') return r.d;
+    if (campo === 'custo') return r.p.custo || 0;
+    if (campo === 'valor') return (r.p.custo || 0) * r.p.estoque;
+    if (campo === 'status') return r.d;
+    return 0;
+  };
+  f = _sortArr(f, _valSort, valSortVal);
+  _atualizarSetas('val', ['cod','nome','forn','estoque','validade','dias','custo','valor','status'], _valSort);
   $('val-tbody').innerHTML=f.map(r=>{
     const d=r.d;
     const col=d<0?'var(--red)':d<=7?'var(--red)':d<=30?'var(--orange)':'var(--yellow)';
@@ -1874,11 +1966,35 @@ function renderValidade(){
 }
 
 // ── ALERTAS PAGE ──────────────────────────────────────────────
+let _alCritSort = { campo: null, dir: 'asc' };
+let _alWarnSort = { campo: null, dir: 'asc' };
+function sortAlCritBy(campo) {
+  if (_alCritSort.campo === campo) _alCritSort.dir = _alCritSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _alCritSort.campo = campo; _alCritSort.dir = 'asc'; }
+  renderAlertas();
+}
+function sortAlWarnBy(campo) {
+  if (_alWarnSort.campo === campo) _alWarnSort.dir = _alWarnSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _alWarnSort.campo = campo; _alWarnSort.dir = 'asc'; }
+  renderAlertas();
+}
 function renderAlertas(){
-  const crits=P.filter(p=>status(p)==='Crítico');
-  const warns=P.filter(p=>status(p)==='Alerta');
+  let crits=P.filter(p=>status(p)==='Crítico');
+  let warns=P.filter(p=>status(p)==='Alerta');
   $('al-crit-count').textContent=crits.length+' itens';
   $('al-warn-count').textContent=warns.length+' itens';
+  const alSortVal = (p, campo) => {
+    if (campo === 'cod') return p.cod;
+    if (campo === 'nome') return p.nome;
+    if (campo === 'estoque') return p.estoque;
+    if (campo === 'min') return p.min;
+    if (campo === 'repor' || campo === 'sugestao') return Math.max(0, p.repo - p.estoque);
+    return 0;
+  };
+  crits = _sortArr(crits, _alCritSort, alSortVal);
+  warns = _sortArr(warns, _alWarnSort, alSortVal);
+  _atualizarSetas('alcrit', ['cod','nome','estoque','min','repor'], _alCritSort);
+  _atualizarSetas('alwarn', ['cod','nome','estoque','min','sugestao'], _alWarnSort);
   const row=(p,col)=>`<tr>
     <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
     <td style="font-weight:500;">${p.nome}</td>
@@ -1891,6 +2007,12 @@ function renderAlertas(){
 }
 
 // ── MOVIMENTAÇÕES ─────────────────────────────────────────────
+let _movSort = { campo: null, dir: 'asc' };
+function sortMovBy(campo) {
+  if (_movSort.campo === campo) _movSort.dir = _movSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _movSort.campo = campo; _movSort.dir = 'asc'; }
+  renderMov();
+}
 function renderMov(){
   $('mov-count').textContent=MOV.length+' registro'+(MOV.length!==1?'s':'');
   if(!MOV.length){
@@ -1901,8 +2023,20 @@ function renderMov(){
     </td></tr>`;
     return;
   }
-  $('mov-tbody').innerHTML=[...MOV].reverse().map((m,ri)=>{
-    const i=MOV.length-1-ri;
+  const movSortVal = (m, campo) => {
+    if (campo === 'data') return _parseDataBR(m.data);
+    if (campo === 'nome') return m.nome;
+    if (campo === 'tipo') return m.tipo;
+    if (campo === 'qty') return m.qty;
+    if (campo === 'custo') return m.custo || 0;
+    if (campo === 'total') return (m.custo || 0) * m.qty;
+    if (campo === 'resp') return m.resp || '';
+    return 0;
+  };
+  const lista = _movSort.campo ? _sortArr(MOV, _movSort, movSortVal) : [...MOV].reverse();
+  _atualizarSetas('mov', ['data','nome','tipo','qty','custo','total','resp'], _movSort);
+  $('mov-tbody').innerHTML=lista.map((m)=>{
+    const i=MOV.indexOf(m);
     const isE=m.tipo==='ENTRADA';
     return `<tr>
       <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${m.data}</td>
@@ -2837,11 +2971,34 @@ function switchSolicTab(tab) {
   });
 }
 
+let _solicSort = { campo: null, dir: 'asc' };
+function sortSolicBy(campo) {
+  if (_solicSort.campo === campo) _solicSort.dir = _solicSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _solicSort.campo = campo; _solicSort.dir = 'asc'; }
+  renderSolicitacoes();
+}
 function renderSolicitacoes() {
   const pend   = SOLIC.filter(s => s.status === 'pendente');
-  const aprov  = SOLIC.filter(s => s.status === 'aprovado').reverse();
-  const rejeit = SOLIC.filter(s => s.status === 'rejeitado').reverse();
-  const todas  = [...SOLIC].reverse();
+  const statusRankSolic = { 'aprovado': 0, 'rejeitado': 1, 'pendente': 2 };
+  const solicSortVal = (s, campo) => {
+    if (campo === 'data') return _parseDataBR(s.data);
+    if (campo === 'nome') return s.nome;
+    if (campo === 'tipo') return s.tipo;
+    if (campo === 'qty') return s.qty;
+    if (campo === 'resp') return s.resp;
+    if (campo === 'status') return statusRankSolic[s.status] ?? 3;
+    return 0;
+  };
+  let aprov  = SOLIC.filter(s => s.status === 'aprovado').reverse();
+  let rejeit = SOLIC.filter(s => s.status === 'rejeitado').reverse();
+  let todas  = [...SOLIC].reverse();
+  if (_solicSort.campo) {
+    aprov  = _sortArr(aprov, _solicSort, solicSortVal);
+    rejeit = _sortArr(rejeit, _solicSort, solicSortVal);
+    todas  = _sortArr(todas, _solicSort, solicSortVal);
+  }
+  ['aprov','rejeit','hist'].forEach(prefix =>
+    _atualizarSetas('solic' + prefix, ['data','nome','tipo','qty','resp','status'], _solicSort));
 
   // Atualiza label e badge
   if ($('solic-count-label')) $('solic-count-label').textContent = SOLIC.length + ' total';
@@ -4188,6 +4345,12 @@ function registrarAudit(tipo, acao, detalhe='', iconeCustom='') {
   if (currentPage === 'auditoria') renderAuditoria();
 }
 
+let _auditSort = { campo: null, dir: 'asc' };
+function sortAuditBy(campo) {
+  if (_auditSort.campo === campo) _auditSort.dir = _auditSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _auditSort.campo = campo; _auditSort.dir = 'asc'; }
+  renderAuditoria();
+}
 function renderAuditoria() {
   const ft = document.getElementById('audit-filter-tipo')?.value || '';
   const fu = document.getElementById('audit-filter-user')?.value || '';
@@ -4201,10 +4364,20 @@ function renderAuditoria() {
       users.map(u => `<option${curVal===u?' selected':''}>${u}</option>`).join('');
   }
 
-  const f = AUDIT.filter(a =>
+  let f = AUDIT.filter(a =>
     (!ft || a.tipo === ft) &&
     (!fu || a.user === fu)
   );
+  const auditSortVal = (a, campo) => {
+    if (campo === 'ts') return a.tsMs || _parseDataBR(a.ts);
+    if (campo === 'user') return a.user;
+    if (campo === 'role') return a.role;
+    if (campo === 'acao') return a.acao;
+    if (campo === 'tipo') return a.tipo;
+    return 0;
+  };
+  f = _sortArr(f, _auditSort, auditSortVal);
+  _atualizarSetas('audit', ['ts','user','role','acao','tipo'], _auditSort);
 
   if ($('audit-count')) $('audit-count').textContent = f.length + ' registros';
 
@@ -4678,6 +4851,12 @@ function renderHistBadge() {
   }
 }
 
+let _histSort = { campo: null, dir: 'asc' };
+function sortHistBy(campo) {
+  if (_histSort.campo === campo) _histSort.dir = _histSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _histSort.campo = campo; _histSort.dir = 'asc'; }
+  renderHistorico();
+}
 function renderHistorico() {
   const fs = $('hist-filter-status')?.value || '';
   const fu = $('hist-filter-user')?.value || '';
@@ -4689,11 +4868,23 @@ function renderHistorico() {
     sel.innerHTML = '<option value="">Todos solicitantes</option>' +
       users.map(u => `<option${cur===u?' selected':''}>${u}</option>`).join('');
   }
-  const f = PEDIDOS.filter(p =>
+  let f = PEDIDOS.filter(p =>
     (!fs || p.status === fs) &&
     (!fu || p.solicitante === fu) &&
     (!fb || p.num.toLowerCase().includes(fb))
   );
+  const statusRankHist = { 'enviado': 0, 'recebido': 1, 'cancelado': 2 };
+  const histSortVal = (p, campo) => {
+    if (campo === 'num') return p.num;
+    if (campo === 'data') return p.dataISO || _parseDataBR(p.data);
+    if (campo === 'solicitante') return p.solicitante;
+    if (campo === 'itens') return p.itens.length;
+    if (campo === 'total') return p.total;
+    if (campo === 'status') return statusRankHist[p.status] ?? 3;
+    return 0;
+  };
+  f = _sortArr(f, _histSort, histSortVal);
+  _atualizarSetas('hist', ['num','data','solicitante','itens','total','status'], _histSort);
   if ($('hist-count')) $('hist-count').textContent = f.length + ' pedido' + (f.length!==1?'s':'');
   const tbody = $('hist-tbody');
   if (!tbody) return;
