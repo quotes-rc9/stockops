@@ -718,7 +718,37 @@
             <!-- Botões dinâmicos -->
           </div>
         </div>
-      </div>  
+      </div>
+      <!-- MODAL EDITAR PEDIDO (admin) -->
+      <div class="overlay" id="overlay-edit-pedido" onclick="if(event.target===this)closeEditarPedido()">
+        <div class="modal" style="width:600px;max-height:85vh;overflow-y:auto;">
+          <div class="m-head">
+            <div class="m-title">✏ Editar Pedido</div>
+            <button class="m-close" onclick="closeEditarPedido()">✕</button>
+          </div>
+          <div class="frow" style="margin-bottom:12px;">
+            <div class="fg" style="margin-bottom:0;">
+              <label class="fl">Nº do pedido</label>
+              <input class="fi2" id="ep2-num">
+            </div>
+            <div class="fg" style="margin-bottom:0;">
+              <label class="fl">Solicitante</label>
+              <input class="fi2" id="ep2-solicitante">
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:12px;">
+            <label class="fl">Observação</label>
+            <textarea class="fi2" id="ep2-obs" rows="2" style="resize:none;width:100%;"></textarea>
+          </div>
+          <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">📦 Itens</div>
+          <div id="ep2-itens" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+          <div class="fhint" style="margin-bottom:12px;">⚠ Editar aqui corrige apenas o registro histórico — não altera o estoque atual. Pra corrigir estoque, use Movimentações.</div>
+          <div class="m-foot">
+            <button class="mbtn mbtn-cancel" onclick="closeEditarPedido()">Cancelar</button>
+            <button class="mbtn mbtn-ok" onclick="salvarEdicaoPedido()">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
       <!-- ══ NOTIFICAÇÕES ═══════════════════════════════════════ -->
       <div class="page" id="page-notificacoes">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
@@ -4577,6 +4607,10 @@ function renderHistorico() {
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
       ${p.status === 'enviado' ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);" onclick="marcarRecebido('${p.id}')">✅ Recebido</button>` : ''}
+      ${CURRENT_USER?.role === 'admin' ? `
+        <button class="btn-edit" onclick="abrirEditarPedido('${p.id}')">✏ Editar</button>
+        <button class="btn-del" onclick="confirmarExcluirPedido('${p.id}')">🗑 Excluir</button>
+      ` : ''}
     </td>
   </tr>`).join('');
 }
@@ -4627,6 +4661,10 @@ function abrirPedidoDet(id) {
     actions += `<button class="mbtn mbtn-ok green" onclick="marcarRecebido('${p.id}')">✅ Marcar como Recebido</button>`;
   } else if (p.status === 'recebido') {
     actions += `<button class="mbtn mbtn-ok" style="background:var(--yellow);border-color:var(--yellow);color:#000;" onclick="reabrirPedido('${p.id}')">↩ Reabrir como Enviado</button>`;
+  }
+  if (CURRENT_USER?.role === 'admin') {
+    actions += `<button class="mbtn mbtn-cancel" onclick="abrirEditarPedido('${p.id}')">✏ Editar</button>`;
+    actions += `<button class="mbtn mbtn-ok red" onclick="confirmarExcluirPedido('${p.id}')">🗑 Excluir pedido</button>`;
   }
   $('pd-actions').innerHTML = actions;
   $('overlay-pedido-det').classList.add('open');
@@ -4723,6 +4761,82 @@ function marcarRecebido(id) {
   renderAll();
   toast(`Pedido ${p.num} marcado como recebido!${qtdAtualizados ? ` Estoque atualizado (${qtdAtualizados} ${qtdAtualizados===1?'item':'itens'}).` : ''}`, 'success');
   pushNotif('pedido', `Pedido ${p.num} recebido`, `Por: ${CURRENT_USER?.nome}`, '✅', 'ni-ok');
+}
+
+// ── Editar / Excluir pedido (somente Admin) ─────────────────────
+let _editPedidoId = null;
+let _editPedidoItens = [];
+
+function abrirEditarPedido(id) {
+  if (!CURRENT_USER || CURRENT_USER.role !== 'admin') { toast('Acesso negado: apenas Admin pode editar pedidos.', 'error'); return; }
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  _editPedidoId = id;
+  _editPedidoItens = JSON.parse(JSON.stringify(p.itens));
+  $('ep2-num').value = p.num;
+  $('ep2-solicitante').value = p.solicitante;
+  $('ep2-obs').value = p.obs || '';
+  renderEditPedidoItens();
+  $('overlay-edit-pedido').classList.add('open');
+}
+
+function closeEditarPedido() {
+  $('overlay-edit-pedido').classList.remove('open');
+  _editPedidoId = null;
+}
+
+function renderEditPedidoItens() {
+  const box = $('ep2-itens');
+  if (!box) return;
+  box.innerHTML = _editPedidoItens.map((it, i) => `
+    <div style="display:flex;gap:6px;align-items:center;background:var(--s3);border-radius:6px;padding:6px 8px;">
+      <div style="flex:1;min-width:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${it.nome}${it.livre ? ' <span style="font-size:9px;color:var(--orange);">livre</span>' : ''}</div>
+      <input class="fi2" type="number" min="1" style="width:64px;flex-shrink:0;" value="${it.qty}" title="Quantidade"
+        onchange="_editPedidoItens[${i}].qty = parseInt(this.value) || 1">
+      <input class="fi2" type="number" min="0" step="0.01" style="width:90px;flex-shrink:0;" value="${it.custo || ''}" placeholder="Valor" title="Valor unitário"
+        onchange="_editPedidoItens[${i}].custo = parseFloat(this.value) || 0">
+      <button class="btn-del" style="flex-shrink:0;" onclick="_editPedidoItens.splice(${i},1); renderEditPedidoItens();">✕</button>
+    </div>`).join('') || '<div style="font-size:11px;color:var(--t4);font-style:italic;">Nenhum item.</div>';
+}
+
+function salvarEdicaoPedido() {
+  if (!CURRENT_USER || CURRENT_USER.role !== 'admin') { toast('Acesso negado.', 'error'); return; }
+  const p = PEDIDOS.find(x => x.id === _editPedidoId);
+  if (!p) return;
+  const num = ($('ep2-num').value || '').trim();
+  const solicitante = ($('ep2-solicitante').value || '').trim();
+  if (!num) { toast('Informe o número do pedido', 'error'); return; }
+  if (!solicitante) { toast('Informe o solicitante', 'error'); return; }
+  p.num = num;
+  p.solicitante = solicitante;
+  p.obs = ($('ep2-obs').value || '').trim();
+  p.itens = _editPedidoItens;
+  p.total = p.itens.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
+  p.fornecedores = [...new Set(p.itens.map(c => c.forn).filter(f => f && f !== '—'))];
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
+  registrarAudit('pedido', `Pedido ${p.num} editado`, `Por: ${CURRENT_USER.nome}`, '✏');
+  closeEditarPedido();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${p.num} atualizado!`, 'success');
+}
+
+function confirmarExcluirPedido(id) {
+  if (!CURRENT_USER || CURRENT_USER.role !== 'admin') { toast('Acesso negado: apenas Admin pode excluir pedidos.', 'error'); return; }
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+  const chegaram = p.itens.filter(it => it.dataChegadaReal).length;
+  const aviso = chegaram > 0
+    ? `\n\n⚠ ${chegaram} ite${chegaram === 1 ? 'm' : 'ns'} deste pedido já foi(ram) somado(s)/processado(s) no estoque. Excluir o pedido NÃO desfaz essa movimentação — se precisar corrigir o estoque, faça isso em Movimentações.`
+    : '';
+  if (!confirm(`Excluir o pedido ${p.num} do histórico?${aviso}`)) return;
+  PEDIDOS = PEDIDOS.filter(x => x.id !== id);
+  if (typeof fbExcluirPedido === 'function') fbExcluirPedido(id);
+  registrarAudit('pedido', `Pedido ${p.num} excluído`, `Por: ${CURRENT_USER.nome}`, '🗑');
+  closePedidoDet();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${p.num} excluído.`, 'success');
 }
 
 function cancelarPedido(id) {
@@ -4988,6 +5102,20 @@ window.fbSalvarPedido = async function(p) {
     const { error } = await sb.from(COL_PEDIDOS).upsert({ id: p.id, data: p }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar pedido:', e); setSyncStatus('error'); }
+};
+
+// ── EXCLUIR pedido ───────────────────────────────────────────
+window.fbExcluirPedido = async function(id) {
+  try {
+    setSyncStatus('saving');
+    const { error } = await sb.from(COL_PEDIDOS).delete().eq('id', id); if (error) throw error;
+    setSyncStatus('ok');
+    return true;
+  } catch(e) {
+    console.error('Erro ao excluir pedido:', e);
+    setSyncStatus('error');
+    return false;
+  }
 };
 
 // ── SALVAR entrada de auditoria ───────────────────────────────
