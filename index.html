@@ -636,6 +636,10 @@
                   <label class="fl">Seu nome</label>
                   <input class="fi2" id="cart-resp" placeholder="Quem está fazendo o pedido">
                 </div>
+                <button class="mbtn mbtn-ok" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-bottom:6px;background:var(--blue);border-color:var(--blue);color:#fff;" onclick="registrarPedidoPendente()">
+                  📝 Registrar Pedido (aguardando chegada)
+                </button>
+                <div class="fhint" style="margin-bottom:10px;">Fica pendente no Histórico com a previsão de chegada. Não mexe no estoque ainda — quando chegar, marque "✅ Chegou" no detalhe do pedido.</div>
                 <button class="mbtn mbtn-ok green" style="width:100%;justify-content:center;padding:10px;font-size:12px;margin-bottom:6px;" onclick="registrarCompra('entrada')">
                   📥 Somar ao Estoque
                 </button>
@@ -3528,7 +3532,7 @@ function aplicarPermissoes() {
 
   // ── Gerar pedido / Registrar compra ────────────────────────────
   if (!temPermissao('gerar_pedido')) {
-    document.querySelectorAll('[onclick*="registrarCompra"],[onclick="addToCart()"],[onclick="limparCarrinho()"]').forEach(b=>{
+    document.querySelectorAll('[onclick*="registrarCompra"],[onclick="registrarPedidoPendente()"],[onclick="addToCart()"],[onclick="limparCarrinho()"]').forEach(b=>{
       b.disabled=true;b.style.opacity='.3';b.style.pointerEvents='none';
     });
   }
@@ -4463,6 +4467,52 @@ function exportarAuditPDF() {
 // MÓDULO: HISTÓRICO DE PEDIDOS DE COMPRA
 // ═══════════════════════════════════════════════════════════════
 
+
+function registrarPedidoPendente() {
+  // Registra o pedido como pendente (ainda não chegou) — não mexe no estoque.
+  if (!podeEditar()) { toast('Acesso negado: apenas Admin e Operador podem registrar pedidos.', 'error'); return; }
+  if (!CART.length) { toast('Carrinho vazio. Adicione itens antes de registrar.', 'error'); return; }
+  const resp = ($('cart-resp')?.value || '').trim();
+  if (!resp) { toast('Informe seu nome em "Seu nome".', 'error'); $('cart-resp')?.focus(); return; }
+
+  const agora = new Date();
+  const num = ($('cart-num')?.value || '').trim() || ('PC-' + Date.now().toString().slice(-6));
+  const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
+  const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
+  const obs = ($('cart-obs')?.value || '').trim();
+  const itens = CART.map(c => ({
+    cod: c.cod, nome: c.nome, forn: c.forn,
+    qty: c.qty, custo: c.custo, livre: c.livre || false,
+    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '', dataChegadaReal: ''
+  }));
+  const pedido = {
+    id: 'ped_' + Date.now(),
+    num,
+    data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    dataISO: agora.toISOString(),
+    solicitante: resp,
+    itens,
+    total,
+    fornecedores: forns,
+    obs,
+    status: 'enviado',
+    criadoPor: CURRENT_USER?.nome || 'Sistema',
+    historicoStatus: [
+      { status: 'enviado', data: agora.toLocaleString('pt-BR'), por: resp }
+    ]
+  };
+  PEDIDOS.unshift(pedido);
+  if (typeof fbSalvarPedido === 'function') fbSalvarPedido(pedido);
+  registrarAudit('pedido', `Pedido ${num} registrado (aguardando chegada)`,
+    `${itens.length} itens · ${R(total)} · ${resp}`, '📝');
+  CART = [];
+  if ($('cart-obs')) $('cart-obs').value = '';
+  if ($('cart-num')) $('cart-num').value = '';
+  renderCart();
+  renderHistBadge();
+  renderHistorico();
+  toast(`Pedido ${num} registrado! Vai aparecer no Histórico como pendente até você marcar a chegada.`, 'success');
+}
 
 function registrarCompra(tipo) {
   // tipo: 'entrada' (soma no estoque) ou 'saida' (subtrai do estoque)
