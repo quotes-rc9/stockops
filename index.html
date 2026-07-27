@@ -1326,6 +1326,13 @@
       </div>
     </div>
 
+    <div class="frow" style="margin-bottom:12px;">
+      <div class="fg" style="margin-bottom:0;flex:1;">
+        <label class="fl">Subcategoria (só para Insumo)</label>
+        <input class="fi2" id="ep-subcat" placeholder="Ex: Tintas, Líquidos de manutenção, Solvente">
+      </div>
+    </div>
+
     <!-- Linha 3: Estoque + Mín + Reposição + Custo + Consumo -->
     <div class="frow3" style="margin-bottom:12px;">
       <div class="fg" style="margin-bottom:0;">
@@ -1909,6 +1916,9 @@ function renderEstoque(){
     </tr>`;
   };
 
+  const INSUMO_SUBCAT_ORDER = ['Tintas', 'Liquidos de manutencao', 'Solvente'];
+  const INSUMO_SUBCAT_LABEL = { 'Tintas': 'Tintas', 'Liquidos de manutencao': 'Líquidos de manutenção', 'Solvente': 'Solvente' };
+
   $('estoque-tbody').innerHTML = grupos.map(g => {
     const meta = CAT_META[g.cat] || { emoji: '📁', color: 'var(--t3)', bg: 'var(--s3)', label: 'Outros' };
     const colapsado = _estColapsados.has(g.cat);
@@ -1918,7 +1928,35 @@ function renderEstoque(){
         ${seta} ${meta.emoji} ${meta.label} (${g.itens.length})
       </td>
     </tr>`;
-    return header + (colapsado ? '' : g.itens.map(rowHtml).join(''));
+    if (colapsado) return header;
+
+    if (g.cat === 'Insumo') {
+      const bySubcat = {};
+      g.itens.forEach(p => {
+        const key = p.subcat || '';
+        (bySubcat[key] = bySubcat[key] || []).push(p);
+      });
+      const keys = Object.keys(bySubcat);
+      const ordered = INSUMO_SUBCAT_ORDER.filter(k => keys.includes(k))
+        .concat(keys.filter(k => k && !INSUMO_SUBCAT_ORDER.includes(k)).sort((a,b)=>a.localeCompare(b,'pt-BR')))
+        .concat(keys.includes('') ? [''] : []);
+      const subHtml = ordered.map(key => {
+        const subItens = bySubcat[key];
+        const subKey = 'Insumo::' + (key || '__sem__');
+        const subColapsado = _estColapsados.has(subKey);
+        const subSeta = subColapsado ? '▸' : '▾';
+        const label = key ? (INSUMO_SUBCAT_LABEL[key] || key) : 'Sem subcategoria';
+        const subHeader = `<tr class="cat-section-row" onclick="toggleEstoqueGrupo('${subKey}')" style="cursor:pointer;">
+          <td colspan="13" style="padding:4px 14px 4px 30px;font-size:9.5px;font-weight:600;color:var(--t3);background:var(--s2);user-select:none;">
+            ${subSeta} ${label} (${subItens.length})
+          </td>
+        </tr>`;
+        return subHeader + (subColapsado ? '' : subItens.map(rowHtml).join(''));
+      }).join('');
+      return header + subHtml;
+    }
+
+    return header + g.itens.map(rowHtml).join('');
   }).join('');
 
   // ── Rodapé com totais da listagem ─────────────────────────────
@@ -2570,6 +2608,7 @@ function openEditModal(cod) {
     document.getElementById('ep-funcao').value = '';
     document.getElementById('ep-obs').value = '';
     document.getElementById('ep-cat').value = 'Insumo';
+    document.getElementById('ep-subcat').value = '';
     document.getElementById('ep-forn').value = '';
     document.getElementById('ep-abc').value = 'C';
     document.getElementById('ep-estoque').value = '0';
@@ -2597,6 +2636,7 @@ function openEditModal(cod) {
     document.getElementById('ep-funcao').value = p.funcao || '';
     document.getElementById('ep-obs').value = p.obs || '';
     document.getElementById('ep-cat').value = p.cat;
+    document.getElementById('ep-subcat').value = p.subcat || '';
     document.getElementById('ep-forn').value = p.forn;
     document.getElementById('ep-abc').value = p.abc;
     document.getElementById('ep-estoque').value = p.estoque;
@@ -2627,7 +2667,7 @@ function closeEditModal() {
 
 // ── Histórico de versões do produto ─────────────────────────
 const _CAMPO_LABELS = {
-  cod: 'Código', nome: 'Nome', funcao: 'Função', obs: 'Observação', cat: 'Categoria', forn: 'Fornecedor',
+  cod: 'Código', nome: 'Nome', funcao: 'Função', obs: 'Observação', cat: 'Categoria', subcat: 'Subcategoria', forn: 'Fornecedor',
   abc: 'ABC', estoque: 'Estoque', min: 'Mínimo', repo: 'Reposição',
   custo: 'Custo (R$)', consumo: 'Consumo/mês', caixa: 'Unid./caixa', val: 'Validades'
 };
@@ -2680,6 +2720,7 @@ function salvarProduto() {
   const funcao  = document.getElementById('ep-funcao').value.trim();
   const obs     = document.getElementById('ep-obs').value.trim();
   const cat     = document.getElementById('ep-cat').value;
+  const subcat  = document.getElementById('ep-subcat').value.trim();
   const forn    = document.getElementById('ep-forn').value.trim();
   const abc     = document.getElementById('ep-abc').value;
   const estoque = parseInt(document.getElementById('ep-estoque').value) || 0;
@@ -2695,7 +2736,7 @@ function salvarProduto() {
   const isNovo = _editCod === null;
   if (isNovo) {
     if (P.find(x => x.cod === cod)) { toast('Já existe um produto com esse código!', 'error'); return; }
-    P.push({ cod, nome, funcao, obs, cat, forn, estoque, min, repo, custo, consumo, caixa, abc, val: validades });
+    P.push({ cod, nome, funcao, obs, cat, subcat, forn, estoque, min, repo, custo, consumo, caixa, abc, val: validades });
     toast(`Produto "${nome}" criado com sucesso!`, 'success');
     registrarAudit('produto', `Produto criado: ${nome}`, `Cód: ${cod} | Cat: ${cat} | Forn: ${forn}`, '📦');
     if (typeof fbSalvarProduto === 'function') fbSalvarProduto(P[P.length-1]);
@@ -2719,12 +2760,12 @@ function salvarProduto() {
     }
     // Captura snapshot do estado anterior para o histórico de versões
     const antes = {
-      cod: p.cod, nome: p.nome, funcao: p.funcao || '', obs: p.obs || '', cat: p.cat, forn: p.forn, abc: p.abc,
+      cod: p.cod, nome: p.nome, funcao: p.funcao || '', obs: p.obs || '', cat: p.cat, subcat: p.subcat || '', forn: p.forn, abc: p.abc,
       estoque: p.estoque, min: p.min, repo: p.repo, custo: p.custo,
       consumo: p.consumo, caixa: p.caixa || 0, val: JSON.stringify(p.val || [])
     };
     const depois = {
-      cod, nome, funcao, obs, cat, forn, abc, estoque, min, repo, custo, consumo, caixa,
+      cod, nome, funcao, obs, cat, subcat, forn, abc, estoque, min, repo, custo, consumo, caixa,
       val: JSON.stringify(validades)
     };
     // Constrói o diff (apenas campos que mudaram)
@@ -2735,7 +2776,7 @@ function salvarProduto() {
       }
     });
 
-    p.cod = cod; p.nome=nome; p.funcao=funcao; p.obs=obs; p.cat=cat; p.forn=forn; p.abc=abc;
+    p.cod = cod; p.nome=nome; p.funcao=funcao; p.obs=obs; p.cat=cat; p.subcat=subcat; p.forn=forn; p.abc=abc;
     p.estoque=estoque; p.min=min; p.repo=repo; p.custo=custo; p.consumo=consumo; p.caixa=caixa;
     p.val = validades;
 
