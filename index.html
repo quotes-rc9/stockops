@@ -4672,6 +4672,7 @@ function exportarPDF(titulo, colunas, linhas, opcoes = {}) {
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [74, 143, 245], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 247, 250] },
+    columnStyles: opcoes.columnStyles || {},
     margin: { left: 10, right: 10 }
   });
   // Rodapé
@@ -4721,8 +4722,9 @@ function exportarEstoquePDF() {
   const pushProdRow = (p) => {
     const d = diasEst(p);
     const mv = minVal(p.val || []);
+    const nomeCell = p.funcao ? `${p.nome}\n${p.funcao}` : p.nome;
     linhas.push([
-      p.cod, p.nome, p.forn, p.estoque, p.min, p.abc,
+      p.cod, nomeCell, p.forn, p.estoque, p.min, p.abc,
       d >= 999 ? '—' : d + 'd',
       mv || '—',
       p.custo > 0 ? R(p.custo) : '—',
@@ -4763,7 +4765,10 @@ function exportarEstoquePDF() {
   const resumoBase = `${f.length} produtos · ${f.reduce((a,p)=>a+p.estoque,0)} unidades · Valor total: ${R(total)}`;
   const resumo = filtrosAtivos.length ? `${resumoBase}  |  Filtros ativos: ${filtrosAtivos.join(' · ')}` : resumoBase;
 
-  exportarPDF('Estoque Completo', colunas, linhas, { resumo });
+  exportarPDF('Estoque Completo', colunas, linhas, {
+    resumo,
+    columnStyles: { 1: { cellWidth: 60 } }
+  });
 }
 
 // ── Exportar Validades PDF ───────────────────────────────────
