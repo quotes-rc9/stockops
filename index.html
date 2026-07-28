@@ -4706,17 +4706,64 @@ function exportarEstoquePDF() {
     if(s&&!p.nome.toLowerCase().includes(s)&&!p.cod.toLowerCase().includes(s)) return false;
     return true;
   });
-  const colunas = ['Código','Nome','Cat.','Fornecedor','Estoque','Mín.','ABC','Custo','Total','Status'];
-  const linhas = f.map(p => [
-    p.cod, p.nome, p.cat, p.forn, p.estoque, p.min, p.abc,
-    p.custo > 0 ? R(p.custo) : '—',
-    p.estoque*p.custo > 0 ? R(p.estoque*p.custo) : '—',
-    status(p)
-  ]);
-  const total = f.reduce((a,p)=>a+p.estoque*p.custo,0);
-  exportarPDF('Estoque Completo', colunas, linhas, {
-    resumo: `${f.length} produtos · ${f.reduce((a,p)=>a+p.estoque,0)} unidades · Valor total: ${R(total)}`
+
+  const CAT_ORDER = ['Peça', 'Insumo', 'Consumível'];
+  const CAT_LABEL = { 'Peça': 'PEÇAS', 'Insumo': 'INSUMOS', 'Consumível': 'CONSUMÍVEIS' };
+  const INSUMO_SUBCAT_ORDER = ['Tintas', 'Liquidos de manutencao', 'Solvente'];
+  const INSUMO_SUBCAT_LABEL = { 'Tintas': 'Tintas', 'Liquidos de manutencao': 'Líquidos de manutenção', 'Solvente': 'Solvente' };
+
+  const colunas = ['Código','Nome','Fornecedor','Estoque','Mín.','ABC','Prev.(dias)','Validade prox.','Custo','Total','Status'];
+  const linhas = [];
+
+  const pushGroupRow = (label) => {
+    linhas.push([{ content: label, colSpan: colunas.length, styles: { fillColor: [230,234,240], textColor: [40,40,40], fontStyle: 'bold', halign: 'left' } }]);
+  };
+  const pushProdRow = (p) => {
+    const d = diasEst(p);
+    const mv = minVal(p.val || []);
+    linhas.push([
+      p.cod, p.nome, p.forn, p.estoque, p.min, p.abc,
+      d >= 999 ? '—' : d + 'd',
+      mv || '—',
+      p.custo > 0 ? R(p.custo) : '—',
+      p.estoque*p.custo > 0 ? R(p.estoque*p.custo) : '—',
+      status(p)
+    ]);
+  };
+
+  CAT_ORDER.forEach(cat => {
+    const itensCat = f.filter(p => p.cat === cat);
+    if (!itensCat.length) return;
+    pushGroupRow(`${CAT_LABEL[cat]} (${itensCat.length})`);
+    if (cat === 'Insumo') {
+      const bySubcat = {};
+      itensCat.forEach(p => { const key = p.subcat || ''; (bySubcat[key] = bySubcat[key] || []).push(p); });
+      const keys = Object.keys(bySubcat);
+      const ordered = INSUMO_SUBCAT_ORDER.filter(k => keys.includes(k))
+        .concat(keys.filter(k => k && !INSUMO_SUBCAT_ORDER.includes(k)).sort((a,b)=>a.localeCompare(b,'pt-BR')))
+        .concat(keys.includes('') ? [''] : []);
+      ordered.forEach(key => {
+        const label = key ? (INSUMO_SUBCAT_LABEL[key] || key) : 'Sem subcategoria';
+        pushGroupRow(`   ${label} (${bySubcat[key].length})`);
+        bySubcat[key].forEach(pushProdRow);
+      });
+    } else {
+      itensCat.forEach(pushProdRow);
+    }
   });
+  const outras = f.filter(p => !CAT_ORDER.includes(p.cat));
+  if (outras.length) { pushGroupRow(`OUTROS (${outras.length})`); outras.forEach(pushProdRow); }
+
+  const filtrosAtivos = [];
+  if (fc.length) filtrosAtivos.push(`Categoria: ${fc.join(', ')}`);
+  if (fs.length) filtrosAtivos.push(`Status: ${fs.join(', ')}`);
+  if (ff.length) filtrosAtivos.push(`Fornecedor: ${ff.join(', ')}`);
+  if (s) filtrosAtivos.push(`Busca: "${s}"`);
+  const total = f.reduce((a,p)=>a+p.estoque*p.custo,0);
+  const resumoBase = `${f.length} produtos · ${f.reduce((a,p)=>a+p.estoque,0)} unidades · Valor total: ${R(total)}`;
+  const resumo = filtrosAtivos.length ? `${resumoBase}  |  Filtros ativos: ${filtrosAtivos.join(' · ')}` : resumoBase;
+
+  exportarPDF('Estoque Completo', colunas, linhas, { resumo });
 }
 
 // ── Exportar Validades PDF ───────────────────────────────────
