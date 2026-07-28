@@ -1624,7 +1624,18 @@ function valBadgesCell(valArr){
     return `<span class="badge b-ok">${label}</span>`;
   };
   if (unicas.length === 1) return oneBadge(unicas[0]);
-  return `<div style="display:flex;flex-direction:column;gap:2px;align-items:flex-start;">${unicas.map(oneBadge).join('')}</div>`;
+  // Mais de uma data: só a mais próxima ganha o selo colorido (é a que importa
+  // pra ação); as demais aparecem como texto discreto, agrupadas num mesmo
+  // bloco com borda — pra ficar claro que são do mesmo produto.
+  const [proxima, ...outras] = unicas;
+  const outrasHtml = outras.map(({data, qtd}) => {
+    const label = data + (qtd > 1 ? ` (${qtd}un)` : '');
+    return `<div style="color:var(--t3);font-size:9.5px;">+ ${label}</div>`;
+  }).join('');
+  return `<div style="border-left:2px solid var(--b2);padding-left:6px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;">
+    ${oneBadge(proxima)}
+    ${outrasHtml}
+  </div>`;
 }
 
 // ── KPIs ──────────────────────────────────────────────────────
