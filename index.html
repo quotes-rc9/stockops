@@ -1129,7 +1129,11 @@
           ＋ Produto não está na lista? Cadastrar agora
         </button>
       </div>
-      <select class="fi2" id="m-prod" onchange="onProdSelect()"><option value="">Selecione o produto...</option></select>
+      <div class="autocomplete-wrap">
+        <input class="fi2" id="m-prod" placeholder="Digite o nome ou código do produto..." autocomplete="off"
+          oninput="onModProdSearch()" onfocus="onModProdSearch()" onblur="setTimeout(()=>closeModProdDrop(),200)">
+        <div class="autocomplete-drop" id="m-prod-drop"></div>
+      </div>
     </div>
     <div class="frow">
       <div class="fg">
@@ -2296,7 +2300,7 @@ function openModal(tipo){
   const ok=$('m-ok');
   ok.textContent=tipo==='entrada'?'Confirmar Entrada':'Confirmar Saída';
   ok.className='mbtn mbtn-ok '+(tipo==='entrada'?'green':'red');
-  $('m-prod').innerHTML='<option value="">Selecione o produto...</option>'+P.map(p=>`<option value="${p.cod}">${p.cod} — ${p.nome} (estoque: ${p.estoque})</option>`).join('');
+  $('m-prod').value=''; $('m-prod').dataset.selectedCod=''; closeModProdDrop();
   $('m-qty').value=''; $('m-custo').value=''; $('m-obs').value='';
   $('m-resp').value = CURRENT_USER ? CURRENT_USER.nome : '';
   $('m-preview').style.display='none'; $('m-custo-hint').textContent='';
@@ -2385,12 +2389,43 @@ function getValidadesModal() {
   return vals;
 }
 function onProdSelect(){
-  const p=P.find(x=>x.cod===$('m-prod').value);
+  const p=P.find(x=>x.cod===$('m-prod').dataset.selectedCod);
   if(!p){ $('m-preview').style.display='none'; return; }
   $('m-preview').style.display='flex';
   $('m-preview').innerHTML=`<span>Estoque atual: <b>${p.estoque} un</b></span><span>Mínimo: ${p.min}</span><span>Status: ${p.estoque<=p.min?'⚠ Crítico':p.estoque<=p.repo?'⚠ Alerta':'✓ OK'}</span>`;
   if(p.custo){ $('m-custo').value=p.custo; $('m-custo-hint').textContent='Último custo: '+R(p.custo); }
 }
+
+// ── Autocomplete do campo Produto (Registrar Entrada/Saída) ─────
+function onModProdSearch() {
+  const q = $('m-prod').value.toLowerCase().trim();
+  $('m-prod').dataset.selectedCod = '';
+  const drop = $('m-prod-drop');
+  if (!q) { drop.classList.remove('open'); return; }
+  const matches = P.filter(p =>
+    p.cod.toLowerCase().includes(q) || p.nome.toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop.innerHTML = matches.map(p => `
+    <div class="ac-opt" onmousedown="selectModProd('${p.cod}')">
+      <span class="ac-opt-cod">${p.cod}</span>
+      <span class="ac-opt-nome">${p.nome}</span>
+      <div class="ac-opt-forn">${p.forn} · estoque: ${p.estoque} un · ${p.custo ? R(p.custo) : 'sem custo'}</div>
+    </div>`).join('');
+  drop.classList.add('open');
+}
+function selectModProd(cod) {
+  const p = P.find(x => x.cod === cod);
+  if (!p) return;
+  $('m-prod').value = `${p.cod} — ${p.nome}`;
+  $('m-prod').dataset.selectedCod = cod;
+  closeModProdDrop();
+  onProdSelect();
+}
+function closeModProdDrop() {
+  $('m-prod-drop')?.classList.remove('open');
+}
+
 function closeModal(){ $('overlay').classList.remove('open'); }
 
 function abrirCadastroRapido() {
@@ -2402,7 +2437,7 @@ function abrirCadastroRapido() {
 }
 function confirmar(){
   if(!podeEditar()){ toast('Acesso negado.','error'); return; }
-  const cod=$('m-prod').value, qty=parseInt($('m-qty').value)||0;
+  const cod=$('m-prod').dataset.selectedCod, qty=parseInt($('m-qty').value)||0;
   const custo=parseFloat($('m-custo').value)||0;
   const resp=$('m-resp').value, obs=$('m-obs').value;
   if(!cod) return _invalido('m-prod', 'Selecione um produto');
@@ -2832,10 +2867,7 @@ function salvarProduto() {
     setTimeout(() => {
       openModal(tipo);
       // Pré-seleciona o produto recém-cadastrado
-      setTimeout(() => {
-        const sel = document.getElementById('m-prod');
-        if (sel) { sel.value = cod; sel.dispatchEvent(new Event('change')); }
-      }, 100);
+      setTimeout(() => { selectModProd(cod); }, 100);
     }, 200);
   } else if (currentPage !== 'estoque') {
     showPage('estoque');
