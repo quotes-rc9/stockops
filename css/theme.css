@@ -1,19 +1,25 @@
 /* ═══════════════════════════════════════════════════════════════
    StockOps — Tema (variáveis CSS, 3 temas, base reset)
+   "Painel HMI" — visual inspirado no display de controle das
+   impressoras Mimaki/Roland. Cada tema é um "chassi" diferente
+   (preto / claro tipo bancada / azul-marinho), mesma linguagem.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Tema Escuro (padrão) ──────────────────────────────────── */
+/* ── Chassi Escuro (padrão) ────────────────────────────────── */
 :root{
-  --bg:#0b0d12;--s1:#111318;--s2:#181b22;--s3:#1f232d;--s4:#272c38;
-  --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.1);--b3:rgba(255,255,255,0.16);
-  --t1:#eceef2;--t2:#9ba3b5;--t3:#5c6478;--t4:#3a3f4e;
-  --blue:#4a8ff5;--blue2:#2d6fd4;--blue-a:rgba(74,143,245,0.12);
-  --green:#2db87a;--green-a:rgba(45,184,122,0.12);
-  --yellow:#e8a020;--yellow-a:rgba(232,160,32,0.12);
-  --red:#e0484a;--red-a:rgba(224,72,74,0.12);
-  --purple:#9b71e8;--purple-a:rgba(155,113,232,0.12);
-  --orange:#e87040;--orange-a:rgba(232,112,64,0.1);
-  --r4:2px;--r6:2px;--r8:3px;--r12:4px;
+  --bg:#0a0c0d;--s1:#14171a;--s2:#1a1e21;--s3:#22272b;--s4:#2c3236;
+  --b1:rgba(178,205,196,0.09);--b2:rgba(178,205,196,0.15);--b3:rgba(178,205,196,0.26);
+  --t1:#eef2f0;--t2:#8b959a;--t3:#5f6a6e;--t4:#3f4a4d;
+  --blue:#33e0a4;--blue2:#22b884;--blue-a:rgba(51,224,164,0.12);--blue-rgb:51,224,164;
+  --green:#33e0a4;--green-a:rgba(51,224,164,0.12);--green-rgb:51,224,164;
+  --yellow:#ffb545;--yellow-a:rgba(255,181,69,0.12);--yellow-rgb:255,181,69;
+  --red:#ff5c5c;--red-a:rgba(255,92,92,0.12);--red-rgb:255,92,92;
+  --purple:#a98cff;--purple-a:rgba(169,140,255,0.12);--purple-rgb:169,140,255;
+  --orange:#ff8a3d;--orange-a:rgba(255,138,61,0.10);--orange-rgb:255,138,61;
+  --on-accent:#08110d;--led-fx:0 0 6px;
+  --led-ok:#33e0a4;--led-warn:#ffb545;--led-crit:#ff5c5c;
+  --bezel-hi:rgba(255,255,255,0.04);--bezel-lo:rgba(0,0,0,0.55);
+  --r4:0;--r6:0;--r8:1px;--r12:2px;
 }
 
 /* ── Modo escuro automático: respeita prefers-color-scheme se
@@ -21,30 +27,36 @@
       "light" do SO mantém o escuro padrão (compatibilidade).
       Para usar light real, o usuário aplica tema manualmente. ── */
 
-/* ── Tema Claro ────────────────────────────────────────────── */
+/* ── Chassi Claro — bancada de laboratório ─────────────────── */
 [data-theme="light"]{
-  --bg:#f0f2f5;--s1:#ffffff;--s2:#f7f8fa;--s3:#eef0f4;--s4:#e2e5ec;
-  --b1:rgba(0,0,0,0.07);--b2:rgba(0,0,0,0.11);--b3:rgba(0,0,0,0.18);
-  --t1:#1a1d26;--t2:#4b5168;--t3:#8891a8;--t4:#b8bfcf;
-  --blue:#2563eb;--blue2:#1d4ed8;--blue-a:rgba(37,99,235,0.10);
-  --green:#16a05a;--green-a:rgba(22,160,90,0.10);
-  --yellow:#b45309;--yellow-a:rgba(180,83,9,0.10);
-  --red:#dc2626;--red-a:rgba(220,38,38,0.10);
-  --purple:#7c3aed;--purple-a:rgba(124,58,237,0.10);
-  --orange:#c2410c;--orange-a:rgba(194,65,12,0.09);
+  --bg:#dfe4e3;--s1:#f5f7f6;--s2:#eceeed;--s3:#e3e7e6;--s4:#d3d9d7;
+  --b1:rgba(16,38,32,0.12);--b2:rgba(16,38,32,0.20);--b3:rgba(16,38,32,0.34);
+  --t1:#0f1618;--t2:#465052;--t3:#6d7779;--t4:#98a2a3;
+  --blue:#0b7d56;--blue2:#065f42;--blue-a:rgba(11,125,86,0.10);--blue-rgb:11,125,86;
+  --green:#0b7d56;--green-a:rgba(11,125,86,0.10);--green-rgb:11,125,86;
+  --yellow:#a15c07;--yellow-a:rgba(161,92,7,0.10);--yellow-rgb:161,92,7;
+  --red:#c62828;--red-a:rgba(198,40,40,0.10);--red-rgb:198,40,40;
+  --purple:#6b3fd4;--purple-a:rgba(107,63,212,0.10);--purple-rgb:107,63,212;
+  --orange:#b3480b;--orange-a:rgba(179,72,11,0.09);--orange-rgb:179,72,11;
+  --on-accent:#ffffff;--led-fx:0 0 0 2px;
+  --led-ok:#0fb87c;--led-warn:#e8930b;--led-crit:#e02424;
+  --bezel-hi:rgba(255,255,255,0.9);--bezel-lo:rgba(16,38,32,0.16);
 }
 
-/* ── Tema Azul Corporativo ─────────────────────────────────── */
+/* ── Chassi Azul Corporativo ────────────────────────────────── */
 [data-theme="corporate"]{
-  --bg:#0d1b2e;--s1:#102039;--s2:#152844;--s3:#1b3154;--s4:#223c65;
-  --b1:rgba(100,160,255,0.08);--b2:rgba(100,160,255,0.13);--b3:rgba(100,160,255,0.20);
-  --t1:#ddeeff;--t2:#8ab4d8;--t3:#4f7ea8;--t4:#2d5070;
-  --blue:#5eaeff;--blue2:#3d8fe0;--blue-a:rgba(94,174,255,0.14);
-  --green:#22d3a0;--green-a:rgba(34,211,160,0.12);
-  --yellow:#fbbf24;--yellow-a:rgba(251,191,36,0.12);
-  --red:#f87171;--red-a:rgba(248,113,113,0.12);
-  --purple:#c084fc;--purple-a:rgba(192,132,252,0.12);
-  --orange:#fb923c;--orange-a:rgba(251,146,60,0.10);
+  --bg:#081726;--s1:#0d2136;--s2:#122a43;--s3:#183351;--s4:#204066;
+  --b1:rgba(120,190,235,0.10);--b2:rgba(120,190,235,0.17);--b3:rgba(120,190,235,0.28);
+  --t1:#dcefff;--t2:#8fb8d4;--t3:#5b869f;--t4:#3a5f78;
+  --blue:#35dfc4;--blue2:#1fae99;--blue-a:rgba(53,223,196,0.14);--blue-rgb:53,223,196;
+  --green:#35dfc4;--green-a:rgba(53,223,196,0.14);--green-rgb:53,223,196;
+  --yellow:#ffc14d;--yellow-a:rgba(255,193,77,0.12);--yellow-rgb:255,193,77;
+  --red:#ff6b6b;--red-a:rgba(255,107,107,0.12);--red-rgb:255,107,107;
+  --purple:#b98cff;--purple-a:rgba(185,140,255,0.12);--purple-rgb:185,140,255;
+  --orange:#ff9a4d;--orange-a:rgba(255,154,77,0.10);--orange-rgb:255,154,77;
+  --on-accent:#04231d;--led-fx:0 0 6px;
+  --led-ok:#35dfc4;--led-warn:#ffc14d;--led-crit:#ff6b6b;
+  --bezel-hi:rgba(150,205,255,0.07);--bezel-lo:rgba(0,0,0,0.45);
 }
 
 /* ── Seletor de tema (na navbar) ───────────────────────────── */
@@ -52,17 +64,20 @@
 .theme-btn{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0;position:relative;}
 .theme-btn:hover{transform:scale(1.15);}
 .theme-btn.active{border-color:var(--t1);box-shadow:0 0 0 2px var(--blue);}
-.theme-btn[data-t="dark"]{background:radial-gradient(circle at 35% 35%,#272c38,#0b0d12);}
-.theme-btn[data-t="light"]{background:radial-gradient(circle at 35% 35%,#ffffff,#e2e5ec);}
-.theme-btn[data-t="corporate"]{background:radial-gradient(circle at 35% 35%,#5eaeff,#0d1b2e);}
+.theme-btn[data-t="dark"]{background:radial-gradient(circle at 35% 35%,#2c3236,#0a0c0d);}
+.theme-btn[data-t="light"]{background:radial-gradient(circle at 35% 35%,#f5f7f6,#d3d9d7);}
+.theme-btn[data-t="corporate"]{background:radial-gradient(circle at 35% 35%,#35dfc4,#081726);}
 .theme-lbl{font-size:9px;color:var(--t3);letter-spacing:.04em;padding:0 4px;}
 
 /* ── Mimaki badges (semânticos do domínio) ─────────────────── */
-.mimaki-price-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--blue-a);color:var(--blue);border:1px solid rgba(74,143,245,.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;}
-.mimaki-caminho{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--purple-a);color:var(--purple);border:1px solid rgba(155,113,232,.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;animation:pulse-badge 2s infinite;}
+.mimaki-price-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--blue-a);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;}
+.mimaki-caminho{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;animation:pulse-badge 2s infinite;}
 
 /* ── WhatsApp solicitante (validação) ──────────────────────── */
 .wpp-solicitante-required{border-color:var(--red)!important;}
+
+/* ── Status de sincronização (sidebar) ─────────────────────── */
+.sync-status{font-size:10px;font-family:'JetBrains Mono',monospace;}
 
 /* ── Base reset + tipografia ───────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
@@ -70,3 +85,4 @@ html,body{height:100%;overflow:hidden;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:12px;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px;}
 .mono{font-family:'JetBrains Mono',monospace;}
+table,td,th,input,.kpi-val,.sb-stat-v{font-variant-numeric:tabular-nums;}

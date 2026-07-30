@@ -7,19 +7,19 @@
 
 <!-- ── PWA ─────────────────────────────────────────────────── -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4a8ff5">
+<meta name="theme-color" content="#33e0a4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="StockOps">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%230b0d12'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='28' font-weight='700' fill='%234a8ff5'>STOCK</text><text x='50%25' y='74%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='28' font-weight='700' fill='%234a8ff5'>OPS</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='4' fill='%230a0c0d'/><text x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='28' font-weight='700' fill='%2333e0a4'>STOCK</text><text x='50%25' y='74%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='28' font-weight='700' fill='%2333e0a4'>OPS</text></svg>">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260721">
-<link rel="stylesheet" href="css/components.css?v=20260721">
-<link rel="stylesheet" href="css/pages.css?v=20260721">
+<link rel="stylesheet" href="css/theme.css?v=20260730">
+<link rel="stylesheet" href="css/components.css?v=20260730">
+<link rel="stylesheet" href="css/pages.css?v=20260730">
 </head>
 <body>
 
@@ -84,7 +84,7 @@
         <button class="login-btn" id="login-btn" onclick="tentarLogin()">Entrar</button>
 
         <!-- Dica: primeiro acesso -->
-        <div id="login-first-access" style="display:none;background:var(--blue-a);border:1px solid rgba(74,143,245,.2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--blue);text-align:center;line-height:1.5;">
+        <div id="login-first-access" style="display:none;background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--blue);text-align:center;line-height:1.5;">
           🔑 Primeiro acesso ao sistema.<br>
           <strong>Usuário:</strong> admin &nbsp;|&nbsp; <strong>Senha:</strong> admin123
         </div>
@@ -129,7 +129,7 @@
         </div>
         <div class="sb-status-row">
           <div class="live"><span class="live-dot"></span>Ao vivo</div>
-          <span id="sync-status" style="font-size:10px;color:var(--green);font-family:'JetBrains Mono',monospace;">☁ Sincronizado</span>
+          <span id="sync-status" class="sync-status" style="color:var(--green);">☁ Sincronizado</span>
           <!-- Sino de notificações -->
           <button class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" title="Notificações">
             🔔
@@ -182,7 +182,7 @@
       </div>
       <div class="sb-footer">
         <div class="sb-lbl" style="padding:0;">Resumo</div>
-        <div class="sb-stat"><span class="sb-stat-l">Itens cadastrados</span><span class="sb-stat-v" id="sb-total" style="color:var(--blue)">—</span></div>
+        <div class="sb-stat"><span class="sb-stat-l">Itens cadastrados</span><span class="sb-stat-v" id="sb-total" style="color:var(--t1)">—</span></div>
         <div class="sb-stat"><span class="sb-stat-l">Valor inventário</span><span class="sb-stat-v" id="sb-valor" style="color:var(--green)">—</span></div>
         <div class="sb-stat"><span class="sb-stat-l">Críticos</span><span class="sb-stat-v" id="sb-crit" style="color:var(--red)">—</span></div>
         <div class="sb-stat"><span class="sb-stat-l">Vencendo (&lt;30d)</span><span class="sb-stat-v" id="sb-exp" style="color:var(--orange)">—</span></div>
@@ -456,7 +456,7 @@
           <div class="ph-right">
             <button class="nav-btn success" style="font-size:12px;padding:6px 14px;" onclick="openModal('entrada')">＋ Registrar Entrada</button>
             <button class="nav-btn danger"  style="font-size:12px;padding:6px 14px;" onclick="openModal('saida')">－ Registrar Saída</button>
-            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(155,113,232,.3);color:var(--purple);font-size:12px;padding:6px 14px;" onclick="showPage('solicitacoes')">📋 Ver Solicitações</button>
+            <button class="nav-btn" style="background:var(--purple-a);border-color:rgba(var(--purple-rgb),.3);color:var(--purple);font-size:12px;padding:6px 14px;" onclick="showPage('solicitacoes')">📋 Ver Solicitações</button>
             <button class="btn-export" onclick="exportarMovPDF()">📄 PDF</button>
           </div>
         </div>
@@ -495,7 +495,7 @@
           </div>
         </div>
         <!-- Explicação -->
-        <div style="padding:6px 14px;flex-shrink:0;background:var(--purple-a);border-bottom:1px solid rgba(155,113,232,.15);">
+        <div style="padding:6px 14px;flex-shrink:0;background:var(--purple-a);border-bottom:1px solid rgba(var(--purple-rgb),.15);">
           <span style="font-size:11px;color:var(--purple);">
             💡 <b>Como funciona:</b> Solicite entrada ou saída → estoque <b>não muda ainda</b> → admin aprova/rejeita → aí o estoque é atualizado.
           </span>
@@ -579,7 +579,7 @@
 
         <!-- ── PAINEL: NOVO PEDIDO ──────────────────────────────── -->
         <div id="compras-panel-novo" style="display:flex;flex:1;overflow:hidden;flex-direction:column;">
-          <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
             <span style="font-size:11px;color:var(--blue);">
               💡 Monte o pedido abaixo e envie via WhatsApp para o responsável aprovar a compra.
             </span>
@@ -588,7 +588,7 @@
           <div class="cart-layout">
             <div class="cart-left">
               <!-- Instrução -->
-              <div style="background:var(--blue-a);border:1px solid rgba(74,143,245,.2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--blue);">
+              <div style="background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.2);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--blue);">
                 💡 <b>Como usar:</b> Digite o nome do produto no campo abaixo, informe a quantidade e clique em <b>＋ Adicionar</b>. Depois clique em <b>Enviar via WhatsApp</b>.
               </div>
               <!-- Barra de adição -->
@@ -728,7 +728,7 @@
               <button class="btn-export" onclick="exportarHistoricoPDF()">📄 PDF</button>
             </div>
           </div>
-          <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+          <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
             <span style="font-size:11px;color:var(--blue);">
               💡 <b>Como funciona:</b> Todo pedido enviado via WhatsApp é salvo aqui. Marque cada item como <b>✅ Chegou</b> no detalhe do pedido pra somar automaticamente no estoque, ou use <b>✅ Marcar Recebido</b> pro pedido inteiro de uma vez.
             </span>
@@ -809,7 +809,7 @@
             <button class="btn-export" onclick="exportarABCPDF()">📄 PDF</button>
           </div>
         </div>
-        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
           <span style="font-size:11px;color:var(--blue);">
             💡 <b>Como funciona:</b> os produtos são ordenados por valor em estoque (estoque × custo). Classe <b>A</b> = itens que somam até 80% do valor total (maior prioridade), <b>B</b> = até 95%, <b>C</b> = o restante. Clique num card pra filtrar a tabela.
           </span>
@@ -844,7 +844,7 @@
             <button class="btn-export" onclick="exportarPrevisaoPDF()">📄 PDF</button>
           </div>
         </div>
-        <div style="background:var(--blue-a);border-bottom:1px solid rgba(74,143,245,.15);padding:6px 14px;flex-shrink:0;">
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
           <span style="font-size:11px;color:var(--blue);">
             💡 <b>Como funciona:</b> com base no consumo médio mensal de cada produto, estima quantos dias faltam até o estoque zerar (ruptura) e sugere uma quantidade de reposição. Mostra só itens com ruptura prevista em até 180 dias.
           </span>
@@ -1024,8 +1024,8 @@
       <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
         <span>⚙ Permissões detalhadas</span>
         <div style="display:flex;gap:6px;">
-          <button onclick="marcarTodas(true)"  style="font-size:9px;padding:2px 8px;background:var(--green-a);border:1px solid rgba(45,184,122,.3);border-radius:4px;color:var(--green);cursor:pointer;">✓ Marcar todas</button>
-          <button onclick="marcarTodas(false)" style="font-size:9px;padding:2px 8px;background:var(--red-a);border:1px solid rgba(224,72,74,.3);border-radius:4px;color:var(--red);cursor:pointer;">✕ Desmarcar todas</button>
+          <button onclick="marcarTodas(true)"  style="font-size:9px;padding:2px 8px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.3);border-radius:4px;color:var(--green);cursor:pointer;">✓ Marcar todas</button>
+          <button onclick="marcarTodas(false)" style="font-size:9px;padding:2px 8px;background:var(--red-a);border:1px solid rgba(var(--red-rgb),.3);border-radius:4px;color:var(--red);cursor:pointer;">✕ Desmarcar todas</button>
         </div>
       </div>
 
@@ -1125,7 +1125,7 @@
     <div class="fg">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <label class="fl" style="margin:0;">Produto</label>
-        <button type="button" onclick="abrirCadastroRapido()" style="font-size:10px;background:var(--blue-a);border:1px solid rgba(74,143,245,.3);border-radius:4px;color:var(--blue);padding:2px 8px;cursor:pointer;font-family:'Inter',sans-serif;">
+        <button type="button" onclick="abrirCadastroRapido()" style="font-size:10px;background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.3);border-radius:4px;color:var(--blue);padding:2px 8px;cursor:pointer;font-family:'Inter',sans-serif;">
           ＋ Produto não está na lista? Cadastrar agora
         </button>
       </div>
@@ -1152,7 +1152,7 @@
         📅 Validade do lote recebido
       </div>
       <div id="m-val-lista" style="display:flex;flex-direction:column;gap:6px;"></div>
-      <button type="button" onclick="adicionarCampoVal()" style="margin-top:6px;font-size:10px;background:var(--blue-a);border:1px solid rgba(74,143,245,.3);border-radius:4px;color:var(--blue);padding:3px 10px;cursor:pointer;font-family:'Inter',sans-serif;">
+      <button type="button" onclick="adicionarCampoVal()" style="margin-top:6px;font-size:10px;background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.3);border-radius:4px;color:var(--blue);padding:3px 10px;cursor:pointer;font-family:'Inter',sans-serif;">
         ＋ Adicionar outra data de validade
       </button>
       <div class="fhint">Se o lote tiver validade, informe a data. Formato: DD/MM/AAAA</div>
@@ -1216,7 +1216,7 @@
       <div class="m-title" id="solic-title">📋 Solicitar Entrada</div>
       <button class="m-close" onclick="closeSolicModal()">✕</button>
     </div>
-    <div style="background:var(--purple-a);border:1px solid rgba(155,113,232,.2);border-radius:var(--r6);padding:8px 12px;font-size:11px;color:var(--purple);margin-bottom:12px;">
+    <div style="background:var(--purple-a);border:1px solid rgba(var(--purple-rgb),.2);border-radius:var(--r6);padding:8px 12px;font-size:11px;color:var(--purple);margin-bottom:12px;">
       ℹ Esta solicitação ficará pendente até ser aprovada. O estoque <strong>não</strong> será alterado agora.
     </div>
     <!-- Modo: produto cadastrado ou livre -->
@@ -1371,14 +1371,14 @@
     <div style="margin-top:10px;">
       <div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <span>📅 Datas de validade dos lotes</span>
-        <button type="button" onclick="epAdicionarVal()" style="font-size:10px;background:var(--blue-a);border:1px solid rgba(74,143,245,.3);border-radius:4px;color:var(--blue);padding:2px 8px;cursor:pointer;font-family:'Inter',sans-serif;">＋ Adicionar</button>
+        <button type="button" onclick="epAdicionarVal()" style="font-size:10px;background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.3);border-radius:4px;color:var(--blue);padding:2px 8px;cursor:pointer;font-family:'Inter',sans-serif;">＋ Adicionar</button>
       </div>
       <div id="ep-val-lista" style="display:flex;flex-direction:column;gap:5px;"></div>
       <div class="fhint">Deixe em branco se o produto não tem validade. Formato: DD/MM/AAAA</div>
     </div>
 
     <div class="m-foot">
-      <button class="mbtn mbtn-cancel" id="ep-hist-btn" onclick="abrirHistoricoProduto()" style="display:none;background:var(--purple-a);border-color:rgba(155,113,232,.35);color:var(--purple);">📜 Histórico (<span id="ep-hist-count">0</span>)</button>
+      <button class="mbtn mbtn-cancel" id="ep-hist-btn" onclick="abrirHistoricoProduto()" style="display:none;background:var(--purple-a);border-color:rgba(var(--purple-rgb),.35);color:var(--purple);">📜 Histórico (<span id="ep-hist-count">0</span>)</button>
       <button class="mbtn mbtn-cancel" onclick="closeEditModal()">Cancelar</button>
       <button class="mbtn mbtn-ok" id="ep-ok" onclick="salvarProduto()">Salvar produto</button>
     </div>
@@ -1877,9 +1877,9 @@ function renderEstoque(){
   // ── Tabela (agrupada por categoria, com ordenação por coluna) ──
   const CAT_ORDER = ['Peça', 'Insumo', 'Consumível'];
   const CAT_META = {
-    'Peça':       { emoji: '⚙',  color: '#b89aff', bg: 'var(--purple-a)', label: 'Peças' },
-    'Insumo':     { emoji: '🧪', color: '#7db5ff', bg: 'var(--blue-a)',   label: 'Insumos' },
-    'Consumível': { emoji: '📦', color: '#e8a020', bg: 'var(--yellow-a)', label: 'Consumíveis' },
+    'Peça':       { emoji: '⚙',  color: 'var(--purple)', bg: 'var(--purple-a)', label: 'Peças' },
+    'Insumo':     { emoji: '🧪', color: 'var(--blue)',   bg: 'var(--blue-a)',   label: 'Insumos' },
+    'Consumível': { emoji: '📦', color: 'var(--yellow)', bg: 'var(--yellow-a)', label: 'Consumíveis' },
   };
   const grupos = [];
   CAT_ORDER.forEach(cat => {
@@ -1913,7 +1913,7 @@ function renderEstoque(){
       ? `<span class="mono" style="color:var(--green);font-size:11px;">${R(valorTotal)}</span>`
       : `<span style="color:var(--t4);">—</span>`;
     const statusCell = isCaminho(p)
-      ? `<span class="badge" style="background:var(--purple-a);color:var(--purple);border:1px solid rgba(155,113,232,.2);">🚚 A CAMINHO</span>`
+      ? `<span class="badge" style="background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);">🚚 A CAMINHO</span>`
       : sBadge(st);
     return `<tr>
       <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
@@ -2311,13 +2311,13 @@ function openModal(tipo){
       avisoEl.innerHTML = '💡 <b>Esta tela SOMA ao estoque atual</b> (use quando o produto chegar). Para definir a quantidade inicial sem somar, use <b>Estoque → ✏ Editar</b>.';
       avisoEl.style.display = 'flex';
       avisoEl.style.background = 'var(--green-a)';
-      avisoEl.style.borderColor = 'rgba(45,184,122,.25)';
+      avisoEl.style.borderColor = 'rgba(var(--green-rgb),.25)';
       avisoEl.style.color = 'var(--green)';
     } else {
       avisoEl.innerHTML = '💡 <b>Esta tela SUBTRAI do estoque atual</b> (use quando o produto for usado/retirado).';
       avisoEl.style.display = 'flex';
       avisoEl.style.background = 'var(--red-a)';
-      avisoEl.style.borderColor = 'rgba(224,72,74,.25)';
+      avisoEl.style.borderColor = 'rgba(var(--red-rgb),.25)';
       avisoEl.style.color = 'var(--red)';
     }
   }
@@ -2343,7 +2343,7 @@ function epAdicionarVal(valor='') {
       style="flex:1;" maxlength="10" value="${valor}"
       oninput="formatarDataVal(this)">
     <button type="button" onclick="this.parentElement.remove()"
-      style="background:var(--red-a);border:1px solid rgba(224,72,74,.3);border-radius:4px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:12px;flex-shrink:0;">✕</button>
+      style="background:var(--red-a);border:1px solid rgba(var(--red-rgb),.3);border-radius:4px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:12px;flex-shrink:0;">✕</button>
   `;
   lista.appendChild(div);
   if (!valor) div.querySelector('input')?.focus();
@@ -2365,7 +2365,7 @@ function adicionarCampoVal() {
     <input class="fi2" type="text" id="m-val-${idx}" placeholder="DD/MM/AAAA"
       style="flex:1;" maxlength="10"
       oninput="formatarDataVal(this)">
-    ${idx > 0 ? `<button type="button" onclick="this.parentElement.remove()" style="background:var(--red-a);border:1px solid rgba(224,72,74,.3);border-radius:4px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:12px;">✕</button>` : ''}
+    ${idx > 0 ? `<button type="button" onclick="this.parentElement.remove()" style="background:var(--red-a);border:1px solid rgba(var(--red-rgb),.3);border-radius:4px;color:var(--red);padding:2px 8px;cursor:pointer;font-size:12px;">✕</button>` : ''}
   `;
   lista.appendChild(div);
   div.querySelector('input')?.focus();
@@ -2546,7 +2546,7 @@ function toast(msg, type='success'){
   const t=$('toast');
   t.innerHTML=`<span style="color:${type==='success'?'var(--green)':'var(--red)'};">${type==='success'?'✓':'✕'}</span> ${msg}`;
   t.className=`toast show`;
-  t.style.borderColor=type==='success'?'rgba(45,184,122,.3)':'rgba(224,72,74,.3)';
+  t.style.borderColor=type==='success'?'rgba(var(--green-rgb),.3)':'rgba(var(--red-rgb),.3)';
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
@@ -4119,7 +4119,7 @@ function onRoleChange(){
 function previewUserAvatar(){
   const role=$('um-role')?.value||'viewer';
   const av=$('user-modal-avatar');
-  const bg={admin:'rgba(224,72,74,.15)',usuario:'rgba(74,143,245,.15)',viewer:'rgba(45,184,122,.15)'};
+  const bg={admin:'rgba(var(--red-rgb),.15)',usuario:'rgba(var(--blue-rgb),.15)',viewer:'rgba(var(--green-rgb),.15)'};
   if(av){av.textContent=ROLE_EMOJI[role];av.style.background=bg[role]||'var(--s3)';}
 }
 
@@ -5146,7 +5146,7 @@ function renderHistorico() {
     return;
   }
   const statusBadge = (s) => {
-    if (s === 'enviado')   return `<span class="badge" style="background:rgba(232,160,32,.15);color:var(--yellow);border:1px solid rgba(232,160,32,.25);">📤 Enviado</span>`;
+    if (s === 'enviado')   return `<span class="badge" style="background:rgba(var(--yellow-rgb),.15);color:var(--yellow);border:1px solid rgba(var(--yellow-rgb),.25);">📤 Enviado</span>`;
     if (s === 'recebido')  return `<span class="badge b-ok">✅ Recebido</span>`;
     if (s === 'cancelado') return `<span class="badge b-crit">❌ Cancelado</span>`;
     return `<span class="badge b-info">${s}</span>`;
@@ -5169,7 +5169,7 @@ function renderHistorico() {
     <td>${statusBadge(p.status)}</td>
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
-      ${p.status === 'enviado' ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);" onclick="marcarRecebido('${p.id}')">✅ Recebido</button>` : ''}
+      ${p.status === 'enviado' ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(var(--green-rgb),.3);" onclick="marcarRecebido('${p.id}')">✅ Recebido</button>` : ''}
       ${CURRENT_USER?.role === 'admin' ? `
         <button class="btn-edit" onclick="abrirEditarPedido('${p.id}')">✏ Editar</button>
         <button class="btn-del" onclick="confirmarExcluirPedido('${p.id}')">🗑 Excluir</button>
@@ -5208,7 +5208,7 @@ function abrirPedidoDet(id) {
         ${it.dataChegadaReal
           ? `<span class="badge b-ok" style="font-size:9px;">✅ ${it.dataChegadaReal}</span>`
           : (p.status === 'enviado'
-              ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(45,184,122,.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`
+              ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(var(--green-rgb),.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`
               : '')}
       </div>
     </div>`).join('');
