@@ -3635,10 +3635,16 @@ const MIMAKI_PRICES = [
   { pattern: /PRIMER/i,  preco: 2243.42, label: 'Primer', caminho: true },
 ];
 
+// Códigos com preço real confirmado por cotação de fornecedor — não seguem
+// mais o preço genérico por família (que é único por padrão de nome, sem
+// diferenciar cor). Editar o custo desses produtos manualmente é definitivo.
+const MIMAKI_PRICES_EXCLUDE = ['LUS175-M', 'LUS175-C', 'LUS175-Y', 'LUS175-BK', 'LUS120-Y'];
+
 // Aplica preços Mimaki no carregamento e sempre que P mudar
 function aplicarPrecosMimaki() {
   let atualizados = 0;
   P.forEach(p => {
+    if (MIMAKI_PRICES_EXCLUDE.includes(p.cod)) return;
     for (const rule of MIMAKI_PRICES) {
       if (rule.pattern.test(p.nome) || rule.pattern.test(p.cod)) {
         p.custo       = rule.preco;
