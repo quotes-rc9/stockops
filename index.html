@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260731b">
-<link rel="stylesheet" href="css/components.css?v=20260731b">
-<link rel="stylesheet" href="css/pages.css?v=20260731b">
+<link rel="stylesheet" href="css/theme.css?v=20260801">
+<link rel="stylesheet" href="css/components.css?v=20260801">
+<link rel="stylesheet" href="css/pages.css?v=20260801">
 </head>
 <body>
 
@@ -228,6 +228,18 @@
               <div class="kpi-sub" id="k-cats">—</div>
               <div class="kpi-click-hint">Clique para ver estoque →</div>
             </div>
+          </div>
+
+          <!-- Pedidos em trânsito -->
+          <div class="panel" id="pedidos-transito-panel" style="display:none;flex-shrink:0;">
+            <div class="ph">
+              <span class="ph-title">🚚 Pedidos em Trânsito</span>
+              <span class="ph-sub" id="pedidos-transito-count"></span>
+              <div class="ph-right">
+                <button class="nav-btn" style="font-size:10px;" onclick="showPage('compras'); switchComprasTab('historico');">Ver todos →</button>
+              </div>
+            </div>
+            <div id="pedidos-transito-list" style="padding:8px;"></div>
           </div>
 
           <!-- MIDDLE ROW -->
@@ -4919,13 +4931,45 @@ function registrarCompra(tipo) {
 function renderHistBadge() {
   const enviados = PEDIDOS.filter(p => p.status === 'enviado').length;
   const nb = $('nb-hist');
-  if (!nb) return;
-  if (enviados > 0) {
-    nb.textContent = enviados;
-    nb.style.display = 'inline';
-  } else {
-    nb.style.display = 'none';
+  if (nb) {
+    if (enviados > 0) {
+      nb.textContent = enviados;
+      nb.style.display = 'inline';
+    } else {
+      nb.style.display = 'none';
+    }
   }
+  renderPedidosTransito();
+}
+
+// ── Pedidos em trânsito (Dashboard) ─────────────────────────────
+function renderPedidosTransito() {
+  const wrap = $('pedidos-transito-panel');
+  const list = $('pedidos-transito-list');
+  if (!wrap || !list) return;
+  const emTransito = PEDIDOS.filter(p => p.status === 'enviado')
+    .sort((a, b) => new Date(a.dataISO) - new Date(b.dataISO));
+  if (!emTransito.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  $('pedidos-transito-count').textContent = emTransito.length + (emTransito.length === 1 ? ' pedido' : ' pedidos');
+  list.innerHTML = emTransito.map(p => {
+    const dias = Math.max(0, Math.floor((Date.now() - new Date(p.dataISO).getTime()) / 86400000));
+    const chegadas = p.itens.map(it => it.chegadaPrevista).filter(Boolean);
+    let proxChegada = null;
+    if (chegadas.length) {
+      proxChegada = chegadas.slice().sort((a, b) => {
+        const [da, ma, aa] = a.split('/').map(Number); const [db, mb, ab] = b.split('/').map(Number);
+        return new Date(aa, ma - 1, da) - new Date(ab, mb - 1, db);
+      })[0];
+    }
+    return `<div class="alert-item" style="border-color:var(--purple);cursor:pointer;" onclick="abrirPedidoDet('${p.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="ai-name">${p.num} <span style="font-weight:400;color:var(--t3);">— ${p.fornecedores.length ? p.fornecedores.join(', ') : 'Sem fornecedor'}</span></div>
+        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R(p.total)}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
+      </div>
+      <div class="ai-val" style="color:var(--purple);">${dias === 0 ? 'hoje' : dias + 'd'}</div>
+    </div>`;
+  }).join('');
 }
 
 let _histSort = { campo: null, dir: 'asc' };
