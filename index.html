@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260730b">
-<link rel="stylesheet" href="css/components.css?v=20260730b">
-<link rel="stylesheet" href="css/pages.css?v=20260730b">
+<link rel="stylesheet" href="css/theme.css?v=20260731">
+<link rel="stylesheet" href="css/components.css?v=20260731">
+<link rel="stylesheet" href="css/pages.css?v=20260731">
 </head>
 <body>
 
@@ -631,6 +631,10 @@
                   <label class="fl">📅 Chegada prevista</label>
                   <input class="fi2" id="cart-chegada" type="date">
                 </div>
+                <div class="fg" style="flex:1;">
+                  <label class="fl">🧪 Validade da tinta</label>
+                  <input class="fi2" id="cart-validade" type="text" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatarDataVal(this)">
+                </div>
               </div>
 
               <!-- Tabela do carrinho -->
@@ -649,11 +653,12 @@
                       <th style="text-align:center;">Estoque atual</th>
                       <th style="text-align:center;">Valor</th>
                       <th style="text-align:center;">Chegada prev.</th>
+                      <th style="text-align:center;">Validade</th>
                       <th style="text-align:center;">Qtd solicitada</th>
                       <th></th>
                     </tr></thead>
                     <tbody id="cart-tbody"></tbody>
-                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="8" style="text-align:center;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
+                    <tfoot><tr class="tfoot-row" id="cart-tfoot"><td colspan="9" style="text-align:center;color:var(--t3);font-style:italic;">Nenhum item adicionado ainda</td></tr></tfoot>
                   </table>
                 </div>
               </div>
@@ -2388,6 +2393,17 @@ function getValidadesModal() {
   });
   return vals;
 }
+
+// ── Aplica uma validade recebida (pedido/carrinho) ao produto ──
+function aplicarValidadeChegada(prod, validade) {
+  if (!prod || !validade) return;
+  if (!prod.val) prod.val = [];
+  prod.val.push(validade);
+  prod.val.sort((a, b) => {
+    const [da, ma, aa] = a.split('/'); const [db, mb, ab] = b.split('/');
+    return new Date(+aa, +ma - 1, +da) - new Date(+ab, +mb - 1, +db);
+  });
+}
 function onProdSelect(){
   const p=P.find(x=>x.cod===$('m-prod').dataset.selectedCod);
   if(!p){ $('m-preview').style.display='none'; return; }
@@ -3340,9 +3356,12 @@ function addToCart() {
   const descricao  = document.getElementById('cart-descricao').value.trim();
   const chegadaRaw = document.getElementById('cart-chegada').value; // yyyy-mm-dd ou ''
   const chegadaPrevista = chegadaRaw ? chegadaRaw.split('-').reverse().join('/') : '';
+  const validadeRaw = document.getElementById('cart-validade').value.trim();
+  const validade = validadeRaw.length === 10 ? validadeRaw : '';
 
   if (!rawText) { toast('Informe o produto', 'error'); return; }
   if (qty <= 0)  { toast('Quantidade inválida', 'error'); return; }
+  if (validadeRaw && !validade) { toast('Data de validade incompleta. Use o formato DD/MM/AAAA.', 'error'); return; }
 
   if (selCod && P.find(x => x.cod === selCod)) {
     // Produto existente no estoque
@@ -3351,17 +3370,18 @@ function addToCart() {
     const existing = CART.find(c => c.cod === p.cod);
     if (existing) {
       existing.qty += qty;
+      if (validade) existing.validade = validade;
       toast(`Quantidade de "${p.nome}" atualizada no carrinho.`, 'success');
     } else {
       CART.push({ id: _cartIdCnt++, cod: p.cod, nome: p.nome, forn: forn || p.forn,
-        estoque: p.estoque, qty, custo, livre: false, descricao, chegadaPrevista });
+        estoque: p.estoque, qty, custo, livre: false, descricao, chegadaPrevista, validade });
       toast(`"${p.nome}" adicionado ao carrinho.`, 'success');
     }
   } else {
     // Produto livre (não cadastrado)
     const nome = rawText;
     CART.push({ id: _cartIdCnt++, cod: '—', nome, forn: forn || '—',
-      estoque: '—', qty, custo: custoInput, livre: true, descricao, chegadaPrevista });
+      estoque: '—', qty, custo: custoInput, livre: true, descricao, chegadaPrevista, validade });
     toast(`"${nome}" adicionado como item livre.`, 'success');
   }
 
@@ -3373,7 +3393,16 @@ function addToCart() {
   document.getElementById('cart-custo').value = '';
   document.getElementById('cart-descricao').value = '';
   document.getElementById('cart-chegada').value = '';
+  document.getElementById('cart-validade').value = '';
   renderCart();
+}
+
+// ── Atualizar validade inline (na tabela do carrinho) ───────────
+function updateCartValidade(id, val) {
+  const item = CART.find(c => c.id === id);
+  if (!item) return;
+  const v = (val || '').trim();
+  item.validade = v.length === 10 ? v : '';
 }
 
 // ── Remover item ──────────────────────────────────────────────
@@ -3415,7 +3444,7 @@ function renderCart() {
 
   if (!CART.length) {
     tbody.innerHTML = '';
-    $('cart-tfoot').innerHTML = `<td colspan="8" style="text-align:center;color:var(--t3);font-style:italic;padding:24px;">Carrinho vazio — adicione itens acima.</td>`;
+    $('cart-tfoot').innerHTML = `<td colspan="9" style="text-align:center;color:var(--t3);font-style:italic;padding:24px;">Carrinho vazio — adicione itens acima.</td>`;
     $('cart-total-val').textContent = 'R$ 0,00';
     $('cart-total-sub').textContent = '0 itens · 0 fornecedores';
     $('cart-forn-resumo').innerHTML = '';
@@ -3432,6 +3461,12 @@ function renderCart() {
     <td style="text-align:center;color:var(--t3);">${c.estoque !== '—' ? c.estoque+' un' : '—'}</td>
     <td style="text-align:center;font-size:11px;color:var(--green);">${c.custo ? R(c.custo) : '—'}</td>
     <td style="text-align:center;font-size:10px;color:var(--t3);">${c.chegadaPrevista || '—'}</td>
+    <td style="text-align:center;font-size:10px;">
+      <input class="fi2" type="text" value="${c.validade || ''}" placeholder="DD/MM/AAAA" maxlength="10"
+        style="width:90px;text-align:center;padding:3px 4px;font-size:10px;"
+        oninput="formatarDataVal(this); updateCartValidade(${c.id}, this.value)"
+        onchange="updateCartValidade(${c.id}, this.value)">
+    </td>
     <td style="text-align:center;">
       <input class="qty-input" type="number" value="${c.qty}" min="1"
         oninput="updateCartQty(${c.id}, this.value)" onchange="updateCartQty(${c.id}, this.value)">
@@ -4978,7 +5013,8 @@ function registrarPedidoPendente() {
   const itens = CART.map(c => ({
     cod: c.cod, nome: c.nome, forn: c.forn,
     qty: c.qty, custo: c.custo, livre: c.livre || false,
-    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '', dataChegadaReal: ''
+    descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '',
+    validade: c.validade || '', dataChegadaReal: ''
   }));
   const pedido = {
     id: 'ped_' + Date.now(),
@@ -5036,9 +5072,11 @@ function registrarCompra(tipo) {
     if (!prod) return;
     prod.estoque += tipo === 'entrada' ? c.qty : -c.qty;
     if (c.custo > 0) prod.custo = c.custo;
+    if (tipo === 'entrada' && c.validade) aplicarValidadeChegada(prod, c.validade);
     MOV.push({
       cod: prod.cod, nome: prod.nome, tipo: tipo === 'entrada' ? 'ENTRADA' : 'SAÍDA',
-      qty: c.qty, custo: c.custo || 0, resp, obs: c.descricao || `Compra${c.forn && c.forn !== '—' ? ' — ' + c.forn : ''}`, val: [],
+      qty: c.qty, custo: c.custo || 0, resp, obs: c.descricao || `Compra${c.forn && c.forn !== '—' ? ' — ' + c.forn : ''}`,
+      val: (tipo === 'entrada' && c.validade) ? [c.validade] : [],
       data: dataStr
     });
     registrarAudit('estoque', `${tipo === 'entrada' ? 'Entrada' : 'Saída'}: ${prod.nome}`,
@@ -5056,6 +5094,7 @@ function registrarCompra(tipo) {
     cod: c.cod, nome: c.nome, forn: c.forn,
     qty: c.qty, custo: c.custo, livre: c.livre || false,
     descricao: c.descricao || '', chegadaPrevista: c.chegadaPrevista || '',
+    validade: c.validade || '',
     dataChegadaReal: tipo === 'entrada' ? agora.toLocaleDateString('pt-BR') : ''
   }));
   const pedido = {
@@ -5199,6 +5238,7 @@ function abrirPedidoDet(id) {
         <div style="font-size:9px;color:var(--t3);">${it.cod !== '—' ? it.cod + ' · ' : ''}${it.forn || '—'}</div>
         ${it.descricao ? `<div style="font-size:9px;color:var(--t3);">${it.descricao}</div>` : ''}
         ${it.chegadaPrevista ? `<div style="font-size:9px;color:var(--t4);">📅 Previsto: ${it.chegadaPrevista}</div>` : ''}
+        ${it.validade ? `<div style="font-size:9px;color:var(--t4);">🧪 Validade: ${it.validade}</div>` : ''}
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
@@ -5251,12 +5291,13 @@ function marcarItemChegou(pedidoId, itemIndex) {
     if (prod) {
       prod.estoque += it.qty;
       if (it.custo > 0) prod.custo = it.custo;
+      if (it.validade) aplicarValidadeChegada(prod, it.validade);
       MOV.push({
         cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
-        resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: [],
+        resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: it.validade ? [it.validade] : [],
         data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
       });
-      registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}`, '📥');
+      registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}${it.validade ? ' | Val: ' + it.validade : ''}`, '📥');
       if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length - 1]);
       if (typeof fbSalvarProduto === 'function') fbSalvarProduto(prod);
       toast(`"${prod.nome}" chegou — estoque atualizado (+${it.qty} un).`, 'success');
@@ -5297,12 +5338,13 @@ function marcarRecebido(id) {
       if (prod) {
         prod.estoque += it.qty;
         if (it.custo > 0) prod.custo = it.custo;
+        if (it.validade) aplicarValidadeChegada(prod, it.validade);
         MOV.push({
           cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
-          resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: [],
+          resp: CURRENT_USER?.nome || 'Sistema', obs: `Chegada do pedido ${p.num}`, val: it.validade ? [it.validade] : [],
           data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
         });
-        registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}`, '📥');
+        registrarAudit('estoque', `Entrada: ${prod.nome}`, `Qtd: ${it.qty} un | Est.: ${prod.estoque} | Pedido: ${p.num}${it.validade ? ' | Val: ' + it.validade : ''}`, '📥');
         if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length - 1]);
         if (typeof fbSalvarProduto === 'function') fbSalvarProduto(prod);
         qtdAtualizados++;
@@ -5358,6 +5400,8 @@ function renderEditPedidoItens() {
         onchange="_editPedidoItens[${i}].qty = parseInt(this.value) || 1">
       <input class="fi2" type="number" min="0" step="0.01" style="width:90px;flex-shrink:0;" value="${it.custo || ''}" placeholder="Valor" title="Valor unitário"
         onchange="_editPedidoItens[${i}].custo = parseFloat(this.value) || 0">
+      <input class="fi2" type="text" maxlength="10" style="width:80px;flex-shrink:0;" value="${it.validade || ''}" placeholder="Validade" title="Validade da tinta (DD/MM/AAAA)"
+        oninput="formatarDataVal(this)" onchange="_editPedidoItens[${i}].validade = (this.value.trim().length===10 ? this.value.trim() : '')">
       <button class="btn-del" style="flex-shrink:0;" onclick="_editPedidoItens.splice(${i},1); renderEditPedidoItens();">✕</button>
     </div>`).join('') || '<div style="font-size:11px;color:var(--t4);font-style:italic;">Nenhum item.</div>';
 }
