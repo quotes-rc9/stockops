@@ -159,42 +159,6 @@
 .cart-total{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--green);margin-top:4px;}
 .cart-empty{text-align:center;color:var(--t3);padding:32px 16px;font-size:11px;}
 
-/* ── Notificações (sino + painel) ──────────────────────────── */
-.notif-bell{position:relative;background:none;border:1px solid var(--b2);border-radius:var(--r6);color:var(--t3);font-size:14px;cursor:pointer;padding:4px 8px;transition:all .12s;line-height:1;}
-.notif-bell:hover{background:var(--s3);color:var(--t1);}
-.notif-bell.has-notif{border-color:rgba(var(--yellow-rgb),.4);color:var(--yellow);}
-.notif-badge{position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:var(--r4);display:flex;align-items:center;justify-content:center;padding:0 3px;animation:blink 2s infinite;}
-
-.notif-panel{position:fixed;top:40px;right:16px;width:340px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r12);box-shadow:0 12px 48px rgba(0,0,0,.6);z-index:900;display:none;flex-direction:column;max-height:520px;overflow:hidden;}
-.notif-panel.open{display:flex;}
-.notif-ph{padding:10px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.notif-ph-title{font-size:12px;font-weight:600;}
-.notif-clear{background:none;border:none;color:var(--t3);font-size:10px;cursor:pointer;font-family:'JetBrains Mono',monospace;}
-.notif-clear:hover{color:var(--t1);}
-.notif-list{overflow-y:auto;flex:1;}
-.notif-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .08s;}
-.notif-item:hover{background:var(--s3);}
-.notif-item:last-child{border:none;}
-.notif-item.unread{background:rgba(var(--blue-rgb),.04);}
-.notif-icon{width:28px;height:28px;border-radius:var(--r6);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
-.ni-crit{background:var(--red-a);}
-.ni-warn{background:var(--yellow-a);}
-.ni-ok{background:var(--green-a);}
-.ni-info{background:var(--blue-a);}
-.ni-solic{background:var(--purple-a);}
-.ni-exp{background:var(--orange-a);}
-.notif-body{flex:1;min-width:0;}
-.notif-title{font-size:11px;font-weight:500;margin-bottom:2px;}
-.notif-sub{font-size:10px;color:var(--t3);}
-.notif-time{font-size:9px;color:var(--t4);margin-top:3px;font-family:'JetBrains Mono',monospace;}
-.notif-unread-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;}
-
-/* Página completa de notificações */
-.notif-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;overflow:hidden;padding:0 14px 14px;}
-.notif-section{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);overflow:hidden;display:flex;flex-direction:column;box-shadow:inset 0 1px 0 var(--bezel-hi),0 1px 0 var(--bezel-lo);}
-.notif-sect-head{padding:9px 12px;border-bottom:1px solid var(--b1);font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.notif-sect-body{flex:1;overflow-y:auto;padding:6px;}
-
 /* ── Banner de alerta no topo (críticos) ───────────────────── */
 .alert-banner{display:none;background:linear-gradient(90deg,rgba(var(--red-rgb),.15),rgba(var(--red-rgb),.05));border-bottom:1px solid rgba(var(--red-rgb),.25);padding:5px 16px;font-size:11px;color:var(--red);align-items:center;gap:8px;flex-shrink:0;}
 .alert-banner.show{display:flex;}

@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260731">
-<link rel="stylesheet" href="css/components.css?v=20260731">
-<link rel="stylesheet" href="css/pages.css?v=20260731">
+<link rel="stylesheet" href="css/theme.css?v=20260731b">
+<link rel="stylesheet" href="css/components.css?v=20260731b">
+<link rel="stylesheet" href="css/pages.css?v=20260731b">
 </head>
 <body>
 
@@ -130,11 +130,6 @@
         <div class="sb-status-row">
           <div class="live"><span class="live-dot"></span>Ao vivo</div>
           <span id="sync-status" class="sync-status" style="color:var(--green);">☁ Sincronizado</span>
-          <!-- Sino de notificações -->
-          <button class="notif-bell" id="notif-bell" onclick="toggleNotifPanel()" title="Notificações">
-            🔔
-            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
-          </button>
         </div>
         <!-- Seletor de tema -->
         <div class="theme-selector" title="Trocar tema">
@@ -175,7 +170,6 @@
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Sistema</div>
-        <button class="sb-item" onclick="showPage('notificacoes',this)"><span class="sb-icon">🔔</span>Notificações<span class="sb-badge sbb-r" id="nb-notif" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('auditoria',this)"><span class="sb-icon">📋</span>Histórico / Auditoria</button>
         <button class="sb-item admin-only" onclick="showPage('usuarios',this)"><span class="sb-icon">👥</span>Gerenciar Usuários</button>
         <button class="sb-item" onclick="exportarBackup()"><span class="sb-icon">💾</span>Exportar backup</button>
@@ -872,35 +866,6 @@
         </div>
       </div>
 
-      <!-- ══ NOTIFICAÇÕES ═══════════════════════════════════════ -->
-      <div class="page" id="page-notificacoes">
-        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">🔔 Central de Notificações</span>
-          <span class="ph-sub" id="notif-page-count"></span>
-          <div class="ph-right">
-            <button class="nav-btn" onclick="marcarTodasLidas()">✓ Marcar todas como lidas</button>
-            <button class="nav-btn danger" onclick="limparNotificacoes()">🗑 Limpar todas</button>
-          </div>
-        </div>
-        <div class="notif-page-grid">
-          <!-- Não lidas -->
-          <div class="notif-section">
-            <div class="notif-sect-head">
-              <span>⚡ Não lidas</span>
-              <span id="notif-unread-count" style="font-size:10px;color:var(--t3);margin-left:auto;"></span>
-            </div>
-            <div class="notif-sect-body" id="notif-unread-list"></div>
-          </div>
-          <!-- Histórico -->
-          <div class="notif-section">
-            <div class="notif-sect-head">
-              <span>📁 Histórico</span>
-              <span id="notif-read-count" style="font-size:10px;color:var(--t3);margin-left:auto;"></span>
-            </div>
-            <div class="notif-sect-body" id="notif-read-list"></div>
-          </div>
-        </div>
-      </div>
 
       <!-- ══ AUDITORIA ══════════════════════════════════════════ -->
       <div class="page" id="page-auditoria">
@@ -1417,18 +1382,6 @@
   </div>
 </div>
 
-<!-- PAINEL FLUTUANTE DE NOTIFICAÇÕES -->
-<div class="notif-panel" id="notif-panel">
-  <div class="notif-ph">
-    <span class="notif-ph-title">🔔 Notificações</span>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="notif-clear" onclick="marcarTodasLidas()">Marcar lidas</button>
-      <button class="notif-clear" onclick="toggleNotifPanel()">✕</button>
-    </div>
-  </div>
-  <div class="notif-list" id="notif-panel-list"></div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1463,11 +1416,6 @@ let _pedDetId  = null;
 let CART      = [];
 let _cartIdCnt = 1;
 let _comprasTab = 'novo';
-
-// Notificações
-let NOTIFS         = [];
-let _notifIdCnt    = 1;
-let _notifPanelOpen = false;
 
 // ═══════════════════════════════════════════════════════════════
 // DADOS — 100% validados das imagens fornecidas
@@ -2487,13 +2435,6 @@ function confirmar(){
   if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length-1]);
   if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
   toast(`${modalTipo==='entrada'?'Entrada':'Saída'} registrada: ${qty}× ${p.nome}`,'success');
-  pushNotif(
-    modalTipo,
-    `${modalTipo==='entrada'?'Entrada':'Saída'} registrada — ${p.nome}`,
-    `${qty} un · ${resp||'Sem responsável'}`,
-    modalTipo==='entrada'?'📥':'📤',
-    modalTipo==='entrada'?'ni-ok':'ni-info'
-  );
 }
 
 // ── NAV ────────────────────────────────────────────────────────
@@ -2543,15 +2484,9 @@ function showPage(id, el){
   if(id==='mov')             renderMov();
   if(id==='estoque')         renderEstoque();
   if(id==='solicitacoes')    renderSolicitacoes();
-  if(id==='notificacoes')    renderNotifPage();
   if(id==='auditoria')       renderAuditoria();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
-  if(typeof _notifPanelOpen !== 'undefined' && _notifPanelOpen){
-    _notifPanelOpen=false;
-    const np=$('notif-panel');
-    if(np) np.classList.remove('open');
-  }
   // Reaplica permissões após qualquer render de página
   // (botões gerados dinamicamente precisam ser reavaliados)
   if(typeof aplicarPermissoes === 'function') setTimeout(aplicarPermissoes, 0);
@@ -2645,11 +2580,9 @@ function renderAll(){
   else if(currentPage==='mov')        renderMov();
   else if(currentPage==='estoque')    renderEstoque();
   else if(currentPage==='solicitacoes') renderSolicitacoes();
-  else if(currentPage==='notificacoes') renderNotifPage();
   else if(currentPage==='auditoria')  renderAuditoria();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
   if(typeof renderHistBadge === 'function') renderHistBadge();
-  if(typeof atualizarBadgeNotif === 'function') atualizarBadgeNotif();
   // Reaplica permissões após render (botões dinâmicos)
   if(typeof aplicarPermissoes === 'function') setTimeout(aplicarPermissoes, 0);
 }
@@ -3083,8 +3016,6 @@ function confirmarSolicitacao() {
   renderSolicBadge();
   renderSolicitacoes();
   toast(`Solicitação enviada! Aguardando aprovação.`, 'success');
-  pushNotif('solic', `Solicitação de ${_solicTipo}: ${nome}`,
-    `${qty} un · ${resp}`, '📋', 'ni-solic');
 }
 
 function aprovarSolic(id) {
@@ -3115,8 +3046,6 @@ function aprovarSolic(id) {
   renderSolicBadge();
   renderSolicitacoes();
   toast(`Solicitação #${id} aprovada e movimentação registrada!`, 'success');
-  pushNotif('aprovado', `Solicitação #${id} aprovada`,
-    `${s.tipo} de ${s.qty} un de "${s.nome}"`, '✅', 'ni-ok');
 }
 
 function rejeitarSolic(id) {
@@ -3130,8 +3059,6 @@ function rejeitarSolic(id) {
   renderSolicBadge();
   renderSolicitacoes();
   toast(`Solicitação #${id} rejeitada.`, 'success');
-  pushNotif('rejeitado', `Solicitação #${id} rejeitada`,
-    `${s.tipo} de ${s.qty} un de "${s.nome}"`, '❌', 'ni-crit');
 }
 
 function renderSolicBadge() {
@@ -3510,148 +3437,10 @@ function renderCartTotals() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MÓDULO: NOTIFICAÇÕES
+// Alertas automáticos do sistema (banner de críticos no topo)
 // ═══════════════════════════════════════════════════════════════
-// (declarado no topo)
-// (declarado no topo)
-// (declarado no topo)
-
-// ── Criar notificação ─────────────────────────────────────────
-function pushNotif(tipo, titulo, sub, icone, niCls) {
-  const agora = new Date();
-  const hora = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  NOTIFS.unshift({ id: _notifIdCnt++, tipo, titulo, sub, icone, niCls, hora, lida: false });
-  if (NOTIFS.length > 100) NOTIFS = NOTIFS.slice(0, 100); // limita histórico
-  atualizarBadgeNotif();
-  renderNotifPanel();
-  if (currentPage === 'notificacoes') renderNotifPage();
-}
-
-// ── Badge do sino ──────────────────────────────────────────────
-function atualizarBadgeNotif() {
-  const naolidas = NOTIFS.filter(n => !n.lida).length;
-  const bell  = $('notif-bell');
-  const badge = $('notif-badge');
-  const nbNotif = $('nb-notif');
-  if (naolidas > 0) {
-    badge.textContent = naolidas > 99 ? '99+' : naolidas;
-    badge.style.display = 'flex';
-    bell.classList.add('has-notif');
-    if (nbNotif) { nbNotif.textContent = naolidas; nbNotif.style.display = 'inline'; }
-  } else {
-    badge.style.display = 'none';
-    bell.classList.remove('has-notif');
-    if (nbNotif) nbNotif.style.display = 'none';
-  }
-}
-
-// ── Painel flutuante ──────────────────────────────────────────
-function toggleNotifPanel() {
-  _notifPanelOpen = !_notifPanelOpen;
-  $('notif-panel').classList.toggle('open', _notifPanelOpen);
-  if (_notifPanelOpen) renderNotifPanel();
-}
-
-// Fechar ao clicar fora
-document.addEventListener('click', e => {
-  if (_notifPanelOpen &&
-      !e.target.closest('#notif-panel') &&
-      !e.target.closest('#notif-bell')) {
-    _notifPanelOpen = false;
-    $('notif-panel').classList.remove('open');
-  }
-});
-
-function renderNotifPanel() {
-  const list = $('notif-panel-list');
-  if (!list) return;
-  if (!NOTIFS.length) {
-    list.innerHTML = `<div style="text-align:center;color:var(--t3);padding:24px;font-size:11px;">Nenhuma notificação.</div>`;
-    return;
-  }
-  list.innerHTML = NOTIFS.slice(0, 20).map(n => `
-    <div class="notif-item ${n.lida ? '' : 'unread'}" onclick="lerNotif(${n.id})">
-      <div class="notif-icon ${n.niCls}">${n.icone}</div>
-      <div class="notif-body">
-        <div class="notif-title">${n.titulo}</div>
-        <div class="notif-sub">${n.sub}</div>
-        <div class="notif-time">${n.hora}</div>
-      </div>
-      ${!n.lida ? '<div class="notif-unread-dot"></div>' : ''}
-    </div>`).join('');
-}
-
-function lerNotif(id) {
-  const n = NOTIFS.find(x => x.id === id);
-  if (n) n.lida = true;
-  atualizarBadgeNotif();
-  renderNotifPanel();
-  if (currentPage === 'notificacoes') renderNotifPage();
-}
-
-function marcarTodasLidas() {
-  NOTIFS.forEach(n => n.lida = true);
-  atualizarBadgeNotif();
-  renderNotifPanel();
-  if (currentPage === 'notificacoes') renderNotifPage();
-}
-
-function limparNotificacoes() {
-  NOTIFS = [];
-  atualizarBadgeNotif();
-  renderNotifPanel();
-  if (currentPage === 'notificacoes') renderNotifPage();
-  toast('Notificações limpas.', 'success');
-}
-
-// ── Página de Notificações ────────────────────────────────────
-function renderNotifPage() {
-  const naolidas = NOTIFS.filter(n => !n.lida);
-  const lidas    = NOTIFS.filter(n => n.lida);
-  if ($('notif-page-count')) $('notif-page-count').textContent = NOTIFS.length + ' notificações';
-  if ($('notif-unread-count')) $('notif-unread-count').textContent = naolidas.length + ' não lidas';
-  if ($('notif-read-count'))   $('notif-read-count').textContent   = lidas.length + ' lidas';
-
-  const buildList = items => items.length
-    ? items.map(n => `
-        <div class="notif-item ${n.lida ? '' : 'unread'}" onclick="lerNotif(${n.id})" style="border-radius:var(--r6);margin-bottom:4px;">
-          <div class="notif-icon ${n.niCls}">${n.icone}</div>
-          <div class="notif-body">
-            <div class="notif-title">${n.titulo}</div>
-            <div class="notif-sub">${n.sub}</div>
-            <div class="notif-time">${n.hora}</div>
-          </div>
-          ${!n.lida ? '<div class="notif-unread-dot"></div>' : ''}
-        </div>`).join('')
-    : `<div style="text-align:center;color:var(--t3);padding:24px;font-size:11px;">Nenhuma.</div>`;
-
-  if ($('notif-unread-list')) $('notif-unread-list').innerHTML = buildList(naolidas);
-  if ($('notif-read-list'))   $('notif-read-list').innerHTML   = buildList(lidas);
-}
-
-// ── Notificações automáticas do sistema ───────────────────────
 function gerarNotifsSistema() {
-  const crits  = P.filter(p => status(p) === 'Crítico');
-  const warns  = P.filter(p => status(p) === 'Alerta');
-  const venc   = [];
-  P.forEach(p => (p.val||[]).forEach(v => { const d = diasAteVal(v); if (d >= 0 && d <= 7) venc.push({p,v,d}); }));
-
-  if (crits.length)
-    pushNotif('critico', `${crits.length} item(s) em estado CRÍTICO`,
-      crits.slice(0,3).map(p=>p.nome).join(', ') + (crits.length>3?'...':''),
-      '🔴', 'ni-crit');
-
-  if (warns.length)
-    pushNotif('alerta', `${warns.length} item(s) abaixo do ponto de reposição`,
-      warns.slice(0,3).map(p=>p.nome).join(', ') + (warns.length>3?'...':''),
-      '⚠️', 'ni-warn');
-
-  if (venc.length)
-    pushNotif('validade', `${venc.length} unidade(s) vencendo em até 7 dias`,
-      venc.slice(0,3).map(r=>r.p.nome+' ('+r.v+')').join(', '),
-      '⏱', 'ni-exp');
-
-  // Banner de críticos
+  const crits = P.filter(p => status(p) === 'Crítico');
   if (crits.length) {
     const banner = $('alert-banner');
     $('alert-banner-text').textContent =
@@ -5314,7 +5103,6 @@ function marcarItemChegou(pedidoId, itemIndex) {
     p.historicoStatus = p.historicoStatus || [];
     p.historicoStatus.push({ status: 'recebido', data: agora.toLocaleString('pt-BR'), por: CURRENT_USER?.nome || 'Sistema' });
     registrarAudit('pedido', `Pedido ${p.num} marcado como recebido`, `Todos os itens chegaram`, '✅');
-    pushNotif('pedido', `Pedido ${p.num} recebido`, `Todos os itens chegaram`, '✅', 'ni-ok');
   }
 
   if (typeof fbSalvarPedido === 'function') fbSalvarPedido(p);
@@ -5365,7 +5153,6 @@ function marcarRecebido(id) {
   renderHistBadge();
   renderAll();
   toast(`Pedido ${p.num} marcado como recebido!${qtdAtualizados ? ` Estoque atualizado (${qtdAtualizados} ${qtdAtualizados===1?'item':'itens'}).` : ''}`, 'success');
-  pushNotif('pedido', `Pedido ${p.num} recebido`, `Por: ${CURRENT_USER?.nome}`, '✅', 'ni-ok');
 }
 
 // ── Editar / Excluir pedido (somente Admin) ─────────────────────

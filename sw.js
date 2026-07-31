@@ -9,14 +9,14 @@
 //
 // ═══════════════════════════════════════════════════════════════
 
-const APP_VERSION = 'stockops-v2.9.0';
+const APP_VERSION = 'stockops-v2.10.0';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './css/theme.css?v=20260731',
-  './css/components.css?v=20260731',
-  './css/pages.css?v=20260731'
+  './css/theme.css?v=20260731b',
+  './css/components.css?v=20260731b',
+  './css/pages.css?v=20260731b'
 ];
 
 self.addEventListener('install', (event) => {
