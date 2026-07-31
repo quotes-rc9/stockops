@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260801">
-<link rel="stylesheet" href="css/components.css?v=20260801">
-<link rel="stylesheet" href="css/pages.css?v=20260801">
+<link rel="stylesheet" href="css/theme.css?v=20260801b">
+<link rel="stylesheet" href="css/components.css?v=20260801b">
+<link rel="stylesheet" href="css/pages.css?v=20260801b">
 </head>
 <body>
 
@@ -1880,11 +1880,15 @@ function renderEstoque(){
     const statusCell = isCaminho(p)
       ? `<span class="badge" style="background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);">🚚 A CAMINHO</span>`
       : sBadge(st);
+    const transito = pedidoTransitoInfo(p.cod);
+    const transitoTag = transito
+      ? `<span style="flex-shrink:0;cursor:help;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);border-radius:var(--r4);padding:1px 5px;" title="Pedido ${transito.pedido.num} em trânsito${transito.item.chegadaPrevista ? ' — previsto ' + transito.item.chegadaPrevista : ''}">🚛 Em trânsito</span>`
+      : '';
     return `<tr>
       <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
       <td style="max-width:240px;">
         <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px;">
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</span>${mimakiTag(p)}${p.obs ? `<span style="flex-shrink:0;cursor:help;" title="Observação: ${p.obs}">📝</span>` : ''}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</span>${mimakiTag(p)}${transitoTag}${p.obs ? `<span style="flex-shrink:0;cursor:help;" title="Observação: ${p.obs}">📝</span>` : ''}
         </div>
         ${p.funcao ? `<div style="font-size:9.5px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;" title="${p.funcao}">${p.funcao}</div>` : ''}
       </td>
@@ -4942,7 +4946,17 @@ function renderHistBadge() {
   renderPedidosTransito();
 }
 
-// ── Pedidos em trânsito (Dashboard) ─────────────────────────────
+// ── Pedidos em trânsito (Dashboard + Estoque) ───────────────────
+// Retorna o pedido/item pendente (status 'enviado', ainda não chegou) que contém este código, se houver.
+function pedidoTransitoInfo(cod) {
+  for (const p of PEDIDOS) {
+    if (p.status !== 'enviado') continue;
+    const item = p.itens.find(it => it.cod === cod && !it.dataChegadaReal);
+    if (item) return { pedido: p, item };
+  }
+  return null;
+}
+
 function renderPedidosTransito() {
   const wrap = $('pedidos-transito-panel');
   const list = $('pedidos-transito-list');
