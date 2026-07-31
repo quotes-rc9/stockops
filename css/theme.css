@@ -70,7 +70,6 @@
 .theme-lbl{font-size:9px;color:var(--t3);letter-spacing:.04em;padding:0 4px;}
 
 /* ── Mimaki badges (semânticos do domínio) ─────────────────── */
-.mimaki-price-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--blue-a);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;}
 .mimaki-caminho{display:inline-flex;align-items:center;gap:3px;font-size:9px;background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:500;animation:pulse-badge 2s infinite;}
 
 /* ── WhatsApp solicitante (validação) ──────────────────────── */

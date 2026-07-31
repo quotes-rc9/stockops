@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260801b">
-<link rel="stylesheet" href="css/components.css?v=20260801b">
-<link rel="stylesheet" href="css/pages.css?v=20260801b">
+<link rel="stylesheet" href="css/theme.css?v=20260802">
+<link rel="stylesheet" href="css/components.css?v=20260802">
+<link rel="stylesheet" href="css/pages.css?v=20260802">
 </head>
 <body>
 
@@ -1884,11 +1884,15 @@ function renderEstoque(){
     const transitoTag = transito
       ? `<span style="flex-shrink:0;cursor:help;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);border-radius:var(--r4);padding:1px 5px;" title="Pedido ${transito.pedido.num} em trânsito${transito.item.chegadaPrevista ? ' — previsto ' + transito.item.chegadaPrevista : ''}">🚛 Em trânsito</span>`
       : '';
+    const temHistPreco = (p.historico || []).some(h => h.diff && h.diff.custo);
+    const histPrecoTag = temHistPreco
+      ? `<span onclick="abrirHistoricoProduto('${p.cod}')" style="flex-shrink:0;cursor:pointer;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--blue-a);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.2);border-radius:var(--r4);padding:1px 5px;" title="Ver histórico de preços">💲 Histórico</span>`
+      : '';
     return `<tr>
       <td class="mono" style="color:var(--blue);font-size:11px;">${p.cod}</td>
       <td style="max-width:240px;">
         <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:5px;">
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</span>${mimakiTag(p)}${transitoTag}${p.obs ? `<span style="flex-shrink:0;cursor:help;" title="Observação: ${p.obs}">📝</span>` : ''}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.nome}</span>${mimakiTag(p)}${transitoTag}${histPrecoTag}${p.obs ? `<span style="flex-shrink:0;cursor:help;" title="Observação: ${p.obs}">📝</span>` : ''}
         </div>
         ${p.funcao ? `<div style="font-size:9.5px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;" title="${p.funcao}">${p.funcao}</div>` : ''}
       </td>
@@ -2439,7 +2443,7 @@ function confirmar(){
     }
   }
   else { p.estoque-=qty; p.consumo=Math.max(0.1,p.consumo*0.8+qty*0.2); }
-  if(custo>0) p.custo=custo;
+  if(custo>0) registrarMudancaPreco(p, custo, modalTipo==='entrada' ? 'Entrada manual' : 'Saída manual');
   const agora=new Date();
   const novasValsLog = modalTipo==='entrada' ? getValidadesModal() : [];
   MOV.push({cod,nome:p.nome,tipo:modalTipo==='entrada'?'ENTRADA':'SAÍDA',qty,custo,resp,obs,
@@ -2695,9 +2699,27 @@ const _CAMPO_LABELS = {
   custo: 'Custo (R$)', consumo: 'Consumo/mês', caixa: 'Unid./caixa', val: 'Validades'
 };
 
-function abrirHistoricoProduto() {
-  if (_editCod === null) return;
-  const p = P.find(x => x.cod === _editCod);
+// Registra uma mudança de custo no histórico do produto (mesmo formato usado
+// pelo diff de edição), venha ela de onde vier (entrada manual, carrinho de
+// compras, chegada de pedido, regra automática Mimaki...).
+function registrarMudancaPreco(p, novoCusto, origem) {
+  if (!p || !novoCusto || novoCusto === p.custo) return;
+  if (!p.historico) p.historico = [];
+  const agora = new Date();
+  p.historico.push({
+    tsMs: agora.getTime(),
+    ts: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}),
+    user: (CURRENT_USER?.nome || 'Sistema') + (origem ? ` (${origem})` : ''),
+    diff: { custo: { antes: p.custo, depois: novoCusto } }
+  });
+  if (p.historico.length > 50) p.historico = p.historico.slice(-50);
+  p.custo = novoCusto;
+}
+
+function abrirHistoricoProduto(codParam) {
+  const cod = codParam || _editCod;
+  if (cod === null || cod === undefined) return;
+  const p = P.find(x => x.cod === cod);
   if (!p) return;
   const hist = (p.historico || []).slice().reverse(); // mais recente primeiro
   const info = document.getElementById('hist-prod-info');
@@ -2717,6 +2739,9 @@ function abrirHistoricoProduto() {
           const na = (() => { try { return JSON.parse(a).length; } catch { return '?'; } })();
           const nd = (() => { try { return JSON.parse(d).length; } catch { return '?'; } })();
           return `<div style="font-size:10.5px;display:flex;gap:8px;padding:3px 0;"><span style="color:var(--t3);min-width:90px;">${label}:</span><span><span style="color:var(--red);">${na} lote${na!==1?'s':''}</span> → <span style="color:var(--green);">${nd} lote${nd!==1?'s':''}</span></span></div>`;
+        }
+        if (k === 'custo') {
+          return `<div style="font-size:10.5px;display:flex;gap:8px;padding:3px 0;"><span style="color:var(--t3);min-width:90px;">${label}:</span><span><span style="color:var(--red);text-decoration:line-through;">${R(+a||0)}</span> → <span style="color:var(--green);">${R(+d||0)}</span></span></div>`;
         }
         return `<div style="font-size:10.5px;display:flex;gap:8px;padding:3px 0;"><span style="color:var(--t3);min-width:90px;">${label}:</span><span><span style="color:var(--red);text-decoration:line-through;">${a||'(vazio)'}</span> → <span style="color:var(--green);">${d||'(vazio)'}</span></span></div>`;
       }).join('');
@@ -3487,8 +3512,7 @@ function aplicarPrecosMimaki() {
     if (MIMAKI_PRICES_EXCLUDE.includes(p.cod)) return;
     for (const rule of MIMAKI_PRICES) {
       if (rule.pattern.test(p.nome) || rule.pattern.test(p.cod)) {
-        p.custo       = rule.preco;
-        p._mimakiTag  = rule.label;
+        registrarMudancaPreco(p, rule.preco, 'Regra automática Mimaki');
         p._caminho    = rule.caminho || false;
         atualizados++;
         break;
@@ -3498,14 +3522,12 @@ function aplicarPrecosMimaki() {
   return atualizados;
 }
 
-// Verifica se um produto é Mimaki
-function isMimaki(p) { return !!p._mimakiTag; }
+// Verifica se um produto está com preço "a caminho" (Primer)
 function isCaminho(p) { return !!p._caminho; }
 
 // Retorna tag visual Mimaki
 function mimakiTag(p) {
   if (isCaminho(p)) return `<span class="mimaki-caminho">🚚 A CAMINHO</span>`;
-  if (isMimaki(p))  return `<span class="mimaki-price-tag">✦ Preço atualizado</span>`;
   return '';
 }
 
@@ -4876,7 +4898,7 @@ function registrarCompra(tipo) {
     const prod = P.find(x => x.cod === c.cod);
     if (!prod) return;
     prod.estoque += tipo === 'entrada' ? c.qty : -c.qty;
-    if (c.custo > 0) prod.custo = c.custo;
+    if (c.custo > 0) registrarMudancaPreco(prod, c.custo, 'Compra via carrinho');
     if (tipo === 'entrada' && c.validade) aplicarValidadeChegada(prod, c.validade);
     MOV.push({
       cod: prod.cod, nome: prod.nome, tipo: tipo === 'entrada' ? 'ENTRADA' : 'SAÍDA',
@@ -5137,7 +5159,7 @@ function marcarItemChegou(pedidoId, itemIndex) {
     const prod = P.find(x => x.cod === it.cod);
     if (prod) {
       prod.estoque += it.qty;
-      if (it.custo > 0) prod.custo = it.custo;
+      if (it.custo > 0) registrarMudancaPreco(prod, it.custo, 'Chegada de pedido');
       if (it.validade) aplicarValidadeChegada(prod, it.validade);
       MOV.push({
         cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
@@ -5183,7 +5205,7 @@ function marcarRecebido(id) {
       const prod = P.find(x => x.cod === it.cod);
       if (prod) {
         prod.estoque += it.qty;
-        if (it.custo > 0) prod.custo = it.custo;
+        if (it.custo > 0) registrarMudancaPreco(prod, it.custo, 'Chegada de pedido');
         if (it.validade) aplicarValidadeChegada(prod, it.validade);
         MOV.push({
           cod: prod.cod, nome: prod.nome, tipo: 'ENTRADA', qty: it.qty, custo: it.custo || 0,
