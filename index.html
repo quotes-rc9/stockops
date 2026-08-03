@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260802">
-<link rel="stylesheet" href="css/components.css?v=20260802">
-<link rel="stylesheet" href="css/pages.css?v=20260802">
+<link rel="stylesheet" href="css/theme.css?v=20260803">
+<link rel="stylesheet" href="css/components.css?v=20260803">
+<link rel="stylesheet" href="css/pages.css?v=20260803">
 </head>
 <body>
 
@@ -691,6 +691,10 @@
                   <label class="fl">Nº do pedido (opcional)</label>
                   <input class="fi2" id="cart-num" placeholder="PC-2026-001">
                 </div>
+                <div class="fg" style="margin-bottom:8px;">
+                  <label class="fl">🚚 Valor do frete (opcional)</label>
+                  <input class="fi2" id="cart-frete" type="number" min="0" step="0.01" placeholder="0,00">
+                </div>
                 <div class="fg" style="margin-bottom:12px;">
                   <label class="fl">Seu nome</label>
                   <input class="fi2" id="cart-resp" placeholder="Quem está fazendo o pedido">
@@ -753,6 +757,7 @@
                 <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortHistBy('itens')">Itens <span id="hist-arrow-itens"></span></th>
                 <th style="text-align:center;">Chegada</th>
                 <th>Fornecedores</th>
+                <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortHistBy('frete')">Frete <span id="hist-arrow-frete"></span></th>
                 <th style="text-align:right;cursor:pointer;user-select:none;" onclick="sortHistBy('total')">Valor Total <span id="hist-arrow-total"></span></th>
                 <th style="cursor:pointer;user-select:none;" onclick="sortHistBy('status')">Status <span id="hist-arrow-status"></span></th>
                 <th>Ações</th>
@@ -789,7 +794,7 @@
             <div class="m-title">✏ Editar Pedido</div>
             <button class="m-close" onclick="closeEditarPedido()">✕</button>
           </div>
-          <div class="frow" style="margin-bottom:12px;">
+          <div class="frow" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr;">
             <div class="fg" style="margin-bottom:0;">
               <label class="fl">Nº do pedido</label>
               <input class="fi2" id="ep2-num">
@@ -797,6 +802,10 @@
             <div class="fg" style="margin-bottom:0;">
               <label class="fl">Solicitante</label>
               <input class="fi2" id="ep2-solicitante">
+            </div>
+            <div class="fg" style="margin-bottom:0;">
+              <label class="fl">🚚 Valor do frete</label>
+              <input class="fi2" id="ep2-frete" type="number" min="0" step="0.01" placeholder="0,00">
             </div>
           </div>
           <div class="fg" style="margin-bottom:12px;">
@@ -4758,11 +4767,12 @@ function exportarSolicPDF() {
 
 // ── Exportar Histórico de Pedidos PDF ────────────────────────
 function exportarHistoricoPDF() {
-  const colunas = ['Nº Pedido','Data','Solicitante','Itens','Fornecedores','Valor Total','Status'];
+  const colunas = ['Nº Pedido','Data','Solicitante','Itens','Fornecedores','Frete','Valor Total','Status'];
   const linhas = PEDIDOS.map(p => [
     p.num, p.data, p.solicitante, p.itens.length,
     p.fornecedores.join(', ') || '—',
-    p.total > 0 ? R(p.total) : '—',
+    p.frete > 0 ? R(p.frete) : '—',
+    (p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—',
     p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'
   ]);
   exportarPDF('Histórico de Pedidos de Compra', colunas, linhas, {
@@ -4834,6 +4844,7 @@ function registrarPedidoPendente() {
 
   const agora = new Date();
   const num = ($('cart-num')?.value || '').trim() || ('PC-' + Date.now().toString().slice(-6));
+  const frete = parseFloat($('cart-frete')?.value) || 0;
   const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
   const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
   const obs = ($('cart-obs')?.value || '').trim();
@@ -4851,6 +4862,7 @@ function registrarPedidoPendente() {
     solicitante: resp,
     itens,
     total,
+    frete,
     fornecedores: forns,
     obs,
     status: 'enviado',
@@ -4866,6 +4878,7 @@ function registrarPedidoPendente() {
   CART = [];
   if ($('cart-obs')) $('cart-obs').value = '';
   if ($('cart-num')) $('cart-num').value = '';
+  if ($('cart-frete')) $('cart-frete').value = '';
   renderCart();
   renderHistBadge();
   renderHistorico();
@@ -4914,6 +4927,7 @@ function registrarCompra(tipo) {
   });
 
   const num = ($('cart-num')?.value || '').trim() || ('PC-' + Date.now().toString().slice(-6));
+  const frete = parseFloat($('cart-frete')?.value) || 0;
   const total = CART.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
   const forns = [...new Set(CART.map(c => c.forn).filter(f => f && f !== '—'))];
   const obs = ($('cart-obs')?.value || '').trim();
@@ -4932,6 +4946,7 @@ function registrarCompra(tipo) {
     solicitante: resp,
     itens,
     total,
+    frete,
     fornecedores: forns,
     obs,
     direcao: tipo,
@@ -4948,6 +4963,7 @@ function registrarCompra(tipo) {
   CART = [];
   if ($('cart-obs')) $('cart-obs').value = '';
   if ($('cart-num')) $('cart-num').value = '';
+  if ($('cart-frete')) $('cart-frete').value = '';
   renderCart();
   renderHistBadge();
   renderAll();
@@ -5001,7 +5017,7 @@ function renderPedidosTransito() {
     return `<div class="alert-item" style="border-color:var(--purple);cursor:pointer;" onclick="abrirPedidoDet('${p.id}')">
       <div style="flex:1;min-width:0;">
         <div class="ai-name">${p.num} <span style="font-weight:400;color:var(--t3);">— ${p.fornecedores.length ? p.fornecedores.join(', ') : 'Sem fornecedor'}</span></div>
-        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R(p.total)}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
+        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
       </div>
       <div class="ai-val" style="color:var(--purple);">${dias === 0 ? 'hoje' : dias + 'd'}</div>
     </div>`;
@@ -5036,17 +5052,18 @@ function renderHistorico() {
     if (campo === 'data') return p.dataISO || _parseDataBR(p.data);
     if (campo === 'solicitante') return p.solicitante;
     if (campo === 'itens') return p.itens.length;
+    if (campo === 'frete') return p.frete || 0;
     if (campo === 'total') return p.total;
     if (campo === 'status') return statusRankHist[p.status] ?? 3;
     return 0;
   };
   f = _sortArr(f, _histSort, histSortVal);
-  _atualizarSetas('hist', ['num','data','solicitante','itens','total','status'], _histSort);
+  _atualizarSetas('hist', ['num','data','solicitante','itens','frete','total','status'], _histSort);
   if ($('hist-count')) $('hist-count').textContent = f.length + ' pedido' + (f.length!==1?'s':'');
   const tbody = $('hist-tbody');
   if (!tbody) return;
   if (!f.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--t3);padding:32px;">
       <div style="font-size:24px;margin-bottom:8px;">📭</div>
       Nenhum pedido encontrado.<br>
       <span style="font-size:10px;">Os pedidos aparecem aqui após serem enviados via WhatsApp.</span>
@@ -5073,7 +5090,8 @@ function renderHistorico() {
     <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
     <td style="text-align:center;">${chegadaBadge(p)}</td>
     <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
-    <td style="text-align:right;font-weight:700;color:var(--green);">${p.total > 0 ? R(p.total) : '—'}</td>
+    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? R(p.frete) : '—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—'}</td>
     <td>${statusBadge(p.status)}</td>
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
@@ -5096,7 +5114,7 @@ function abrirPedidoDet(id) {
     <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
     <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
     ${p.direcao ? `<div><b>📦 Tipo:</b> ${p.direcao === 'saida' ? '📤 Saída de estoque' : '📥 Entrada de estoque'}</div>` : ''}
-    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor:</b> ${R(p.total)}</div>
+    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${R(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${R(p.frete)} · <b>Total c/ frete:</b> ${R(p.total + p.frete)}` : ''}</div>
     ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
     ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
   $('pd-itens').innerHTML = p.itens.map((it, i) => `
@@ -5247,6 +5265,7 @@ function abrirEditarPedido(id) {
   _editPedidoItens = JSON.parse(JSON.stringify(p.itens));
   $('ep2-num').value = p.num;
   $('ep2-solicitante').value = p.solicitante;
+  $('ep2-frete').value = p.frete || '';
   $('ep2-obs').value = p.obs || '';
   renderEditPedidoItens();
   $('overlay-edit-pedido').classList.add('open');
@@ -5283,6 +5302,7 @@ function salvarEdicaoPedido() {
   if (!solicitante) { toast('Informe o solicitante', 'error'); return; }
   p.num = num;
   p.solicitante = solicitante;
+  p.frete = parseFloat($('ep2-frete').value) || 0;
   p.obs = ($('ep2-obs').value || '').trim();
   p.itens = _editPedidoItens;
   p.total = p.itens.reduce((a, c) => a + (c.custo * c.qty || 0), 0);
@@ -5353,9 +5373,9 @@ function reabrirPedido(id) {
 
 function exportarHistoricoCSV() {
   if (!PEDIDOS.length) { toast('Nenhum pedido para exportar', 'error'); return; }
-  let csv = 'Nº Pedido,Data,Solicitante,Itens,Fornecedores,Valor Total,Status,Criado Por\n';
+  let csv = 'Nº Pedido,Data,Solicitante,Itens,Fornecedores,Frete,Valor Total,Status,Criado Por\n';
   PEDIDOS.forEach(p => {
-    csv += `"${p.num}","${p.data}","${p.solicitante}",${p.itens.length},"${p.fornecedores.join('; ')}","${R(p.total)}","${p.status}","${p.criadoPor}"\n`;
+    csv += `"${p.num}","${p.data}","${p.solicitante}",${p.itens.length},"${p.fornecedores.join('; ')}","${R(p.frete||0)}","${R((p.total||0)+(p.frete||0))}","${p.status}","${p.criadoPor}"\n`;
   });
   csv += '\n\nDETALHAMENTO DE ITENS\nNº Pedido,Código,Produto,Fornecedor,Qtd,Custo Unit,Total\n';
   PEDIDOS.forEach(p => {
