@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260805b">
-<link rel="stylesheet" href="css/components.css?v=20260805b">
-<link rel="stylesheet" href="css/pages.css?v=20260805b">
+<link rel="stylesheet" href="css/theme.css?v=20260805c">
+<link rel="stylesheet" href="css/components.css?v=20260805c">
+<link rel="stylesheet" href="css/pages.css?v=20260805c">
 </head>
 <body>
 
@@ -146,7 +146,7 @@
           <button class="sb-action-btn success" onclick="openModal('entrada')">＋ Entrada</button>
           <button class="sb-action-btn danger" onclick="openModal('saida')">－ Saída</button>
           <button class="sb-action-btn" id="nav-solic-btn" onclick="showPage('solicitacoes')">📋 Solicitações</button>
-          <button class="sb-action-btn primary" onclick="showPage('compras')">🛒 Gerar Pedido</button>
+          <button class="sb-action-btn primary" id="nav-pedido-btn" onclick="showPage('compras')">🛒 Gerar Pedido</button>
         </div>
       </div>
       <div class="sb-section">
@@ -172,7 +172,7 @@
         <div class="sb-lbl">Sistema</div>
         <button class="sb-item" onclick="showPage('auditoria',this)"><span class="sb-icon">📋</span>Histórico / Auditoria</button>
         <button class="sb-item admin-only" onclick="showPage('usuarios',this)"><span class="sb-icon">👥</span>Gerenciar Usuários</button>
-        <button class="sb-item" onclick="exportarBackup()"><span class="sb-icon">💾</span>Exportar backup</button>
+        <button class="sb-item" id="nav-backup-btn" onclick="exportarBackup()"><span class="sb-icon">💾</span>Exportar backup</button>
       </div>
       <div class="sb-footer">
         <div class="sb-lbl" style="padding:0;">Resumo</div>
@@ -3776,6 +3776,7 @@ function aplicarPermissoes() {
     'page-previsao':     'ver_previsao',
     'page-auditoria':    'ver_auditoria',
     'page-usuarios':     'gerenciar_usuarios',
+    'page-maquinas':     'ver_maquinas',
   };
 
   // Controla sidebar
@@ -3837,6 +3838,23 @@ function aplicarPermissoes() {
     });
   }
 
+  // ── Solicitações / Gerar Pedido (ações rápidas) ────────────────
+  const btnSolic = document.getElementById('nav-solic-btn');
+  if (btnSolic) btnSolic.style.display = temPermissao('ver_solicitacoes') ? '' : 'none';
+  const btnPedido = document.getElementById('nav-pedido-btn');
+  if (btnPedido) btnPedido.style.display = temPermissao('ver_pedidos') ? '' : 'none';
+
+  // ── Exportar backup ─────────────────────────────────────────────
+  const btnBackup = document.getElementById('nav-backup-btn');
+  if (btnBackup) btnBackup.style.display = temPermissao('exportar_dados') ? '' : 'none';
+
+  // ── Esconde rótulo de seção da sidebar sem nenhum item visível ──
+  document.querySelectorAll('.sidebar .sb-section').forEach(sec => {
+    const temItemVisivel = [...sec.querySelectorAll('.sb-item, .sb-action-btn')].some(it => it.style.display !== 'none');
+    const lbl = sec.querySelector('.sb-lbl');
+    if (lbl) lbl.style.display = temItemVisivel ? '' : 'none';
+  });
+
   // ── Gerenciar usuários ────────────────────────────────────────
   document.querySelectorAll('.admin-only').forEach(el=>{
     el.style.display=temPermissao('gerenciar_usuarios')?'':'none';
@@ -3883,12 +3901,15 @@ const TODAS_PERMISSOES = [
   { id:'ver_auditoria',      icon:'🔍', label:'Ver Auditoria',            desc:'Histórico completo de todas as ações' },
   { id:'gerenciar_usuarios', icon:'👥', label:'Gerenciar Usuários',       desc:'Criar, editar e excluir usuários' },
   { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
+  { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
+  { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
 ];
 
 const PERMS_PADRAO = {
   admin:   TODAS_PERMISSOES.map(p => p.id),
   usuario: ['ver_dashboard','ver_estoque','ver_validades','ver_alertas','ver_mov',
-            'ver_solicitacoes','ver_pedidos','registrar_mov','criar_solic','gerar_pedido','ver_valores'],
+            'ver_solicitacoes','ver_pedidos','registrar_mov','criar_solic','gerar_pedido','ver_valores',
+            'ver_maquinas','exportar_dados'],
   viewer:  ['ver_dashboard','ver_estoque','ver_validades','ver_alertas'],
 };
 
