@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260805">
-<link rel="stylesheet" href="css/components.css?v=20260805">
-<link rel="stylesheet" href="css/pages.css?v=20260805">
+<link rel="stylesheet" href="css/theme.css?v=20260805b">
+<link rel="stylesheet" href="css/components.css?v=20260805b">
+<link rel="stylesheet" href="css/pages.css?v=20260805b">
 </head>
 <body>
 
@@ -2056,7 +2056,7 @@ function renderValidade(){
       <td style="text-align:center;font-weight:700;">${r.p.estoque}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${r.v}</td>
       <td style="text-align:center;color:${col};font-weight:600;font-family:'JetBrains Mono',monospace;">${label}</td>
-      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?RV(custo):'—'}</td>
+      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?R(custo):'—'}</td>
       <td style="text-align:right;font-weight:700;color:${d<0?'var(--red)':'var(--green)'};font-family:'JetBrains Mono',monospace;font-size:11px;">${valorTot>0?RV(valorTot):'—'}</td>
       <td>${st}</td>
     </tr>`;
@@ -2601,7 +2601,7 @@ function renderCharts(){
       <circle cx="50" cy="50" r="36" fill="none" stroke="var(--s3)" stroke-width="16"/>
       ${circles}
     </svg>
-    <div class="legend-list">${abcD.map(d=>`<div class="leg-item" onclick="showPage('abc')" title="Ver Análise ABC completa"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct.toFixed(1)}% (${RV(d.v)})</div>`).join('')}</div>`;
+    <div class="legend-list">${abcD.map(d=>`<div class="leg-item" onclick="showPage('abc')" title="Ver Análise ABC completa"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct.toFixed(1)}% (${R(d.v)})</div>`).join('')}</div>`;
 }
 
 function renderAll(){
@@ -5023,7 +5023,7 @@ function renderPedidosTransito() {
     return `<div class="alert-item" style="border-color:var(--purple);cursor:pointer;" onclick="abrirPedidoDet('${p.id}')">
       <div style="flex:1;min-width:0;">
         <div class="ai-name">${p.num} <span style="font-weight:400;color:var(--t3);">— ${p.fornecedores.length ? p.fornecedores.join(', ') : 'Sem fornecedor'}</span></div>
-        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${RV((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
+        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
       </div>
       <div class="ai-val" style="color:var(--purple);">${dias === 0 ? 'hoje' : dias + 'd'}</div>
     </div>`;
@@ -5096,8 +5096,8 @@ function renderHistorico() {
     <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
     <td style="text-align:center;">${chegadaBadge(p)}</td>
     <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
-    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? RV(p.frete) : '—'}</td>
-    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? RV((p.total||0) + (p.frete||0)) : '—'}</td>
+    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? R(p.frete) : '—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—'}</td>
     <td>${statusBadge(p.status)}</td>
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
@@ -5120,7 +5120,7 @@ function abrirPedidoDet(id) {
     <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
     <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
     ${p.direcao ? `<div><b>📦 Tipo:</b> ${p.direcao === 'saida' ? '📤 Saída de estoque' : '📥 Entrada de estoque'}</div>` : ''}
-    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${RV(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${RV(p.frete)} · <b>Total c/ frete:</b> ${RV(p.total + p.frete)}` : ''}</div>
+    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${R(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${R(p.frete)} · <b>Total c/ frete:</b> ${R(p.total + p.frete)}` : ''}</div>
     ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
     ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
   $('pd-itens').innerHTML = p.itens.map((it, i) => `
@@ -5135,7 +5135,7 @@ function abrirPedidoDet(id) {
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
-        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${RV(it.custo * it.qty)}</div>` : ''}
+        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${R(it.custo * it.qty)}</div>` : ''}
       </div>
       <div style="flex-shrink:0;">
         ${it.dataChegadaReal
