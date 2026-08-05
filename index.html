@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260805c">
-<link rel="stylesheet" href="css/components.css?v=20260805c">
-<link rel="stylesheet" href="css/pages.css?v=20260805c">
+<link rel="stylesheet" href="css/theme.css?v=20260805d">
+<link rel="stylesheet" href="css/components.css?v=20260805d">
+<link rel="stylesheet" href="css/pages.css?v=20260805d">
 </head>
 <body>
 
@@ -274,7 +274,7 @@
           </div>
 
           <!-- CHARTS -->
-          <div class="charts-row">
+          <div class="charts-row" id="charts-row">
             <div class="chart-card">
               <div class="cc-title">Consumo real</div>
               <div class="cc-sub">Saídas por categoria — últimos 6 meses</div>
@@ -282,7 +282,7 @@
               <div class="bar-xlabels" id="chart-xlabels"></div>
               <div style="display:flex;gap:12px;margin-top:8px;" id="chart-legend"></div>
             </div>
-            <div class="chart-card">
+            <div class="chart-card" id="chart-abc-card">
               <div class="cc-title">Curva ABC — valor</div>
               <div class="cc-sub">% do valor total por classe</div>
               <div class="donut-row" id="chart-abc"></div>
@@ -3847,6 +3847,13 @@ function aplicarPermissoes() {
   // ── Exportar backup ─────────────────────────────────────────────
   const btnBackup = document.getElementById('nav-backup-btn');
   if (btnBackup) btnBackup.style.display = temPermissao('exportar_dados') ? '' : 'none';
+
+  // ── Curva ABC (Dashboard) — é uma análise de valor ──────────────
+  const cardAbc = document.getElementById('chart-abc-card');
+  const podeVerAbc = temPermissao('ver_valores');
+  if (cardAbc) cardAbc.style.display = podeVerAbc ? '' : 'none';
+  const chartsRow = document.getElementById('charts-row');
+  if (chartsRow) chartsRow.classList.toggle('single-chart', !podeVerAbc);
 
   // ── Esconde rótulo de seção da sidebar sem nenhum item visível ──
   document.querySelectorAll('.sidebar .sb-section').forEach(sec => {
