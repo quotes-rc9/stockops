@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260803">
-<link rel="stylesheet" href="css/components.css?v=20260803">
-<link rel="stylesheet" href="css/pages.css?v=20260803">
+<link rel="stylesheet" href="css/theme.css?v=20260805">
+<link rel="stylesheet" href="css/components.css?v=20260805">
+<link rel="stylesheet" href="css/pages.css?v=20260805">
 </head>
 <body>
 
@@ -1552,6 +1552,11 @@ let P = [
 
 // ── UTILITÁRIOS ───────────────────────────────────────────────
 const R = v => 'R$\u00a0' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+// Como R(), mas oculta o valor se o usu\u00e1rio atual n\u00e3o tiver permiss\u00e3o de ver valores monet\u00e1rios.
+const RV = v => {
+  try { return (typeof temPermissao === 'function' && !temPermissao('ver_valores')) ? '\ud83d\udd12 Oculto' : R(v); }
+  catch (e) { return R(v); }
+};
 const N = v => v.toLocaleString('pt-BR');
 
 function parseDate(s){ const[d,m,a]=s.split('/');return new Date(+a,+m-1,+d); }
@@ -1632,7 +1637,7 @@ function renderKPIs(){
   $('k-crit').textContent=k.crit;
   $('k-alert').textContent=k.alrt;
   $('k-exp').textContent=k.expUnits;
-  $('k-valor').textContent=R(k.valor);
+  $('k-valor').textContent=RV(k.valor);
   // Novo KPI de cadastrados
   if($('k-cadastrados')) $('k-cadastrados').textContent=P.length;
   if($('k-cats')){
@@ -1642,7 +1647,7 @@ function renderKPIs(){
   }
   // sidebar
   $('sb-total').textContent=P.length;
-  $('sb-valor').textContent=R(k.valor);
+  $('sb-valor').textContent=RV(k.valor);
   $('sb-crit').textContent=k.crit;
   $('sb-exp').textContent=k.expUnits;
   $('nb-crit').textContent=k.crit;
@@ -1842,7 +1847,7 @@ function renderEstoque(){
       if($('fr-cons'))    $('fr-cons').textContent    = cons;
       if($('fr-total'))   $('fr-total').textContent   = f.length;
       if($('fr-qtd'))     $('fr-qtd').textContent     = N(qtdTotal)+' un';
-      if($('fr-valor'))   $('fr-valor').textContent   = R(valTotal);
+      if($('fr-valor'))   $('fr-valor').textContent   = RV(valTotal);
     } else {
       resumoBar.style.display='none';
     }
@@ -1884,7 +1889,7 @@ function renderEstoque(){
     const stColor=st==='Crítico'?'var(--red)':st==='Alerta'?'var(--yellow)':'var(--t1)';
     const valorTotal = p.estoque * p.custo;
     const valorCell = valorTotal > 0
-      ? `<span class="mono" style="color:var(--green);font-size:11px;">${R(valorTotal)}</span>`
+      ? `<span class="mono" style="color:var(--green);font-size:11px;">${RV(valorTotal)}</span>`
       : `<span style="color:var(--t4);">—</span>`;
     const statusCell = isCaminho(p)
       ? `<span class="badge" style="background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);">🚚 A CAMINHO</span>`
@@ -1893,7 +1898,7 @@ function renderEstoque(){
     const transitoTag = transito
       ? `<span style="flex-shrink:0;cursor:help;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--purple-a);color:var(--purple);border:1px solid rgba(var(--purple-rgb),.2);border-radius:var(--r4);padding:1px 5px;" title="Pedido ${transito.pedido.num} em trânsito${transito.item.chegadaPrevista ? ' — previsto ' + transito.item.chegadaPrevista : ''}">🚛 Em trânsito</span>`
       : '';
-    const temHistPreco = (p.historico || []).some(h => h.diff && h.diff.custo);
+    const temHistPreco = temPermissao('ver_valores') && (p.historico || []).some(h => h.diff && h.diff.custo);
     const histPrecoTag = temHistPreco
       ? `<span onclick="abrirHistoricoProduto('${p.cod}')" style="flex-shrink:0;cursor:pointer;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--blue-a);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.2);border-radius:var(--r4);padding:1px 5px;" title="Ver histórico de preços">💲 Histórico</span>`
       : '';
@@ -2051,8 +2056,8 @@ function renderValidade(){
       <td style="text-align:center;font-weight:700;">${r.p.estoque}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${r.v}</td>
       <td style="text-align:center;color:${col};font-weight:600;font-family:'JetBrains Mono',monospace;">${label}</td>
-      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?R(custo):'—'}</td>
-      <td style="text-align:right;font-weight:700;color:${d<0?'var(--red)':'var(--green)'};font-family:'JetBrains Mono',monospace;font-size:11px;">${valorTot>0?R(valorTot):'—'}</td>
+      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?RV(custo):'—'}</td>
+      <td style="text-align:right;font-weight:700;color:${d<0?'var(--red)':'var(--green)'};font-family:'JetBrains Mono',monospace;font-size:11px;">${valorTot>0?RV(valorTot):'—'}</td>
       <td>${st}</td>
     </tr>`;
   }).join('');
@@ -2073,7 +2078,7 @@ function renderValidade(){
     <td colspan="3" style="color:var(--t3);font-style:italic;">${f.length} item${f.length!==1?'s':''} listado${f.length!==1?'s':''}</td>
     <td style="text-align:center;font-weight:700;color:var(--blue);">${totalQtd} un</td>
     <td colspan="3"></td>
-    <td style="text-align:right;font-weight:700;color:var(--green);">${totalValor>0?R(totalValor):'—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${totalValor>0?RV(totalValor):'—'}</td>
     <td></td>`;
   $('val-tbody').insertAdjacentElement('afterend', tfoot);
 }
@@ -2596,7 +2601,7 @@ function renderCharts(){
       <circle cx="50" cy="50" r="36" fill="none" stroke="var(--s3)" stroke-width="16"/>
       ${circles}
     </svg>
-    <div class="legend-list">${abcD.map(d=>`<div class="leg-item" onclick="showPage('abc')" title="Ver Análise ABC completa"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct.toFixed(1)}% (${R(d.v)})</div>`).join('')}</div>`;
+    <div class="legend-list">${abcD.map(d=>`<div class="leg-item" onclick="showPage('abc')" title="Ver Análise ABC completa"><div class="leg-sq" style="background:${d.col};"></div>${d.cls} — ${d.pct.toFixed(1)}% (${RV(d.v)})</div>`).join('')}</div>`;
 }
 
 function renderAll(){
@@ -3877,12 +3882,13 @@ const TODAS_PERMISSOES = [
   { id:'gerar_pedido',       icon:'📱', label:'Gerar Pedido / WhatsApp',  desc:'Criar pedidos e enviar via WhatsApp' },
   { id:'ver_auditoria',      icon:'🔍', label:'Ver Auditoria',            desc:'Histórico completo de todas as ações' },
   { id:'gerenciar_usuarios', icon:'👥', label:'Gerenciar Usuários',       desc:'Criar, editar e excluir usuários' },
+  { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
 ];
 
 const PERMS_PADRAO = {
   admin:   TODAS_PERMISSOES.map(p => p.id),
   usuario: ['ver_dashboard','ver_estoque','ver_validades','ver_alertas','ver_mov',
-            'ver_solicitacoes','ver_pedidos','registrar_mov','criar_solic','gerar_pedido'],
+            'ver_solicitacoes','ver_pedidos','registrar_mov','criar_solic','gerar_pedido','ver_valores'],
   viewer:  ['ver_dashboard','ver_estoque','ver_validades','ver_alertas'],
 };
 
@@ -5017,7 +5023,7 @@ function renderPedidosTransito() {
     return `<div class="alert-item" style="border-color:var(--purple);cursor:pointer;" onclick="abrirPedidoDet('${p.id}')">
       <div style="flex:1;min-width:0;">
         <div class="ai-name">${p.num} <span style="font-weight:400;color:var(--t3);">— ${p.fornecedores.length ? p.fornecedores.join(', ') : 'Sem fornecedor'}</span></div>
-        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
+        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${RV((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
       </div>
       <div class="ai-val" style="color:var(--purple);">${dias === 0 ? 'hoje' : dias + 'd'}</div>
     </div>`;
@@ -5090,8 +5096,8 @@ function renderHistorico() {
     <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
     <td style="text-align:center;">${chegadaBadge(p)}</td>
     <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
-    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? R(p.frete) : '—'}</td>
-    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—'}</td>
+    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? RV(p.frete) : '—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? RV((p.total||0) + (p.frete||0)) : '—'}</td>
     <td>${statusBadge(p.status)}</td>
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
@@ -5114,7 +5120,7 @@ function abrirPedidoDet(id) {
     <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
     <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
     ${p.direcao ? `<div><b>📦 Tipo:</b> ${p.direcao === 'saida' ? '📤 Saída de estoque' : '📥 Entrada de estoque'}</div>` : ''}
-    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${R(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${R(p.frete)} · <b>Total c/ frete:</b> ${R(p.total + p.frete)}` : ''}</div>
+    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${RV(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${RV(p.frete)} · <b>Total c/ frete:</b> ${RV(p.total + p.frete)}` : ''}</div>
     ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
     ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
   $('pd-itens').innerHTML = p.itens.map((it, i) => `
@@ -5129,7 +5135,7 @@ function abrirPedidoDet(id) {
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
-        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${R(it.custo * it.qty)}</div>` : ''}
+        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${RV(it.custo * it.qty)}</div>` : ''}
       </div>
       <div style="flex-shrink:0;">
         ${it.dataChegadaReal
