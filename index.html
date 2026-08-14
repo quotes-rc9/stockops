@@ -17,9 +17,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="css/theme.css?v=20260805d">
-<link rel="stylesheet" href="css/components.css?v=20260805d">
-<link rel="stylesheet" href="css/pages.css?v=20260805d">
+<link rel="stylesheet" href="css/theme.css?v=20260814">
+<link rel="stylesheet" href="css/components.css?v=20260814">
+<link rel="stylesheet" href="css/pages.css?v=20260814">
 </head>
 <body>
 
@@ -3736,6 +3736,7 @@ function efetuarLogin(u) {
   document.querySelectorAll('.admin-only').forEach(el=>{el.style.display=u.role==='admin'?'':' none';});
   registrarAudit('login', `Login: ${u.nome}`, `Perfil: ${ROLE_LABELS[u.role]} | Login: ${u.email}`, '🔑');
   aplicarPermissoes();
+  renderAll(); // recalcula KPIs/valores agora que sabemos quem logou (antes do login, CURRENT_USER era null e RV() mostrava tudo oculto)
   toast(`Bem-vindo, ${u.nome}! ${ROLE_EMOJI[u.role]||''}`, 'success');
 }
 
