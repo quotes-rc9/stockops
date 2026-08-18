@@ -4104,42 +4104,64 @@ function renderMaquinas(){
       const st=_tintaStatus(o.validade);
       const desde=_diasDesde(o.inicio);
       const meta=[];
-      if(o.inicio) meta.push(`instalada ${_fmtData(o.inicio)}`);
+      if(o.inicio) meta.push(_fmtData(o.inicio));
       if(o.validade) meta.push(`val. ${_fmtData(o.validade)}`);
-      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--b2);">
-        <span style="font-weight:600;font-size:12px;color:var(--t1);">${_escMaq(o.modelo)}</span>
-        ${meta.length?`<span style="font-size:10px;color:var(--t4);">${meta.join(' · ')}</span>`:''}
-        ${st?`<span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
-        ${desde!=null?`<span style="font-size:10px;color:var(--t3);">em uso há ${desde}d</span>`:''}
-        <button class="btn-edit" style="margin-left:auto;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>
+      if(desde!=null) meta.push(`há ${desde}d`);
+      return `<div style="padding:4px 0;border-top:1px solid var(--b2);">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-weight:600;font-size:11.5px;color:var(--t1);">${_escMaq(o.modelo)}</span>
+          ${st?`<span style="font-size:9.5px;font-weight:600;padding:0 6px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:1px;">
+          ${meta.length?`<span style="font-size:9.5px;color:var(--t4);">${meta.join(' · ')}</span>`:''}
+          <button class="btn-edit" style="margin-left:auto;padding:1px 7px;font-size:10px;flex-shrink:0;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>
+        </div>
       </div>`;
     };
-    const _itemFinal=({o})=>{
-      const dur=_duracaoDias(o.inicio,o.fim);
-      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--b2);opacity:.7;">
-        <span style="font-weight:600;font-size:12px;color:var(--t2);">${_escMaq(o.modelo)}</span>
-        <span style="font-size:10px;color:var(--t4);">${_fmtData(o.inicio)} → ${_fmtData(o.fim)}</span>
-        ${dur!=null?`<span style="margin-left:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:var(--s3);color:var(--t3);white-space:nowrap;">durou ${dur}d</span>`:'<span style="margin-left:auto;font-size:10px;color:var(--t4);">finalizada</span>'}
-      </div>`;
+    // Agrupa as finalizadas por cor/modelo — ex: "BRANCO-07 — 4 und" com a validade de cada uma
+    const _grupos={};
+    _finalizadas.forEach(({o})=>{ (_grupos[o.modelo]=_grupos[o.modelo]||[]).push(o); });
+    const _itemGrupo=(cor)=>{
+      const itens=_grupos[cor].slice().sort((a,b)=>(a.fim||'').localeCompare(b.fim||''));
+      return `<details style="border-top:1px solid var(--b2);padding:5px 0;">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:8px;font-size:11.5px;">
+          <span style="font-weight:600;color:var(--t2);">${_escMaq(cor)}</span>
+          <span style="margin-left:auto;font-size:10px;font-weight:600;padding:1px 7px;border-radius:var(--r6);background:var(--s3);color:var(--t3);white-space:nowrap;">${itens.length} und</span>
+        </summary>
+        <div style="margin-top:4px;display:flex;flex-direction:column;gap:3px;">
+          ${itens.map(o=>{
+            const dur=_duracaoDias(o.inicio,o.fim);
+            return `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10px;color:var(--t4);padding-left:2px;">
+              <span>val. ${_fmtData(o.validade)}</span>
+              <span>·</span>
+              <span>${_fmtData(o.inicio)} → ${_fmtData(o.fim)}</span>
+              ${dur!=null?`<span style="margin-left:auto;">${dur}d</span>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </details>`;
     };
-    return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;align-items:center;gap:10px;">
+    return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:8px;height:620px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
         <div style="width:40px;height:40px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🖨</div>
         <div style="min-width:0;flex:1;">
           <div style="font-weight:700;font-size:14px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escMaq(m.nome)}</div>
           <div style="font-size:12px;color:var(--t3);">${_escMaq(m.modelo)||'—'}</div>
         </div>
+        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r6);background:var(--s3);color:var(--t3);white-space:nowrap;">${_emUso.length} em uso</span>
       </div>
-      <div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;">Tintas em uso</div>
-        ${_emUso.length?_emUso.map(_itemEmUso).join(''):'<span style="color:var(--t4);font-size:11px;">— nenhuma tinta em uso —</span>'}
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="min-height:0;overflow-y:auto;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;position:sticky;top:0;background:var(--s2);">Tintas em uso</div>
+          ${_emUso.length?_emUso.map(_itemEmUso).join(''):'<span style="color:var(--t4);font-size:11px;">— nenhuma tinta em uso —</span>'}
+        </div>
+        <div style="min-height:0;overflow-y:auto;border-left:1px solid var(--b2);padding-left:12px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;position:sticky;top:0;background:var(--s2);">Tintas usadas (${_finalizadas.length})</div>
+          ${Object.keys(_grupos).length?Object.keys(_grupos).sort().map(_itemGrupo).join(''):'<span style="color:var(--t4);font-size:11px;">— nenhuma tinta finalizada —</span>'}
+        </div>
       </div>
-      ${_finalizadas.length?`<div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:2px;">Finalizadas (${_finalizadas.length})</div>
-        ${_finalizadas.map(_itemFinal).join('')}
-      </div>`:''}
-      ${m.obs?`<div style="font-size:11px;color:var(--t3);border-top:1px solid var(--b2);padding-top:8px;white-space:pre-wrap;">${_escMaq(m.obs)}</div>`:''}
-      <div style="display:flex;gap:6px;margin-top:auto;padding-top:2px;flex-wrap:wrap;">
+      ${m.obs?`<div style="font-size:10.5px;color:var(--t3);border-top:1px solid var(--b2);padding-top:6px;white-space:pre-wrap;flex-shrink:0;max-height:52px;overflow-y:auto;">${_escMaq(m.obs)}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">
         <button class="btn-edit" onclick="openMaqHist('${m.id}')">📜 Histórico</button>
         <button class="btn-edit" onclick="openMaquinaModal('${m.id}')">✏ Editar</button>
         <button class="btn-del" onclick="excluirMaquina('${m.id}')">🗑 Excluir</button>
