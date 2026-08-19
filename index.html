@@ -167,6 +167,7 @@
       <div class="sb-section">
         <div class="sb-lbl">Equipamentos</div>
         <button class="sb-item" onclick="showPage('maquinas',this)"><span class="sb-icon">🖨</span>Máquinas<span class="sb-badge sbb-p" id="nb-maq" style="display:none;">0</span></button>
+        <button class="sb-item" onclick="showPage('analise-min',this)"><span class="sb-icon">🧪</span>Estoque Mínimo</button>
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Sistema</div>
@@ -954,6 +955,44 @@
             Nenhuma máquina cadastrada ainda.<br>Clique em <b>＋ Nova máquina</b> para começar.
           </div>
           <div id="maq-grid" style="display:flex;flex-direction:column;gap:20px;"></div>
+        </div>
+      </div>
+
+      <!-- ══ ESTOQUE MÍNIMO DE TINTAS ═══════════════════════════ -->
+      <div class="page" id="page-analise-min">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">🧪 Estoque Mínimo de Tintas</span>
+          <div class="ph-right">
+            <button class="btn-export" onclick="exportarAnaliseMinPDF()">📄 PDF</button>
+          </div>
+        </div>
+        <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--blue);">
+            💡 <b>Como funciona:</b> calcula, pra cada tinta, quantos dias em média ela fica instalada até ser trocada (histórico real das 6 máquinas), divide pelo nº de máquinas/posições que usam essa mesma tinta ao mesmo tempo, e chega numa <b>cadência da loja</b> — de quanto em quanto tempo, na média, alguma máquina troca essa tinta. Se essa cadência for maior que 2× o prazo de reposição (60 dias), sobra folga suficiente pra pedir e receber a próxima antes de precisar — e como a tinta aguenta <b>+1 ano de uso após a validade impressa</b> uma vez instalada, manter só 1 unidade reserva não corre risco real de vencer parada no estoque.
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;padding:12px 14px;flex-shrink:0;">
+          <div class="panel" id="amin-vermelho-card"></div>
+          <div class="panel" id="amin-amarelo-card"></div>
+          <div class="panel" id="amin-verde-card"></div>
+          <div class="panel" id="amin-capital-card"></div>
+        </div>
+        <div class="tbl-wrap" style="flex:1;">
+          <table>
+            <thead><tr>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('maquina')">Máquina <span id="amin-arrow-maquina"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('cor')">Cor / Tinta <span id="amin-arrow-cor"></span></th>
+              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('produto')">Produto <span id="amin-arrow-produto"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('slots')">Máquinas/slots <span id="amin-arrow-slots"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('mediaDias')">Média dias/ciclo <span id="amin-arrow-mediaDias"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência da loja <span id="amin-arrow-cadencia"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('estoque')">Estoque atual <span id="amin-arrow-estoque"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('min')">Mínimo atual <span id="amin-arrow-min"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('sugerido')">Mínimo sugerido <span id="amin-arrow-sugerido"></span></th>
+              <th>Justificativa</th>
+            </tr></thead>
+            <tbody id="amin-tbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -2521,6 +2560,7 @@ function showPage(id, el){
   if(id==='auditoria')       renderAuditoria();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
+  if(id==='analise-min')     renderAnaliseMin();
   // Reaplica permissões após qualquer render de página
   // (botões gerados dinamicamente precisam ser reavaliados)
   if(typeof aplicarPermissoes === 'function') setTimeout(aplicarPermissoes, 0);
@@ -2615,6 +2655,7 @@ function renderAll(){
   else if(currentPage==='estoque')    renderEstoque();
   else if(currentPage==='solicitacoes') renderSolicitacoes();
   else if(currentPage==='auditoria')  renderAuditoria();
+  else if(currentPage==='analise-min') renderAnaliseMin();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
   if(typeof renderHistBadge === 'function') renderHistBadge();
   // Reaplica permissões após render (botões dinâmicos)
@@ -3778,6 +3819,7 @@ function aplicarPermissoes() {
     'page-auditoria':    'ver_auditoria',
     'page-usuarios':     'gerenciar_usuarios',
     'page-maquinas':     'ver_maquinas',
+    'page-analise-min':  'ver_analise_min',
   };
 
   // Controla sidebar
@@ -3910,6 +3952,7 @@ const TODAS_PERMISSOES = [
   { id:'gerenciar_usuarios', icon:'👥', label:'Gerenciar Usuários',       desc:'Criar, editar e excluir usuários' },
   { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
   { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
+  { id:'ver_analise_min',    icon:'🧪', label:'Ver Estoque Mínimo de Tintas', desc:'Recomendação de mínimo por giro de tinta' },
   { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
 ];
 
@@ -4443,6 +4486,177 @@ function excluirMaquina(id){
   toast(`Máquina "${m.nome}" excluída.`,'success');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO: ESTOQUE MÍNIMO DE TINTAS — cruza histórico de uso (MAQUINAS)
+// com estoque atual (P) pra sugerir mínimo de 1 ou 2 por tinta.
+// ═══════════════════════════════════════════════════════════════
+
+// Mapeia cada combinação (modelo de máquina, cor) para o produto de estoque correspondente.
+// Branco-07 e Branco-08 são 2 posições físicas na máquina mas consomem o MESMO produto
+// ("Tinta Branca <MODELO>") — por isso entram juntas numa linha com slotsPorMaquina:2.
+const TINTA_MAPA = [
+  { maqModelo:'LH-100',  cores:['BLACK'],                  produtoNome:'Tinta Preta LH100',    slotsPorMaquina:1 },
+  { maqModelo:'LH-100',  cores:['CYAN'],                    produtoNome:'Tinta Ciano LH100',    slotsPorMaquina:1 },
+  { maqModelo:'LH-100',  cores:['MAGENTA'],                produtoNome:'Magenta LH100',        slotsPorMaquina:1 },
+  { maqModelo:'LH-100',  cores:['YELLOW'],                  produtoNome:'Tinta Amarela LH100',  slotsPorMaquina:1 },
+  { maqModelo:'LH-100',  cores:['CLEAR'],                   produtoNome:'Verniz Clear LH100',   slotsPorMaquina:1 },
+  { maqModelo:'LH-100',  cores:['BRANCO-07','BRANCO-08'],  produtoNome:'Tinta Branca LH100',   slotsPorMaquina:2 },
+  { maqModelo:'LUS-120', cores:['BLACK'],                   produtoNome:'Tinta Preta LUS120',   slotsPorMaquina:1 },
+  { maqModelo:'LUS-120', cores:['CYAN'],                    produtoNome:'Tinta Ciano LUS120',   slotsPorMaquina:1 },
+  { maqModelo:'LUS-120', cores:['MAGENTA'],                 produtoNome:'Tinta Magenta LUS120', slotsPorMaquina:1 },
+  { maqModelo:'LUS-120', cores:['YELLOW'],                  produtoNome:'Tinta Amarela LUS120', slotsPorMaquina:1 },
+  { maqModelo:'LUS-120', cores:['CLEAR'],                   produtoNome:'Verniz Clear LUS120',  slotsPorMaquina:1 },
+  { maqModelo:'LUS-120', cores:['BRANCO-07','BRANCO-08'],  produtoNome:'Tinta Branca LUS120',  slotsPorMaquina:2 },
+];
+// Primer: produto único, compartilhado pelas 6 máquinas (não separa por modelo de máquina)
+const TINTA_PRIMER = { cores:['PRIMER'], produtoNome:'Tinta Neutra PR 200' };
+const PRAZO_REPOSICAO_DIAS = 30; // dias estimados entre pedir e receber uma remessa MIMAKI — ajustável
+
+function _aminTier(cadencia){
+  if (cadencia==null || !isFinite(cadencia)) return { nivel:'—', sugerido:null, badge:'', texto:'Histórico insuficiente (sem ciclos finalizados) pra calcular ainda.' };
+  if (cadencia < PRAZO_REPOSICAO_DIAS) return { nivel:'🔴 Alto giro', sugerido:2, badge:'b-crit', texto:'Troca mais rápido do que dá pra repor — precisa de uma unidade reserva pronta.' };
+  if (cadencia < PRAZO_REPOSICAO_DIAS*2) return { nivel:'🟡 Atenção', sugerido:2, badge:'b-warn', texto:'Troca quase no ritmo do prazo de reposição — folga pequena pra reduzir agora.' };
+  return { nivel:'🟢 Giro lento', sugerido:1, badge:'b-ok', texto:'Sobra pelo menos um prazo de reposição inteiro de folga entre uma troca e outra — e como a tinta aguenta +1 ano após a validade impressa, a reserva não corre risco de vencer parada no estoque.' };
+}
+
+function _aminCalcGrupo(maquinasDoGrupo, cores, produtoNome){
+  const ciclos=[];
+  let maquinasUsando=0;
+  maquinasDoGrupo.forEach(m=>{
+    const doGrupo=(m.tintas||[]).filter(t=>cores.includes(String(t.modelo||'').toUpperCase().trim()));
+    if(doGrupo.length) maquinasUsando++;
+    doGrupo.forEach(t=>{ if(t.fim){ const d=_duracaoDias(t.inicio,t.fim); if(d!=null) ciclos.push(d); } });
+  });
+  const mediaDias = ciclos.length ? ciclos.reduce((a,b)=>a+b,0)/ciclos.length : null;
+  const minDias = ciclos.length ? Math.min(...ciclos) : null;
+  const maxDias = ciclos.length ? Math.max(...ciclos) : null;
+  return { ciclos:ciclos.length, mediaDias, minDias, maxDias, maquinasUsando };
+}
+
+function calcularAnaliseTintas(){
+  const linhas=[];
+  TINTA_MAPA.forEach(entry=>{
+    const maquinasDoModelo=MAQUINAS.filter(m=>m.modelo===entry.maqModelo);
+    const g=_aminCalcGrupo(maquinasDoModelo, entry.cores, entry.produtoNome);
+    const slots=g.maquinasUsando*entry.slotsPorMaquina;
+    const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
+    const tier=_aminTier(cadencia);
+    const produto=P.find(p=>String(p.nome||'').trim().toLowerCase()===entry.produtoNome.trim().toLowerCase());
+    linhas.push({
+      maquina:entry.maqModelo, cor:entry.cores.join('/'), produtoNome:entry.produtoNome, produto,
+      slots, ciclos:g.ciclos, mediaDias:g.mediaDias, minDias:g.minDias, maxDias:g.maxDias,
+      cadencia, tier:tier.nivel, badge:tier.badge, sugerido:tier.sugerido, justificativa:tier.texto,
+      estoque:produto?produto.estoque:null, min:produto?produto.min:null, custo:produto?produto.custo:null,
+    });
+  });
+  // Primer: agrupa as 6 máquinas juntas, sem separar por modelo
+  {
+    const g=_aminCalcGrupo(MAQUINAS, TINTA_PRIMER.cores, TINTA_PRIMER.produtoNome);
+    const slots=g.maquinasUsando*1;
+    const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
+    const tier=_aminTier(cadencia);
+    const produto=P.find(p=>String(p.nome||'').trim().toLowerCase()===TINTA_PRIMER.produtoNome.trim().toLowerCase());
+    linhas.push({
+      maquina:'Todas (compartilhado)', cor:'PRIMER', produtoNome:TINTA_PRIMER.produtoNome, produto,
+      slots, ciclos:g.ciclos, mediaDias:g.mediaDias, minDias:g.minDias, maxDias:g.maxDias,
+      cadencia, tier:tier.nivel, badge:tier.badge, sugerido:tier.sugerido, justificativa:tier.texto,
+      estoque:produto?produto.estoque:null, min:produto?produto.min:null, custo:produto?produto.custo:null,
+    });
+  }
+  return linhas;
+}
+
+let _aminSort = { campo: null, dir: 'asc' };
+function sortAminBy(campo) {
+  if (_aminSort.campo === campo) _aminSort.dir = _aminSort.dir === 'asc' ? 'desc' : 'asc';
+  else { _aminSort.campo = campo; _aminSort.dir = 'asc'; }
+  renderAnaliseMin();
+}
+
+function renderAnaliseMin(){
+  const tbody=$('amin-tbody'); if(!tbody) return;
+  const linhas=calcularAnaliseTintas();
+
+  const vermelhas=linhas.filter(l=>l.badge==='b-crit');
+  const amarelas=linhas.filter(l=>l.badge==='b-warn');
+  const verdes=linhas.filter(l=>l.badge==='b-ok');
+  const capitalLiberado=verdes.reduce((a,l)=>{
+    if(l.min!=null && l.sugerido!=null && l.min>l.sugerido && l.custo){ return a+(l.min-l.sugerido)*l.custo; }
+    return a;
+  },0);
+
+  const cardHtml=(id,icon,titulo,cor,corA,qtd,sub)=>{
+    const el=$(id); if(!el) return;
+    el.innerHTML=`
+      <div class="ph"><span style="font-size:16px;">${icon}</span><span class="ph-title" style="color:${cor};">${titulo}</span></div>
+      <div style="padding:12px;">
+        <div style="font-size:26px;font-weight:700;color:${cor};">${qtd}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px;">${sub}</div>
+      </div>`;
+  };
+  cardHtml('amin-vermelho-card','🔴','Alto giro','var(--red)','var(--red-a)',vermelhas.length,'mantêm mínimo 2 — trocam rápido demais');
+  cardHtml('amin-amarelo-card','🟡','Atenção','var(--yellow)','var(--yellow-a)',amarelas.length,'mantêm mínimo 2 por ora — folga pequena');
+  cardHtml('amin-verde-card','🟢','Giro lento','var(--green)','var(--green-a)',verdes.length,'podem reduzir para mínimo 1');
+  cardHtml('amin-capital-card','💰','Capital liberável','var(--blue)','var(--blue-a)',R(capitalLiberado),'se aplicar as reduções sugeridas');
+
+  const aminSortVal=(l,campo)=>{
+    if(campo==='maquina') return l.maquina;
+    if(campo==='cor') return l.cor;
+    if(campo==='produto') return l.produtoNome;
+    if(campo==='slots') return l.slots||0;
+    if(campo==='mediaDias') return l.mediaDias||0;
+    if(campo==='cadencia') return l.cadencia||0;
+    if(campo==='estoque') return l.estoque||0;
+    if(campo==='min') return l.min||0;
+    if(campo==='sugerido') return l.sugerido||0;
+    return '';
+  };
+  const ordenadas=_sortArr(linhas,_aminSort,aminSortVal);
+  _atualizarSetas('amin',['maquina','cor','produto','slots','mediaDias','cadencia','estoque','min','sugerido'],_aminSort);
+
+  tbody.innerHTML=ordenadas.map(l=>{
+    const produtoTxt=l.produto?_escMaq(l.produtoNome):`<span style="color:var(--t4);">${_escMaq(l.produtoNome)} (não localizado)</span>`;
+    const cadenciaTxt=l.cadencia!=null?`${Math.round(l.cadencia)}d`:'—';
+    const mediaTxt=l.mediaDias!=null?`${Math.round(l.mediaDias)}d (${l.ciclos} ciclos)`:'—';
+    const sugTxt=l.sugerido!=null?l.sugerido:'—';
+    const badgeCls=l.badge?`badge ${l.badge}`:'';
+    return `<tr>
+      <td class="mono" style="font-size:11px;color:var(--blue);">${_escMaq(l.maquina)}</td>
+      <td style="font-weight:600;">${_escMaq(l.cor)}</td>
+      <td>${produtoTxt}</td>
+      <td style="text-align:center;">${l.slots||'—'}</td>
+      <td style="text-align:center;color:var(--t3);">${mediaTxt}</td>
+      <td style="text-align:center;font-weight:600;">${cadenciaTxt}</td>
+      <td style="text-align:center;">${l.estoque!=null?l.estoque:'—'}</td>
+      <td style="text-align:center;color:var(--t3);">${l.min!=null?l.min:'—'}</td>
+      <td style="text-align:center;font-weight:700;">${sugTxt}</td>
+      <td>${l.tier?`<span class="${badgeCls}">${_escMaq(l.tier)}</span> `:''}<span style="font-size:10.5px;color:var(--t3);">${_escMaq(l.justificativa)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportarAnaliseMinPDF(){
+  const linhas=calcularAnaliseTintas();
+  const verdes=linhas.filter(l=>l.badge==='b-ok');
+  const capitalLiberado=verdes.reduce((a,l)=>{
+    if(l.min!=null && l.sugerido!=null && l.min>l.sugerido && l.custo){ return a+(l.min-l.sugerido)*l.custo; }
+    return a;
+  },0);
+  const colunas=['Máquina','Cor','Produto','Slots','Média dias/ciclo','Cadência da loja','Estoque','Mín. atual','Mín. sugerido','Justificativa'];
+  const corpo=linhas.map(l=>[
+    l.maquina, l.cor, l.produto?l.produtoNome:`${l.produtoNome} (não localizado)`,
+    l.slots||'—',
+    l.mediaDias!=null?`${Math.round(l.mediaDias)}d (${l.ciclos} ciclos)`:'—',
+    l.cadencia!=null?`${Math.round(l.cadencia)}d`:'—',
+    l.estoque!=null?l.estoque:'—',
+    l.min!=null?l.min:'—',
+    l.sugerido!=null?l.sugerido:'—',
+    l.justificativa,
+  ]);
+  exportarPDF('Estoque Mínimo de Tintas', colunas, corpo, {
+    resumo:`${linhas.length} tintas analisadas · ${verdes.length} podem reduzir para mínimo 1 · Capital estimado liberável: ${R(capitalLiberado)}`
+  });
+}
 
   // ═══════════════════════════════════════════════════════════════
 // MÓDULO: AUDITORIA — Histórico de todas as ações
@@ -5890,6 +6104,7 @@ _sbRealtime(COL_MAQUINAS, (rows) => {
   MAQUINAS.length = 0;
   rows.forEach(m => MAQUINAS.push(m));
   if (currentPage === 'maquinas') renderMaquinas();
+  if (currentPage === 'analise-min') renderAnaliseMin();
 });
 
 _sbRealtime(COL_CONFIG, async () => {

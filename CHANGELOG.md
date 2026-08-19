@@ -1,5 +1,46 @@
 # 📝 Changelog — StockOps
 
+## [2.20.0] — 2026-08-19
+
+### ✨ Nova funcionalidade — Estoque Mínimo de Tintas
+
+Nova página em Equipamentos que cruza o histórico real de troca de tintas das 6 máquinas Mimaki (módulo Máquinas) com o estoque atual, e recomenda se o mínimo de cada tinta deve continuar em 2 unidades ou pode cair para 1 — motivada pela confirmação do técnico de que a tinta aguenta uso até 1 ano após a validade impressa uma vez instalada, tornando seguro reduzir a reserva nas tintas de giro lento.
+
+**Localização**: sidebar "🧪 Estoque Mínimo", dentro da seção Equipamentos (ao lado de Máquinas).
+
+**Lógica de cálculo**:
+```javascript
+mediaDias      = média de dias entre instalação e troca (ciclos finalizados, por cor/máquina)
+slotsSimultaneos = máquinas usando aquela tinta × posições por máquina (Branco = 2, demais = 1)
+cadenciaLoja   = mediaDias / slotsSimultaneos
+```
+- Cadência < 30 dias → 🔴 Alto giro, mantém mínimo 2
+- Cadência entre 30 e 60 dias → 🟡 Atenção, mantém mínimo 2 por ora
+- Cadência ≥ 60 dias → 🟢 Giro lento, sugere mínimo 1
+
+Primer (PR-200) é tratado à parte: produto único compartilhado pelas 6 máquinas, sem separar por modelo LH-100/LUS-120.
+
+**Layout**: banner explicando a fórmula e a regra de validade +1 ano, 4 cards de resumo (alto giro / atenção / giro lento / capital liberável estimado em R$), tabela ordenável com máquina, cor, produto, slots simultâneos, média de dias/ciclo, cadência, estoque atual, mínimo atual, mínimo sugerido e justificativa.
+
+**Permissão**: `ver_analise_min` (nova, só admin por padrão — mesmo critério de Análise ABC e Previsão de Compra).
+
+**Exportação**: PDF via `exportarAnaliseMinPDF()`, mesmo padrão visual das outras análises.
+
+Só análise/recomendação — não altera o mínimo automaticamente, o ajuste continua manual na tela de Estoque.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `calcularAnaliseTintas()` | Cálculo puro: cruza `MAQUINAS` + `P` + `TINTA_MAPA`, retorna uma linha por tinta |
+| `renderAnaliseMin()` | Renderiza os 4 cards de resumo + tabela |
+| `sortAminBy(campo)` | Ordenação da tabela |
+| `exportarAnaliseMinPDF()` | Exporta PDF |
+| `_aminTier(cadencia)` | Classifica a cadência em alto giro / atenção / giro lento |
+| `_aminCalcGrupo(...)` | Agrega ciclos e máquinas usando por grupo de tinta |
+
+---
+
 ## [2.6.0] — 2026-05-11
 
 ### ✨ Nova funcionalidade — Pedido Automático
