@@ -4573,6 +4573,12 @@ function sortAminBy(campo) {
   renderAnaliseMin();
 }
 
+let _aminFiltro = null;
+function toggleAminFiltro(badge){
+  _aminFiltro = (_aminFiltro === badge) ? null : badge;
+  renderAnaliseMin();
+}
+
 function renderAnaliseMin(){
   const tbody=$('amin-tbody'); if(!tbody) return;
   const linhas=calcularAnaliseTintas();
@@ -4585,19 +4591,26 @@ function renderAnaliseMin(){
     return a;
   },0);
 
-  const cardHtml=(id,icon,titulo,cor,corA,qtd,sub)=>{
+  const cardHtml=(id,icon,titulo,cor,corA,qtd,sub,badge)=>{
     const el=$(id); if(!el) return;
+    const clicavel = !!badge;
+    const ativo = clicavel && _aminFiltro === badge;
+    el.style.cursor = clicavel ? 'pointer' : '';
+    el.style.background = ativo ? corA : '';
+    el.onclick = clicavel ? (()=>toggleAminFiltro(badge)) : null;
     el.innerHTML=`
-      <div class="ph"><span style="font-size:16px;">${icon}</span><span class="ph-title" style="color:${cor};">${titulo}</span></div>
+      <div class="ph"><span style="font-size:16px;">${icon}</span><span class="ph-title" style="color:${cor};">${titulo}</span>${ativo?`<span style="margin-left:auto;font-size:9px;color:${cor};">✕ limpar</span>`:''}</div>
       <div style="padding:12px;">
         <div style="font-size:26px;font-weight:700;color:${cor};">${qtd}</div>
         <div style="font-size:10px;color:var(--t3);margin-top:2px;">${sub}</div>
       </div>`;
   };
-  cardHtml('amin-vermelho-card','🔴','Alto giro','var(--red)','var(--red-a)',vermelhas.length,'mantêm mínimo 2 — trocam rápido demais');
-  cardHtml('amin-amarelo-card','🟡','Atenção','var(--yellow)','var(--yellow-a)',amarelas.length,'mantêm mínimo 2 por ora — folga pequena');
-  cardHtml('amin-verde-card','🟢','Giro lento','var(--green)','var(--green-a)',verdes.length,'podem reduzir para mínimo 1');
+  cardHtml('amin-vermelho-card','🔴','Alto giro','var(--red)','var(--red-a)',vermelhas.length,'mantêm mínimo 2 — trocam rápido demais','b-crit');
+  cardHtml('amin-amarelo-card','🟡','Atenção','var(--yellow)','var(--yellow-a)',amarelas.length,'mantêm mínimo 2 por ora — folga pequena','b-warn');
+  cardHtml('amin-verde-card','🟢','Giro lento','var(--green)','var(--green-a)',verdes.length,'podem reduzir para mínimo 1','b-ok');
   cardHtml('amin-capital-card','💰','Capital liberável','var(--blue)','var(--blue-a)',R(capitalLiberado),'se aplicar as reduções sugeridas');
+
+  const itensTabela = _aminFiltro ? linhas.filter(l=>l.badge===_aminFiltro) : linhas;
 
   const aminSortVal=(l,campo)=>{
     if(campo==='maquina') return l.maquina;
@@ -4611,7 +4624,7 @@ function renderAnaliseMin(){
     if(campo==='sugerido') return l.sugerido||0;
     return '';
   };
-  const ordenadas=_sortArr(linhas,_aminSort,aminSortVal);
+  const ordenadas=_sortArr(itensTabela,_aminSort,aminSortVal);
   _atualizarSetas('amin',['maquina','cor','produto','slots','mediaDias','cadencia','estoque','min','sugerido'],_aminSort);
 
   tbody.innerHTML=ordenadas.map(l=>{
