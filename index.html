@@ -968,7 +968,7 @@
         </div>
         <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
           <span style="font-size:11px;color:var(--blue);">
-            💡 <b>Como funciona:</b> calcula, pra cada tinta, quantos dias em média ela fica instalada até ser trocada (histórico real das 6 máquinas), divide pelo nº de máquinas/posições que usam essa mesma tinta ao mesmo tempo, e chega numa <b>cadência da loja</b> — de quanto em quanto tempo, na média, alguma máquina troca essa tinta. Se essa cadência for maior que 2× o prazo de reposição (60 dias), sobra folga suficiente pra pedir e receber a próxima antes de precisar — e como a tinta aguenta <b>+1 ano de uso após a validade impressa</b> uma vez instalada, manter só 1 unidade reserva não corre risco real de vencer parada no estoque.
+            💡 <b>Como funciona:</b> calcula, pra cada tinta, quantos dias em média ela fica instalada até ser trocada (histórico real das 6 máquinas), divide pelo nº de máquinas/posições que usam essa mesma tinta ao mesmo tempo, e chega numa <b>cadência do setor</b> — de quanto em quanto tempo, na média, alguma máquina troca essa tinta. Se essa cadência for maior que 2× o prazo de reposição (60 dias), sobra folga suficiente pra pedir e receber a próxima antes de precisar — e como a tinta aguenta <b>+1 ano de uso após a validade impressa</b> uma vez instalada, manter só 1 unidade reserva não corre risco real de vencer parada no estoque.
           </span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;padding:12px 14px;flex-shrink:0;">
@@ -985,7 +985,7 @@
               <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('produto')">Produto <span id="amin-arrow-produto"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('slots')">Máquinas/slots <span id="amin-arrow-slots"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('mediaDias')">Média dias/ciclo <span id="amin-arrow-mediaDias"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência da loja <span id="amin-arrow-cadencia"></span></th>
+              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência do Setor <span id="amin-arrow-cadencia"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('estoque')">Estoque atual <span id="amin-arrow-estoque"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('min')">Mínimo atual <span id="amin-arrow-min"></span></th>
               <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('sugerido')">Mínimo sugerido <span id="amin-arrow-sugerido"></span></th>
@@ -4642,7 +4642,7 @@ function exportarAnaliseMinPDF(){
     if(l.min!=null && l.sugerido!=null && l.min>l.sugerido && l.custo){ return a+(l.min-l.sugerido)*l.custo; }
     return a;
   },0);
-  const colunas=['Máquina','Cor','Produto','Slots','Média dias/ciclo','Cadência da loja','Estoque','Mín. atual','Mín. sugerido','Justificativa'];
+  const colunas=['Máquina','Cor','Produto','Slots','Média dias/ciclo','Cadência do Setor','Estoque','Mín. atual','Mín. sugerido','Justificativa'];
   const corpo=linhas.map(l=>[
     l.maquina, l.cor, l.produto?l.produtoNome:`${l.produtoNome} (não localizado)`,
     l.slots||'—',
