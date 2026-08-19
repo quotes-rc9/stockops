@@ -4530,10 +4530,10 @@ const TINTA_PRIMER = { cores:['PRIMER'], produtoNome:'Tinta Neutra PR 200' };
 const PRAZO_REPOSICAO_DIAS = 30; // dias estimados entre pedir e receber uma remessa MIMAKI — ajustável
 
 function _aminTier(cadencia){
-  if (cadencia==null || !isFinite(cadencia)) return { nivel:'—', sugerido:null, badge:'', texto:'Histórico insuficiente (sem ciclos finalizados) pra calcular ainda.' };
-  if (cadencia < PRAZO_REPOSICAO_DIAS) return { nivel:'🔴 Alto giro', sugerido:2, badge:'b-crit', texto:'Troca mais rápido do que dá pra repor — precisa de uma unidade reserva pronta.' };
-  if (cadencia < PRAZO_REPOSICAO_DIAS*2) return { nivel:'🟡 Atenção', sugerido:2, badge:'b-warn', texto:'Troca quase no ritmo do prazo de reposição — folga pequena pra reduzir agora.' };
-  return { nivel:'🟢 Giro lento', sugerido:1, badge:'b-ok', texto:'Sobra pelo menos um prazo de reposição inteiro de folga entre uma troca e outra — e como a tinta aguenta +1 ano após a validade impressa, a reserva não corre risco de vencer parada no estoque.' };
+  if (cadencia==null || !isFinite(cadencia)) return { nivel:'—', sugerido:null, badge:'', texto:'Histórico insuficiente ainda.' };
+  if (cadencia < PRAZO_REPOSICAO_DIAS) return { nivel:'🔴 Alto giro', sugerido:2, badge:'b-crit', texto:'Gira mais rápido que o prazo de reposição.' };
+  if (cadencia < PRAZO_REPOSICAO_DIAS*2) return { nivel:'🟡 Atenção', sugerido:2, badge:'b-warn', texto:'Cadência perto do prazo de reposição.' };
+  return { nivel:'🟢 Giro lento', sugerido:1, badge:'b-ok', texto:'Giro lento — seguro reduzir pra 1 (aguenta +1 ano após vencer).' };
 }
 
 const AMIN_JANELA_N = 5; // "últimos N ciclos" quando a janela = recente
