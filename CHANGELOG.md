@@ -1,5 +1,26 @@
 # 📝 Changelog — StockOps
 
+## [2.21.0] — 2026-08-19
+
+### ✨ Nova funcionalidade — Diagnóstico por máquina no Estoque Mínimo
+
+Depois de comparar 3 protótipos de tela, a tela "Estoque Mínimo de Tintas" ganhou 3 acréscimos:
+
+1. **Seletor de janela de cálculo**: "Histórico completo" ou "Últimos 5 ciclos" — alterna a base de cálculo da cadência entre todo o histórico (desde jun/2024) ou só as trocas mais recentes, que refletem melhor o ritmo atual.
+2. **Alerta de tinta parada**: banner vermelho (só aparece quando há algo a sinalizar) listando tintas atualmente instaladas muito além da média *daquela máquina específica* pra aquela cor (1,3× = atenção, 2× = crítico). Expansível, mostra máquina, dias atual, média da máquina e a razão.
+3. **Consumo por máquina**: nova seção abaixo da tabela agregada, com um card por máquina mostrando cada cor com uma bolinha de status (verde/amarelo/vermelho) e os dias em uso — pra identificar padrões como uma máquina rodando bem menos que as outras do mesmo modelo.
+
+A tabela agregada por modelo (decisão de compra) continua igual, só passou a respeitar a janela de cálculo escolhida — inclusive na exportação em PDF.
+
+### 🔧 Funções novas/alteradas no JS
+
+| Função | Descrição |
+|---|---|
+| `setAminJanela(j)` | Alterna entre histórico completo e últimos 5 ciclos, re-renderiza |
+| `_aminCalcGrupo(...)` | Agora aceita janela e ordena ciclos por data pra pegar os N mais recentes |
+| `calcularConsumoPorMaquina()` | Compara o pote atual de cada máquina/cor com a média histórica daquela máquina especificamente |
+| `toggleAminAlerta()` | Expande/recolhe a lista de tintas paradas no banner |
+
 ## [2.20.0] — 2026-08-19
 
 ### ✨ Nova funcionalidade — Estoque Mínimo de Tintas

@@ -977,22 +977,39 @@
           <div class="panel" id="amin-verde-card"></div>
           <div class="panel" id="amin-capital-card"></div>
         </div>
-        <div class="tbl-wrap" style="flex:1;">
-          <table>
-            <thead><tr>
-              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('maquina')">Máquina <span id="amin-arrow-maquina"></span></th>
-              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('cor')">Cor / Tinta <span id="amin-arrow-cor"></span></th>
-              <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('produto')">Produto <span id="amin-arrow-produto"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('slots')">Máquinas/slots <span id="amin-arrow-slots"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('mediaDias')">Média dias/ciclo <span id="amin-arrow-mediaDias"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência do Setor <span id="amin-arrow-cadencia"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('estoque')">Estoque atual <span id="amin-arrow-estoque"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('min')">Mínimo atual <span id="amin-arrow-min"></span></th>
-              <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('sugerido')">Mínimo sugerido <span id="amin-arrow-sugerido"></span></th>
-              <th>Justificativa</th>
-            </tr></thead>
-            <tbody id="amin-tbody"></tbody>
-          </table>
+        <div style="display:flex;gap:6px;padding:0 14px 10px;flex-shrink:0;">
+          <button class="nav-btn" id="amin-janela-total" onclick="setAminJanela('total')">Histórico completo</button>
+          <button class="nav-btn" id="amin-janela-recente" onclick="setAminJanela('recente')">Últimos 5 ciclos</button>
+        </div>
+        <div id="amin-alerta-wrap" style="padding:0 14px 12px;flex-shrink:0;display:none;">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:var(--red-a);border:1px solid rgba(var(--red-rgb),.3);border-radius:var(--r6);padding:9px 12px;cursor:pointer;font-size:11.5px;color:var(--red);" onclick="toggleAminAlerta()">
+            <span style="font-size:14px;">⚠</span>
+            <span id="amin-alerta-txt" style="flex:1;"></span>
+            <span class="mono" id="amin-alerta-chev" style="font-size:10px;flex-shrink:0;">▾ ver quais</span>
+          </div>
+          <div id="amin-alerta-detalhe" style="display:none;background:var(--s1);border:1px solid var(--b2);border-top:none;border-radius:0 0 var(--r6) var(--r6);padding:8px 12px;font-size:11px;color:var(--t3);"></div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding-bottom:14px;">
+          <div class="tbl-wrap" style="margin:0 14px;">
+            <table>
+              <thead><tr>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('maquina')">Máquina <span id="amin-arrow-maquina"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('cor')">Cor / Tinta <span id="amin-arrow-cor"></span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('produto')">Produto <span id="amin-arrow-produto"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('slots')">Máquinas/slots <span id="amin-arrow-slots"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('mediaDias')">Média dias/ciclo <span id="amin-arrow-mediaDias"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência do Setor <span id="amin-arrow-cadencia"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('estoque')">Estoque atual <span id="amin-arrow-estoque"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('min')">Mínimo atual <span id="amin-arrow-min"></span></th>
+                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('sugerido')">Mínimo sugerido <span id="amin-arrow-sugerido"></span></th>
+                <th>Justificativa</th>
+              </tr></thead>
+              <tbody id="amin-tbody"></tbody>
+            </table>
+          </div>
+
+          <div style="margin:22px 14px 0;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);border-bottom:1px solid var(--b2);padding-bottom:8px;">🖨 Consumo por máquina — diagnóstico</div>
+          <div id="amin-maquinas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:12px 14px 0;"></div>
         </div>
       </div>
 
@@ -4519,25 +4536,35 @@ function _aminTier(cadencia){
   return { nivel:'🟢 Giro lento', sugerido:1, badge:'b-ok', texto:'Sobra pelo menos um prazo de reposição inteiro de folga entre uma troca e outra — e como a tinta aguenta +1 ano após a validade impressa, a reserva não corre risco de vencer parada no estoque.' };
 }
 
-function _aminCalcGrupo(maquinasDoGrupo, cores, produtoNome){
-  const ciclos=[];
+const AMIN_JANELA_N = 5; // "últimos N ciclos" quando a janela = recente
+function _aminCalcGrupo(maquinasDoGrupo, cores, produtoNome, janela){
+  let ciclos=[]; // {dur, fim}
   let maquinasUsando=0;
   maquinasDoGrupo.forEach(m=>{
     const doGrupo=(m.tintas||[]).filter(t=>cores.includes(String(t.modelo||'').toUpperCase().trim()));
     if(doGrupo.length) maquinasUsando++;
-    doGrupo.forEach(t=>{ if(t.fim){ const d=_duracaoDias(t.inicio,t.fim); if(d!=null) ciclos.push(d); } });
+    doGrupo.forEach(t=>{ if(t.fim){ const d=_duracaoDias(t.inicio,t.fim); if(d!=null) ciclos.push({dur:d, fim:t.fim}); } });
   });
-  const mediaDias = ciclos.length ? ciclos.reduce((a,b)=>a+b,0)/ciclos.length : null;
-  const minDias = ciclos.length ? Math.min(...ciclos) : null;
-  const maxDias = ciclos.length ? Math.max(...ciclos) : null;
-  return { ciclos:ciclos.length, mediaDias, minDias, maxDias, maquinasUsando };
+  ciclos.sort((a,b)=> (b.fim||'').localeCompare(a.fim||'')); // mais recente primeiro
+  if(janela==='recente') ciclos = ciclos.slice(0, AMIN_JANELA_N);
+  const vals = ciclos.map(c=>c.dur);
+  const mediaDias = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  const minDias = vals.length ? Math.min(...vals) : null;
+  const maxDias = vals.length ? Math.max(...vals) : null;
+  return { ciclos:vals.length, mediaDias, minDias, maxDias, maquinasUsando };
+}
+
+let _aminJanela = 'recente';
+function setAminJanela(j){
+  _aminJanela = j;
+  renderAnaliseMin();
 }
 
 function calcularAnaliseTintas(){
   const linhas=[];
   TINTA_MAPA.forEach(entry=>{
     const maquinasDoModelo=MAQUINAS.filter(m=>m.modelo===entry.maqModelo);
-    const g=_aminCalcGrupo(maquinasDoModelo, entry.cores, entry.produtoNome);
+    const g=_aminCalcGrupo(maquinasDoModelo, entry.cores, entry.produtoNome, _aminJanela);
     const slots=g.maquinasUsando*entry.slotsPorMaquina;
     const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
     const tier=_aminTier(cadencia);
@@ -4551,7 +4578,7 @@ function calcularAnaliseTintas(){
   });
   // Primer: agrupa as 6 máquinas juntas, sem separar por modelo
   {
-    const g=_aminCalcGrupo(MAQUINAS, TINTA_PRIMER.cores, TINTA_PRIMER.produtoNome);
+    const g=_aminCalcGrupo(MAQUINAS, TINTA_PRIMER.cores, TINTA_PRIMER.produtoNome, _aminJanela);
     const slots=g.maquinasUsando*1;
     const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
     const tier=_aminTier(cadencia);
@@ -4564,6 +4591,29 @@ function calcularAnaliseTintas(){
     });
   }
   return linhas;
+}
+
+// ── Diagnóstico por máquina: compara o pote atual (sem fim) com a média
+// HISTÓRICA daquela máquina especificamente pra aquela cor (não a média agregada
+// por modelo) — é isso que revela uma máquina rodando fora do padrão dela mesma.
+const AMIN_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Clear', PRIMER:'Primer', 'BRANCO-07':'Branco-07', 'BRANCO-08':'Branco-08' };
+const AMIN_ORDEM_COR = ['BLACK','CYAN','MAGENTA','YELLOW','CLEAR','PRIMER','BRANCO-07','BRANCO-08'];
+function calcularConsumoPorMaquina(){
+  return [...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(m=>{
+    const cores = AMIN_ORDEM_COR.map(cor=>{
+      const itens=(m.tintas||[]).filter(t=>String(t.modelo||'').toUpperCase().trim()===cor);
+      const finalizados=itens.filter(t=>t.fim);
+      const atual=itens.filter(t=>!t.fim).sort((a,b)=>(b.inicio||'').localeCompare(a.inicio||''))[0];
+      const durs=finalizados.map(t=>_duracaoDias(t.inicio,t.fim)).filter(d=>d!=null);
+      const media = durs.length ? durs.reduce((a,b)=>a+b,0)/durs.length : null;
+      if(!atual) return null;
+      const diasAtual=_diasDesde(atual.inicio);
+      const razao = (media && diasAtual!=null) ? diasAtual/media : null;
+      const nivel = razao==null ? 'ok' : razao>=2 ? 'crit' : razao>=1.3 ? 'warn' : 'ok';
+      return { cor, nome:AMIN_NOME_COR[cor], diasAtual, media, ciclos:durs.length, razao, nivel };
+    }).filter(Boolean);
+    return { nome:m.nome, modelo:m.modelo, cores };
+  });
 }
 
 let _aminSort = { campo: null, dir: 'asc' };
@@ -4646,6 +4696,61 @@ function renderAnaliseMin(){
       <td>${l.tier?`<span class="${badgeCls}">${_escMaq(l.tier)}</span> `:''}<span style="font-size:10.5px;color:var(--t3);">${_escMaq(l.justificativa)}</span></td>
     </tr>`;
   }).join('');
+
+  const btnTotal=$('amin-janela-total'), btnRecente=$('amin-janela-recente');
+  if(btnTotal && btnRecente){
+    btnTotal.classList.toggle('primary', _aminJanela==='total');
+    btnRecente.classList.toggle('primary', _aminJanela==='recente');
+  }
+
+  // ── Banner de tinta parada ──
+  const consumo=calcularConsumoPorMaquina();
+  const outliers=[];
+  consumo.forEach(m=>m.cores.forEach(c=>{ if(c.nivel!=='ok') outliers.push({maquina:m.nome, ...c}); }));
+  outliers.sort((a,b)=>(b.razao||0)-(a.razao||0));
+  const alertaWrap=$('amin-alerta-wrap');
+  if(alertaWrap){
+    if(outliers.length){
+      alertaWrap.style.display='';
+      $('amin-alerta-txt').innerHTML=`<b>${outliers.length} tinta${outliers.length!==1?'s':''}</b> instalada${outliers.length!==1?'s':''} bem além do normal daquela máquina — vale conferência física antes da próxima compra.`;
+      $('amin-alerta-detalhe').innerHTML=outliers.map(o=>{
+        const cor=o.nivel==='crit'?'var(--red)':'var(--yellow)';
+        return `<div style="display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--b1);"><span style="width:100px;flex-shrink:0;color:var(--t1);">${_escMaq(o.maquina)}</span><span>${_escMaq(o.nome)} — ${o.diasAtual}d em uso (média da máquina: ${Math.round(o.media)}d · <b style="color:${cor};">${o.razao.toFixed(1)}×</b>)</span></div>`;
+      }).join('');
+    } else {
+      alertaWrap.style.display='none';
+    }
+  }
+
+  // ── Grade de diagnóstico por máquina ──
+  const grid=$('amin-maquinas-grid');
+  if(grid){
+    grid.innerHTML=consumo.map(m=>{
+      const rows=m.cores.map(c=>{
+        const led=c.nivel==='crit'?'crit':c.nivel==='warn'?'warn':'ok';
+        const ledCor=led==='crit'?'var(--red)':led==='warn'?'var(--yellow)':'var(--green)';
+        const obs=c.nivel==='crit'?`${c.razao.toFixed(1)}× a média — conferir`:c.nivel==='warn'?`${c.razao.toFixed(1)}× a média`:(c.media?'dentro do padrão':'sem histórico ainda');
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--b1);font-size:11px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${ledCor};flex-shrink:0;"></span>
+          <span style="font-weight:600;width:62px;flex-shrink:0;">${_escMaq(c.nome)}</span>
+          <span style="flex:1;color:var(--t3);font-size:10px;">${obs}</span>
+          <span class="mono" style="font-weight:600;color:var(--t2);">${c.diasAtual}d</span>
+        </div>`;
+      }).join('');
+      return `<div class="panel" style="padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-weight:700;font-size:12.5px;">🖨 ${_escMaq(m.nome)}</span><span class="mono" style="font-size:10px;color:var(--t3);margin-left:auto;">${_escMaq(m.modelo)}</span></div>
+        ${rows}
+      </div>`;
+    }).join('');
+  }
+}
+
+function toggleAminAlerta(){
+  const d=$('amin-alerta-detalhe');
+  const chev=$('amin-alerta-chev');
+  const open=d.style.display==='block';
+  d.style.display=open?'none':'block';
+  chev.textContent=open?'▾ ver quais':'▴ esconder';
 }
 
 function exportarAnaliseMinPDF(){
