@@ -4131,7 +4131,7 @@ function _renderMaquinaCard(m){
         </div>
         ${datas.length?`<div style="font-size:9.5px;color:var(--t4);margin-top:1px;">${datas.join(' · ')}</div>`:''}
         <div style="display:flex;align-items:center;gap:6px;margin-top:1px;">
-          ${desde!=null?`<span style="font-size:9.5px;color:var(--t4);">em uso há ${desde}d</span>`:''}
+          ${desde!=null?`<span style="font-size:10.5px;font-weight:700;color:var(--t1);">em uso há ${desde}d</span>`:''}
           <button class="btn-edit" style="margin-left:auto;padding:1px 7px;font-size:10px;flex-shrink:0;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>
         </div>
       </div>`;
