@@ -1988,6 +1988,17 @@ function renderEstoque(){
 
   const INSUMO_SUBCAT_ORDER = ['Tintas', 'Liquidos de manutencao', 'Solvente'];
   const INSUMO_SUBCAT_LABEL = { 'Tintas': 'Tintas', 'Liquidos de manutencao': 'Líquidos de manutenção', 'Solvente': 'Solvente' };
+  const TINTA_MODELO_ORDER = ['LH100', 'LUS120', 'LUS175', 'LUS150', 'PR-200 (Primer)', 'Roland ECO UV'];
+  function _tintaModelo(p){
+    const c=(p.cod||'').toUpperCase(), n=(p.nome||'').toUpperCase();
+    if (c.startsWith('ECO UV') || n.includes('ECO UV')) return 'Roland ECO UV';
+    if (c.startsWith('PR200') || n.includes('PR 200') || n.includes('PR200')) return 'PR-200 (Primer)';
+    let m = c.match(/^(LH100|LUS120|LUS175|LUS150)/);
+    if (m) return m[1];
+    m = n.match(/(LH ?100|LUS ?120|LUS ?175|LUS ?150)/);
+    if (m) return m[1].replace(/\s+/g,'');
+    return 'Outros';
+  }
 
   $('estoque-tbody').innerHTML = grupos.map(g => {
     const meta = CAT_META[g.cat] || { emoji: '📁', color: 'var(--t3)', bg: 'var(--s3)', label: 'Outros' };
@@ -2021,7 +2032,28 @@ function renderEstoque(){
             ${subSeta} ${label} (${subItens.length})
           </td>
         </tr>`;
-        return subHeader + (subColapsado ? '' : subItens.map(rowHtml).join(''));
+        if (subColapsado) return subHeader;
+        if (key === 'Tintas') {
+          const byModelo = {};
+          subItens.forEach(p => { const mk = _tintaModelo(p); (byModelo[mk] = byModelo[mk] || []).push(p); });
+          const mKeys = Object.keys(byModelo);
+          const mOrdered = TINTA_MODELO_ORDER.filter(k => mKeys.includes(k))
+            .concat(mKeys.filter(k => !TINTA_MODELO_ORDER.includes(k)).sort((a,b)=>a.localeCompare(b,'pt-BR')));
+          const modeloHtml = mOrdered.map(mk => {
+            const mItens = byModelo[mk];
+            const mSubKey = 'Insumo::Tintas::' + mk;
+            const mColapsado = _estColapsados.has(mSubKey);
+            const mSeta = mColapsado ? '▸' : '▾';
+            const mHeader = `<tr class="cat-section-row" onclick="toggleEstoqueGrupo('${mSubKey}')" style="cursor:pointer;">
+              <td colspan="13" style="padding:3px 14px 3px 46px;font-size:9px;font-weight:600;color:var(--t4);background:var(--s1);user-select:none;">
+                ${mSeta} 🖨 ${mk} (${mItens.length})
+              </td>
+            </tr>`;
+            return mHeader + (mColapsado ? '' : mItens.map(rowHtml).join(''));
+          }).join('');
+          return subHeader + modeloHtml;
+        }
+        return subHeader + subItens.map(rowHtml).join('');
       }).join('');
       return header + subHtml;
     }
