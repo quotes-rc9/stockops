@@ -168,6 +168,7 @@
         <div class="sb-lbl">Equipamentos</div>
         <button class="sb-item" onclick="showPage('maquinas',this)"><span class="sb-icon">🖨</span>Máquinas<span class="sb-badge sbb-p" id="nb-maq" style="display:none;">0</span></button>
         <button class="sb-item" onclick="showPage('analise-min',this)"><span class="sb-icon">🧪</span>Estoque Mínimo</button>
+        <button class="sb-item" onclick="showPage('previsao-tinta',this)"><span class="sb-icon">🗓</span>Previsão de Troca de Tinta</button>
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Sistema</div>
@@ -1010,6 +1011,67 @@
 
           <div style="margin:22px 14px 0;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);border-bottom:1px solid var(--b2);padding-bottom:8px;">🖨 Consumo por máquina — diagnóstico</div>
           <div id="amin-maquinas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:12px 14px 0;"></div>
+        </div>
+      </div>
+
+      <!-- ══ PREVISÃO DE TROCA DE TINTA ═══════════════════════════ -->
+      <div class="page" id="page-previsao-tinta">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">🗓 Previsão de Troca de Tinta</span>
+        </div>
+        <div style="padding:8px 14px 0;flex-shrink:0;display:flex;flex-direction:column;gap:6px;">
+          <div style="background:var(--blue-a);border-radius:var(--r6);padding:6px 10px;font-size:11px;color:var(--blue);">💡 <b>Padrão atual de estoque mínimo:</b> 1 unidade de reserva no estoque + 1 já instalada na máquina — menos folga do que antes, por isso a previsão abaixo precisa ser acompanhada de perto.</div>
+          <div style="background:var(--purple-a);border-radius:var(--r6);padding:6px 10px;font-size:11px;color:var(--purple);">⚠ <b>Data vencida não significa "acabou":</b> a tinta aguenta rodar até +1 ano após a validade impressa (exceto o Primer), e o consumo varia de máquina pra máquina — quando uma cor passa da previsão, o certo é comprar a reserva e conferir fisicamente o nível na máquina antes de trocar.</div>
+        </div>
+        <div class="ped-tabs" style="flex-shrink:0;margin-top:8px;">
+          <button class="ped-tab active" id="ptt-resumo"     onclick="switchPrevisaoTintaTab('resumo')">📊 Resumo</button>
+          <button class="ped-tab" id="ptt-pedido"             onclick="switchPrevisaoTintaTab('pedido')">🛒 Pedido consolidado</button>
+          <button class="ped-tab" id="ptt-calendario"         onclick="switchPrevisaoTintaTab('calendario')">🗓️ Calendário de compra</button>
+          <button class="ped-tab" id="ptt-maquina"            onclick="switchPrevisaoTintaTab('maquina')">🖨 Por máquina</button>
+        </div>
+
+        <div id="ptt-panel-resumo" style="flex:1;overflow-y:auto;padding:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+            <div class="panel" id="pt-chip-crit"></div>
+            <div class="panel" id="pt-chip-trocarok"></div>
+            <div class="panel" id="pt-chip-warn"></div>
+            <div class="panel" id="pt-chip-ok"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;">
+            <div class="panel" style="padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🔥 Mais urgente agora <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
+              <div id="pt-urgentes-list"></div>
+            </div>
+            <div class="panel" style="padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🗓️ Próximo mês <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('calendario')">ver calendário →</button></div>
+              <div id="pt-proximo-mes"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="ptt-panel-pedido" style="display:none;flex:1;overflow-y:auto;padding:14px;">
+          <div id="pt-filtro-ativo"></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr id="pt-thead">
+                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="maquina" onclick="sortPtBy('maquina')">Máquina <span class="sort-arrow"></span></th>
+                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="tinta" onclick="sortPtBy('tinta')">Tinta <span class="sort-arrow"></span></th>
+                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="diasAtual" onclick="sortPtBy('diasAtual')">Instalada há <span class="sort-arrow"></span></th>
+                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="media" onclick="sortPtBy('media')">Média <span class="sort-arrow"></span></th>
+                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="restante" onclick="sortPtBy('restante')">Restante <span class="sort-arrow"></span></th>
+                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="previsao" onclick="sortPtBy('previsao')">Previsão de compra <span class="sort-arrow"></span></th>
+              </tr></thead>
+              <tbody id="pt-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="ptt-panel-calendario" style="display:none;flex:1;overflow-y:auto;padding:14px;">
+          <div id="pt-calendar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;"></div>
+        </div>
+
+        <div id="ptt-panel-maquina" style="display:none;flex:1;overflow-y:auto;padding:14px;">
+          <div id="pt-maquinas-grid" style="display:flex;flex-direction:column;gap:20px;"></div>
         </div>
       </div>
 
@@ -2610,6 +2672,7 @@ function showPage(id, el){
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
   if(id==='analise-min')     renderAnaliseMin();
+  if(id==='previsao-tinta')  renderPrevisaoTinta();
   // Reaplica permissões após qualquer render de página
   // (botões gerados dinamicamente precisam ser reavaliados)
   if(typeof aplicarPermissoes === 'function') setTimeout(aplicarPermissoes, 0);
@@ -2705,6 +2768,7 @@ function renderAll(){
   else if(currentPage==='solicitacoes') renderSolicitacoes();
   else if(currentPage==='auditoria')  renderAuditoria();
   else if(currentPage==='analise-min') renderAnaliseMin();
+  else if(currentPage==='previsao-tinta') renderPrevisaoTinta();
   if(typeof renderSolicBadge === 'function') renderSolicBadge();
   if(typeof renderHistBadge === 'function') renderHistBadge();
   // Reaplica permissões após render (botões dinâmicos)
@@ -3869,6 +3933,7 @@ function aplicarPermissoes() {
     'page-usuarios':     'gerenciar_usuarios',
     'page-maquinas':     'ver_maquinas',
     'page-analise-min':  'ver_analise_min',
+    'page-previsao-tinta': 'ver_previsao_tinta',
   };
 
   // Controla sidebar
@@ -4002,6 +4067,7 @@ const TODAS_PERMISSOES = [
   { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
   { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
   { id:'ver_analise_min',    icon:'🧪', label:'Ver Estoque Mínimo de Tintas', desc:'Recomendação de mínimo por giro de tinta' },
+  { id:'ver_previsao_tinta', icon:'🗓', label:'Ver Previsão de Troca de Tinta', desc:'Pedido consolidado e calendário de compra de tintas' },
   { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
 ];
 
@@ -4642,10 +4708,405 @@ function calcularConsumoPorMaquina(){
       const diasAtual=_diasDesde(atual.inicio);
       const razao = (media && diasAtual!=null) ? diasAtual/media : null;
       const nivel = razao==null ? 'ok' : razao>=2 ? 'crit' : razao>=1.3 ? 'warn' : 'ok';
-      return { cor, nome:AMIN_NOME_COR[cor], diasAtual, media, ciclos:durs.length, razao, nivel };
+      const tintaIdx = m.tintas.indexOf(atual);
+      return { cor, nome:AMIN_NOME_COR[cor], diasAtual, media, ciclos:durs.length, razao, nivel,
+               maqId:m.id, tintaIdx, conferencia:atual.conferencia||null };
     }).filter(Boolean);
     return { nome:m.nome, modelo:m.modelo, cores };
   });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Previsão de Troca de Tinta — quando cada máquina/cor vai precisar
+// de reposição, cruzando calcularConsumoPorMaquina() com o estoque
+// real (P) e, se houver, uma conferência física registrada pelo
+// usuário (que sobrepõe a previsão estatística pra aquela tinta).
+// ═══════════════════════════════════════════════════════════════
+function _tintaInfoPorModeloCor(modelo, cor){
+  if(cor==='PRIMER') return { produtoNome:TINTA_PRIMER.produtoNome, slotLabel:null };
+  const entry = TINTA_MAPA.find(e=>e.maqModelo===modelo && e.cores.includes(cor));
+  if(!entry) return null;
+  return { produtoNome:entry.produtoNome, slotLabel: cor==='BRANCO-07'?'07':cor==='BRANCO-08'?'08':null };
+}
+
+function _ptStatus(effRestante, estoque){
+  if(effRestante==null) return { key:'semhist', cor:'var(--t3)', label:'Sem histórico' };
+  if(effRestante<=0){
+    return (estoque==null || estoque<1)
+      ? { key:'crit',     cor:'var(--red)',    label:'Comprar urgente' }
+      : { key:'trocarok', cor:'var(--purple)', label:'Pode trocar' };
+  }
+  return effRestante<=PRAZO_REPOSICAO_DIAS
+    ? { key:'warn', cor:'var(--yellow)', label:'Programar' }
+    : { key:'ok',   cor:'var(--green)',  label:'Tranquilo' };
+}
+
+function _ptDataPrevisao(dias){
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return d.toLocaleDateString('pt-BR');
+}
+
+function calcularPrevisaoTinta(){
+  const rows = [];
+  calcularConsumoPorMaquina().forEach(m=>{
+    m.cores.forEach(c=>{
+      const info = _tintaInfoPorModeloCor(m.modelo, c.cor);
+      const produtoNome = info ? info.produtoNome : null;
+      const produto = produtoNome ? P.find(p=>String(p.nome||'').trim().toLowerCase()===produtoNome.trim().toLowerCase()) : null;
+      const rawRestante = c.media!=null ? Math.round(c.media - c.diasAtual) : null;
+      let effRestante = rawRestante, conferido = false;
+      if(c.conferencia && c.conferencia.diasRestantes!=null){
+        effRestante = c.conferencia.diasRestantes - _diasDesde(c.conferencia.data);
+        conferido = true;
+      }
+      const status = _ptStatus(effRestante, produto?produto.estoque:null);
+      rows.push({
+        maqId:c.maqId, tintaIdx:c.tintaIdx, maquina:m.nome, modelo:m.modelo,
+        cor:c.cor, corNome:c.nome, slotLabel:info?info.slotLabel:null,
+        produtoNome, produto, diasAtual:c.diasAtual, media:c.media, ciclos:c.ciclos,
+        rawRestante, effRestante, conferido, conferencia:c.conferencia,
+        previsaoData: effRestante!=null ? _ptDataPrevisao(effRestante) : null,
+        status,
+      });
+    });
+  });
+  return rows;
+}
+
+// ── Render: Previsão de Troca de Tinta (4 abas) ──
+let _ptTab = 'resumo';
+function switchPrevisaoTintaTab(tab){
+  _ptTab = tab;
+  ['resumo','pedido','calendario','maquina'].forEach(t=>{
+    const btn = document.getElementById('ptt-'+t);
+    const panel = document.getElementById('ptt-panel-'+t);
+    if(btn) btn.classList.toggle('active', t===tab);
+    if(panel) panel.style.display = t===tab ? '' : 'none';
+  });
+}
+
+let _ptFiltro = null;
+function filtrarPtStatus(status){
+  _ptFiltro = status;
+  switchPrevisaoTintaTab('pedido');
+  renderPrevisaoTinta();
+}
+function limparPtFiltro(){
+  _ptFiltro = null;
+  renderPrevisaoTinta();
+}
+
+let _ptSort = { campo:'restante', dir:'asc' };
+function sortPtBy(campo){
+  if(_ptSort.campo===campo) _ptSort.dir = _ptSort.dir==='asc'?'desc':'asc';
+  else _ptSort = { campo, dir:'asc' };
+  renderPrevisaoTinta();
+}
+function _ptSortVal(r, campo){
+  switch(campo){
+    case 'maquina': return r.maquina;
+    case 'tinta': return _ptNomeCompleto(r);
+    case 'diasAtual': return r.diasAtual ?? -1;
+    case 'media': return r.media ?? -1;
+    case 'restante': return r.effRestante ?? 99999;
+    case 'previsao': return r.previsaoData ? _parseDataBR(r.previsaoData) : Infinity;
+    default: return 0;
+  }
+}
+function _ptNomeCompleto(r){
+  if(!r.produtoNome) return r.corNome + ' (produto não cadastrado)';
+  return r.produtoNome + (r.slotLabel ? ` (slot ${r.slotLabel})` : '');
+}
+function _ptBadgeMaquina(nome){
+  const m = String(nome).match(/\d+/);
+  return 'M' + (m ? m[0] : '—');
+}
+
+const _ptExpandidos = new Set();
+function togglePtLinha(maqId, tintaIdx){
+  const key = maqId+'|'+tintaIdx;
+  if(_ptExpandidos.has(key)) _ptExpandidos.delete(key);
+  else _ptExpandidos.add(key);
+  renderPrevisaoTinta();
+}
+
+function _ptDetalheHtml(r){
+  const p = r.produto;
+  let estoqueHtml;
+  if(!p){
+    estoqueHtml = `<div style="color:var(--t4);font-size:11px;">Sem produto correspondente cadastrado no estoque.</div>`;
+  } else {
+    const baixo = p.estoque <= (p.min||0);
+    const valHtml = (p.val && p.val.length) ? p.val.map((v,i)=>{
+      const vencida = _parseDataBR(v) > 0 && _parseDataBR(v) < Date.now();
+      return `<span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Un.${i+1}: ${_escMaq(v)}${vencida?' (vencida)':''}</span>`;
+    }).join(' ') : `<span style="color:var(--t4);font-size:11px;">Sem validade registrada.</span>`;
+    estoqueHtml = `
+      <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;margin-bottom:8px;">
+        <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Estoque atual</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;color:${baixo?'var(--red)':'var(--t1)'};">${p.estoque} un</b></div>
+        <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Mínimo</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${p.min!=null?p.min:'—'}</b></div>
+        <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Custo unitário</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${R(p.custo||0)}</b></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${valHtml}</div>`;
+  }
+
+  const c = r.conferencia;
+  const checkinAtual = c ? `
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.3);border-radius:var(--r6);padding:8px 12px;margin-bottom:10px;font-size:11.5px;">
+      <span>✓ Conferido fisicamente em ${_escMaq(_fmtData(c.data))}</span>
+      <span>Estimativa: ainda dura <b>${r.effRestante>=0?'+':''}${r.effRestante}d</b></span>
+      ${c.nota ? `<span style="font-style:italic;color:var(--t3);">"${_escMaq(c.nota)}"</span>` : ''}
+      <button class="nav-btn" style="padding:3px 9px;font-size:10px;" onclick="limparConferenciaTinta('${r.maqId}',${r.tintaIdx})">Apagar e voltar à média do sistema</button>
+    </div>` : '';
+
+  const idDias = `ptdias-${r.maqId}-${r.tintaIdx}`;
+  const idNota = `ptnota-${r.maqId}-${r.tintaIdx}`;
+  return `${estoqueHtml}
+    ${checkinAtual}
+    <div style="padding-top:8px;border-top:1px dashed var(--b2);">
+      <div style="font-size:11px;color:var(--t3);font-weight:600;margin-bottom:6px;">${c?'Refazer conferência física:':'Conferiu fisicamente na máquina? Registre aqui:'}</div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px;">
+        <span style="font-size:11px;color:var(--t3);">Ainda dura:</span>
+        <button class="nav-btn" style="padding:4px 9px;font-size:10.5px;" onclick="salvarConferenciaTinta('${r.maqId}',${r.tintaIdx},15,document.getElementById('${idNota}').value)">+15d</button>
+        <button class="nav-btn" style="padding:4px 9px;font-size:10.5px;" onclick="salvarConferenciaTinta('${r.maqId}',${r.tintaIdx},30,document.getElementById('${idNota}').value)">+30d</button>
+        <button class="nav-btn" style="padding:4px 9px;font-size:10.5px;" onclick="salvarConferenciaTinta('${r.maqId}',${r.tintaIdx},60,document.getElementById('${idNota}').value)">+60d (~2m)</button>
+        <button class="nav-btn" style="padding:4px 9px;font-size:10.5px;" onclick="salvarConferenciaTinta('${r.maqId}',${r.tintaIdx},90,document.getElementById('${idNota}').value)">+90d (~3m)</button>
+        <input type="number" id="${idDias}" min="0" placeholder="outro (dias)" style="width:90px;background:var(--s2);border:1px solid var(--b2);color:var(--t1);padding:5px 8px;border-radius:6px;font-size:11px;">
+        <button class="nav-btn primary" style="padding:4px 10px;font-size:10.5px;" onclick="salvarConferenciaTinta('${r.maqId}',${r.tintaIdx},parseInt(document.getElementById('${idDias}').value,10),document.getElementById('${idNota}').value)">Salvar</button>
+      </div>
+      <input type="text" id="${idNota}" placeholder="Nota opcional (ex: garrafa em ~40%)" style="width:100%;background:var(--s2);border:1px solid var(--b2);color:var(--t1);padding:6px 9px;border-radius:6px;font-size:11.5px;">
+    </div>`;
+}
+
+function salvarConferenciaTinta(maqId, tintaIdx, dias, nota){
+  if(!podeEditar()){ toast('Você não tem permissão.','error'); return; }
+  if(!dias || dias<0 || isNaN(dias)){ toast('Informe um número de dias válido.','error'); return; }
+  const m = MAQUINAS.find(x=>x.id===maqId); if(!m||!m.tintas||!m.tintas[tintaIdx]) return;
+  const t = m.tintas[tintaIdx];
+  const n = new Date();
+  const dataStr = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  t.conferencia = { data: dataStr, diasRestantes: dias, nota: String(nota||'').trim() };
+  _maqHistPush(m, `Conferência física: ${t.modelo}`, `Estimativa registrada: ainda dura ${dias} dias${nota?` — "${String(nota).trim()}"`:''}`, '🔍');
+  registrarAudit('sistema', `Conferência física: ${t.modelo}`, `Máquina: ${m.nome} | estimativa: +${dias}d`, '🔍');
+  if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
+  renderPrevisaoTinta();
+  toast('Conferência registrada.','success');
+}
+function limparConferenciaTinta(maqId, tintaIdx){
+  if(!podeEditar()){ toast('Você não tem permissão.','error'); return; }
+  const m = MAQUINAS.find(x=>x.id===maqId); if(!m||!m.tintas||!m.tintas[tintaIdx]) return;
+  const t = m.tintas[tintaIdx];
+  if(!confirm('Apagar a conferência física e voltar a usar a média do sistema?')) return;
+  delete t.conferencia;
+  _maqHistPush(m, `Conferência física removida: ${t.modelo}`, `Voltou a usar a média estatística do sistema.`, '🔍');
+  registrarAudit('sistema', `Conferência física removida: ${t.modelo}`, `Máquina: ${m.nome}`, '🔍');
+  if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
+  renderPrevisaoTinta();
+  toast('Conferência removida.','success');
+}
+
+function renderPrevisaoTinta(){
+  if(!document.getElementById('page-previsao-tinta')) return;
+  const rows = calcularPrevisaoTinta();
+  _renderPtResumo(rows);
+  _renderPtPedido(rows);
+  _renderPtCalendario(rows);
+  _renderPtPorMaquina(rows);
+}
+
+function _ptChipCard(id, cor, corA, titulo, sub, qtd, statusKey){
+  const el = document.getElementById(id); if(!el) return;
+  el.style.cursor = 'pointer';
+  el.style.background = _ptFiltro===statusKey ? corA : '';
+  el.onclick = () => filtrarPtStatus(statusKey);
+  el.innerHTML = `
+    <div class="ph"><span class="ph-title" style="color:${cor};font-size:12px;">${titulo}</span></div>
+    <div style="padding:12px;">
+      <div style="font-size:26px;font-weight:700;color:${cor};">${qtd}</div>
+      <div style="font-size:10px;color:var(--t3);margin-top:2px;">${sub}</div>
+    </div>`;
+}
+
+function _ptParseDataObj(s){
+  const p = String(s).split('/');
+  return new Date(parseInt(p[2],10), parseInt(p[1],10)-1, parseInt(p[0],10));
+}
+
+function _renderPtResumo(rows){
+  const el0 = document.getElementById('pt-chip-crit'); if(!el0) return;
+  const crit = rows.filter(r=>r.status.key==='crit');
+  const trocarok = rows.filter(r=>r.status.key==='trocarok');
+  const warn = rows.filter(r=>r.status.key==='warn');
+  const ok = rows.filter(r=>r.status.key==='ok');
+  _ptChipCard('pt-chip-crit', 'var(--red)', 'var(--red-a)', '🔴 Comprar urgente', 'passou da média e SEM reserva no estoque', crit.length, 'crit');
+  _ptChipCard('pt-chip-trocarok', 'var(--purple)', 'var(--purple-a)', '🟣 Pode trocar', 'passou da média, mas já tem reserva', trocarok.length, 'trocarok');
+  _ptChipCard('pt-chip-warn', 'var(--yellow)', 'var(--yellow-a)', '🟡 Programar', `dentro do prazo de reposição (${PRAZO_REPOSICAO_DIAS}d)`, warn.length, 'warn');
+  _ptChipCard('pt-chip-ok', 'var(--green)', 'var(--green-a)', '🟢 Tranquilo', 'ainda dentro do padrão da máquina', ok.length, 'ok');
+
+  const urg = [...crit].sort((a,b)=>(a.effRestante??99999)-(b.effRestante??99999)).slice(0,5);
+  const urgEl = document.getElementById('pt-urgentes-list');
+  if(urgEl){
+    urgEl.innerHTML = urg.length ? urg.map(r=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--b1);font-size:12px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span>
+        <span style="flex:1;font-weight:600;">${_ptNomeCompleto(r)}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);">${r.effRestante}d</span>
+      </div>`).join('') : `<div style="color:var(--t4);font-size:11.5px;padding:6px 0;">Nada crítico agora — nenhuma tinta sem reserva no estoque.</div>`;
+  }
+
+  const proxEl = document.getElementById('pt-proximo-mes');
+  if(proxEl){
+    const hoje = new Date();
+    const proxM = hoje.getMonth()===11 ? 0 : hoje.getMonth()+1;
+    const proxY = hoje.getMonth()===11 ? hoje.getFullYear()+1 : hoje.getFullYear();
+    const doProxMes = rows.filter(r=>{
+      if(r.effRestante==null || r.effRestante<=0 || !r.previsaoData) return false;
+      const dt = _ptParseDataObj(r.previsaoData);
+      return dt.getMonth()===proxM && dt.getFullYear()===proxY;
+    });
+    const total = doProxMes.reduce((s,r)=> s + (r.produto?r.produto.custo:0), 0);
+    const nomeMes = new Date(proxY, proxM, 1).toLocaleDateString('pt-BR',{month:'long'});
+    proxEl.innerHTML = `
+      <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:32px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);">${doProxMes.length}</span><span style="font-size:11.5px;color:var(--t3);">tinta${doProxMes.length!==1?'s':''} prevista${doProxMes.length!==1?'s':''} — ${nomeMes}</span></div>
+      <div style="font-size:13px;color:var(--t2);margin-top:6px;">Total estimado: <b style="font-family:'JetBrains Mono',monospace;color:var(--green);">${R(total)}</b></div>`;
+  }
+}
+
+const FILTRO_PT_LABEL = { crit:'🔴 Comprar urgente', trocarok:'🟣 Pode trocar', warn:'🟡 Programar', ok:'🟢 Tranquilo' };
+function _renderPtPedido(rows){
+  const tb = document.getElementById('pt-tbody'); if(!tb) return;
+  const filtroEl = document.getElementById('pt-filtro-ativo');
+  if(filtroEl){
+    filtroEl.innerHTML = _ptFiltro
+      ? `<div style="display:inline-flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:6px 8px 6px 14px;font-size:12px;color:var(--t2);margin-bottom:10px;">Mostrando: <b>${FILTRO_PT_LABEL[_ptFiltro]}</b><button class="nav-btn" style="padding:4px 10px;font-size:10.5px;" onclick="limparPtFiltro()">✕ limpar filtro</button></div>`
+      : '';
+  }
+  const filtered = _ptFiltro ? rows.filter(r=>r.status.key===_ptFiltro) : rows;
+  const dirMul = _ptSort.dir==='asc'?1:-1;
+  const sorted = [...filtered].sort((a,b)=>{
+    const va=_ptSortVal(a,_ptSort.campo), vb=_ptSortVal(b,_ptSort.campo);
+    if(typeof va==='string') return va.localeCompare(vb)*dirMul;
+    return (va-vb)*dirMul;
+  });
+  const thead = document.getElementById('pt-thead');
+  if(thead){
+    thead.querySelectorAll('th.sortable').forEach(th=>{
+      const ativo = th.dataset.campo===_ptSort.campo;
+      th.style.color = ativo ? 'var(--green)' : '';
+      const arrow = th.querySelector('.sort-arrow');
+      if(arrow) arrow.textContent = ativo ? (_ptSort.dir==='asc'?'▲':'▼') : '';
+    });
+  }
+  if(!sorted.length){ tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:20px;">Nenhum item nessa categoria.</td></tr>`; return; }
+  tb.innerHTML = sorted.map(r=>{
+    const key = r.maqId+'|'+r.tintaIdx;
+    const expandido = _ptExpandidos.has(key);
+    const neg = r.effRestante!=null && r.effRestante<0;
+    let aviso = '';
+    if(r.conferido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--green);background:var(--green-a);padding:2px 7px;border-radius:20px;">✓ conferido</span>`;
+    else if(r.status.key==='crit') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⚠ comprar + conferir %</span>`;
+    else if(r.status.key==='trocarok') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--purple);background:var(--purple-a);padding:2px 7px;border-radius:20px;">✓ já tem reserva</span>`;
+    const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
+      <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span> <span class="mono" style="font-size:9.5px;color:var(--t4);">${_escMaq(r.modelo)}</span></td>
+      <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;"></span>${_ptNomeCompleto(r)}</td>
+      <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
+      <td style="text-align:center;" class="mono">${r.media!=null?Math.round(r.media)+'d':'—'}</td>
+      <td style="text-align:center;font-weight:700;color:${neg?'var(--red)':'var(--t2)'};" class="mono">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</td>
+      <td class="mono">${r.previsaoData||'sem histórico'}${aviso}</td>
+    </tr>`;
+    const detalhe = expandido ? `<tr><td colspan="6" style="background:var(--s2);">${_ptDetalheHtml(r)}</td></tr>` : '';
+    return linha + detalhe;
+  }).join('');
+}
+
+function _renderPtCalendario(rows){
+  const grid = document.getElementById('pt-calendar-grid'); if(!grid) return;
+  const hoje = new Date();
+  const futuros = rows.filter(r=>r.previsaoData && r.effRestante!=null && r.effRestante>0);
+  const porMes = {};
+  futuros.forEach(r=>{
+    const dt = _ptParseDataObj(r.previsaoData);
+    const key = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+    if(!porMes[key]) porMes[key] = { y:dt.getFullYear(), m:dt.getMonth(), itens:[] };
+    porMes[key].itens.push(r);
+  });
+  let maxKey = hoje.getFullYear()*12+hoje.getMonth();
+  Object.values(porMes).forEach(g=>{ maxKey = Math.max(maxKey, g.y*12+g.m); });
+  const meses = [];
+  for(let k=hoje.getFullYear()*12+hoje.getMonth(); k<=maxKey; k++){
+    const y = Math.floor(k/12), m = k%12;
+    const key = y+'-'+String(m+1).padStart(2,'0');
+    meses.push({ y, m, itens: (porMes[key]?.itens||[]) });
+  }
+  grid.innerHTML = meses.map((g,idx)=>{
+    const destaque = idx===0||idx===1;
+    const tag = idx===0?'MÊS ATUAL':idx===1?'PRÓXIMO MÊS':'';
+    g.itens.sort((a,b)=>a.effRestante-b.effRestante);
+    let totalMes = 0;
+    const itensHtml = g.itens.length ? g.itens.map(r=>{
+      const custo = r.produto ? r.produto.custo : null;
+      if(custo!=null) totalMes += custo;
+      return `<div style="padding:6px 0;border-top:1px solid var(--b1);font-size:11.5px;">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;flex-shrink:0;">${_ptBadgeMaquina(r.maquina)}</span>
+          <span style="font-weight:600;flex:1;">${_ptNomeCompleto(r)}</span>
+          <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?R(custo):'—'}</span>
+        </div>
+        <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · previsto ${r.previsaoData}</div>
+      </div>`;
+    }).join('') : `<div style="font-size:11px;color:var(--t4);padding:4px 0;">Nenhuma tinta prevista pra esse mês.</div>`;
+    const totalHtml = g.itens.length ? `<div style="margin-top:10px;padding-top:9px;border-top:1px solid var(--b2);font-size:12px;color:var(--t2);text-align:right;">Total estimado: <b class="mono" style="color:var(--green);font-size:13.5px;">${R(totalMes)}</b></div>` : '';
+    const nomeMes = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'long'});
+    return `<div class="panel" style="padding:12px 14px;${destaque?'border-color:var(--green);':''}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><span style="font-weight:700;font-size:13px;text-transform:capitalize;">${nomeMes} de ${g.y}</span>${tag?`<span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-a);color:var(--green);">${tag}</span>`:''}</div>
+      ${itensHtml}
+      ${totalHtml}
+    </div>`;
+  }).join('');
+}
+
+function _renderPtPorMaquina(rows){
+  const grid = document.getElementById('pt-maquinas-grid'); if(!grid) return;
+  const porMaquina = {};
+  rows.forEach(r=>{
+    if(!porMaquina[r.maqId]) porMaquina[r.maqId] = { nome:r.maquina, modelo:r.modelo, itens:[] };
+    porMaquina[r.maqId].itens.push(r);
+  });
+  const maquinas = Object.values(porMaquina).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const modelos = [...new Set(maquinas.map(m=>m.modelo))];
+  grid.innerHTML = modelos.map(modelo=>{
+    const doModelo = maquinas.filter(m=>m.modelo===modelo);
+    const cards = doModelo.map(m=>{
+      const linhas = m.itens.map(r=>{
+        const key = r.maqId+'|'+r.tintaIdx;
+        const expandido = _ptExpandidos.has(key);
+        const neg = r.effRestante!=null && r.effRestante<0;
+        const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
+          <td style="display:flex;align-items:center;font-weight:600;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;flex-shrink:0;"></span>${_ptNomeCompleto(r)}</td>
+          <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
+          <td style="text-align:center;" class="mono">${r.media!=null?Math.round(r.media)+'d':'—'}</td>
+          <td style="text-align:center;font-weight:700;color:${neg?'var(--red)':'var(--t2)'};" class="mono">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</td>
+          <td class="mono">${r.previsaoData||'sem hist.'}</td>
+        </tr>`;
+        const detalhe = expandido ? `<tr><td colspan="5" style="background:var(--s2);">${_ptDetalheHtml(r)}</td></tr>` : '';
+        return linha + detalhe;
+      }).join('');
+      return `<div class="panel" style="overflow:hidden;">
+        <div class="ph" style="padding:9px 12px;"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;margin-right:8px;">${_ptBadgeMaquina(m.nome)}</span><span class="ph-title" style="font-size:12.5px;">${m.nome} — ${m.modelo}</span></div>
+        <div class="tbl-wrap" style="margin:0;">
+          <table>
+            <thead><tr><th>Tinta</th><th style="text-align:center;">Instalada</th><th style="text-align:center;">Média</th><th style="text-align:center;">Restante</th><th>Previsão</th></tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">${modelo}<span style="flex:1;height:1px;background:var(--b1);"></span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">${cards}</div>
+    </div>`;
+  }).join('');
 }
 
 let _aminSort = { campo: null, dir: 'asc' };
@@ -6255,6 +6716,7 @@ _sbRealtime(COL_MAQUINAS, (rows) => {
   rows.forEach(m => MAQUINAS.push(m));
   if (currentPage === 'maquinas') renderMaquinas();
   if (currentPage === 'analise-min') renderAnaliseMin();
+  if (currentPage === 'previsao-tinta') renderPrevisaoTinta();
 });
 
 _sbRealtime(COL_CONFIG, async () => {

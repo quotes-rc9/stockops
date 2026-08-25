@@ -1,5 +1,33 @@
 # 📝 Changelog — StockOps
 
+## [2.23.0] — 2026-08-25
+
+### ✨ Nova funcionalidade — Previsão de Troca de Tinta
+
+Nova página em Equipamentos, ao lado de Estoque Mínimo, que cruza a média histórica de troca de cada tinta em cada máquina especificamente (não a média agregada por modelo) com os dias que a tinta atual já está instalada, prevendo quando cada cor vai precisar de reposição — organizada em 4 abas: Resumo, Pedido consolidado, Calendário de compra e Por máquina.
+
+Motivada pela mudança do padrão de estoque mínimo de "2 unidades em estoque" para "1 unidade de reserva + 1 já instalada na máquina" — menos folga, então a previsão precisa ser acompanhada de perto. Como a tinta aguenta rodar até +1 ano após a validade impressa (confirmado com o técnico, exceto o Primer, que não tem essa margem), uma previsão vencida não significa "acabou": o sistema sinaliza para comprar a reserva e conferir fisicamente o nível na máquina antes de trocar, distinguindo isso de quando já não há reserva nenhuma no estoque.
+
+Inclui uma **conferência física**: ao verificar visualmente o nível de uma tinta na máquina, é possível registrar uma estimativa de quantos dias ainda dura — essa conferência sobrepõe a previsão estatística até ser apagada ou refeita, e fica registrada no histórico da máquina e na auditoria.
+
+**Localização**: sidebar "🗓 Previsão de Troca de Tinta", dentro da seção Equipamentos (ao lado de Estoque Mínimo).
+
+**Permissão**: `ver_previsao_tinta` (nova, só admin por padrão — mesmo critério de Estoque Mínimo).
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `calcularPrevisaoTinta()` | Cruza `calcularConsumoPorMaquina()` + `TINTA_MAPA`/`TINTA_PRIMER` + estoque real (`P`), retorna 1 linha por máquina×cor instalada |
+| `_tintaInfoPorModeloCor(modelo, cor)` | Modelo+cor → nome do produto e slot (Branco-07/08) |
+| `_ptStatus(effRestante, estoque)` | Classificador único dos 5 status (crítico, pode trocar, programar, tranquilo, sem histórico) |
+| `renderPrevisaoTinta()` | Entry point, popula as 4 abas |
+| `switchPrevisaoTintaTab(tab)` | Alterna entre as 4 abas |
+| `sortPtBy(campo)` / `filtrarPtStatus(status)` | Ordenação e filtro da tabela consolidada |
+| `togglePtLinha(maqId, tintaIdx)` | Expande/recolhe o detalhe de estoque + conferência de uma linha |
+| `salvarConferenciaTinta(maqId, tintaIdx, dias, nota)` | Registra a conferência física, sobrepõe a previsão estatística |
+| `limparConferenciaTinta(maqId, tintaIdx)` | Remove a conferência registrada, volta pra média do sistema |
+
 ## [2.21.0] — 2026-08-19
 
 ### ✨ Nova funcionalidade — Diagnóstico por máquina no Estoque Mínimo
