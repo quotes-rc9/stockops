@@ -1037,10 +1037,14 @@
             <div class="panel" id="pt-chip-warn"></div>
             <div class="panel" id="pt-chip-ok"></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:16px;">
             <div class="panel" style="padding:12px 14px;">
-              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🔥 Mais urgente agora <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🔴 Comprar agora <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
               <div id="pt-urgentes-list"></div>
+            </div>
+            <div class="panel" style="padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🟣 Repor / ficar de olho <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
+              <div id="pt-repor-list"></div>
             </div>
             <div class="panel" style="padding:12px 14px;">
               <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🗓️ Próximo mês <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('calendario')">ver calendário →</button></div>
@@ -1067,7 +1071,8 @@
         </div>
 
         <div id="ptt-panel-calendario" style="display:none;flex:1;overflow-y:auto;padding:14px;">
-          <div id="pt-calendar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;"></div>
+          <div id="pt-calendar-strip" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;"></div>
+          <div id="pt-calendar-detail"></div>
         </div>
 
         <div id="ptt-panel-maquina" style="display:none;flex:1;overflow-y:auto;padding:14px;">
@@ -4729,16 +4734,72 @@ function _tintaInfoPorModeloCor(modelo, cor){
   return { produtoNome:entry.produtoNome, slotLabel: cor==='BRANCO-07'?'07':cor==='BRANCO-08'?'08':null };
 }
 
-function _ptStatus(effRestante, estoque){
-  if(effRestante==null) return { key:'semhist', cor:'var(--t3)', label:'Sem histórico' };
-  if(effRestante<=0){
-    return (estoque==null || estoque<1)
-      ? { key:'crit',     cor:'var(--red)',    label:'Comprar urgente' }
-      : { key:'trocarok', cor:'var(--purple)', label:'Pode trocar' };
+// ── Motor de decisão único: cruza média/conferência (consumo) + estoque + validade
+// (regra confirmada: aguenta +1 ano após a validade impressa, EXCETO o Primer) ──
+const _PT_ACAO = {
+  comprar:   { key:'comprar',   cor:'var(--red)',    label:'🔴 Comprar' },
+  repor:     { key:'repor',     cor:'var(--purple)', label:'🟣 Repor' },
+  programar: { key:'programar', cor:'var(--yellow)', label:'🟡 Programar' },
+  tranquilo: { key:'tranquilo', cor:'var(--green)',  label:'🟢 Tranquilo' },
+  semhist:   { key:'semhist',   cor:'var(--t3)',      label:'⚪ Sem histórico' },
+};
+function _ptUsavelAte(validadeStr, cor){
+  const ts = _parseDataBR(validadeStr);
+  if(!ts) return 0;
+  return cor==='PRIMER' ? ts : ts + 365*86400000;
+}
+function _ptReservaValidaNaData(produto, cor, dataRefMs){
+  if(!produto || !produto.val || !produto.val.length) return 0;
+  return produto.val.filter(v=>_ptUsavelAte(v, cor) >= dataRefMs).length;
+}
+function _ptAvaliar(cor, effRestante, previsaoDataStr, produto){
+  if(effRestante==null){
+    return { ..._PT_ACAO.semhist, motivo:'Ainda não há ciclos suficientes registrados nessa máquina pra calcular uma média confiável.' };
   }
-  return effRestante<=PRAZO_REPOSICAO_DIAS
-    ? { key:'warn', cor:'var(--yellow)', label:'Programar' }
-    : { key:'ok',   cor:'var(--green)',  label:'Tranquilo' };
+  const estoqueAtual = produto ? produto.estoque : 0;
+  const regraTxt = cor==='PRIMER' ? '(o Primer não pode ser usado após a validade)' : '(validade + 1 ano de uso)';
+  const hoje = Date.now();
+  const reservaAgora = _ptReservaValidaNaData(produto, cor, hoje);
+
+  if(effRestante<=0){
+    if(reservaAgora>=1){
+      return { ..._PT_ACAO.repor, motivo:`Já passou da média de troca (${effRestante}d) e há reserva válida no estoque — pode trocar assim que conferir o nível físico na máquina. Depois de trocar, reponha o estoque.` };
+    }
+    const motivoEstoque = estoqueAtual>0
+      ? `há ${estoqueAtual} unidade(s) em estoque, mas já passaram do prazo de uso ${regraTxt} — não contam mais como reserva`
+      : 'não há nenhuma unidade de reserva no estoque';
+    return { ..._PT_ACAO.comprar, motivo:`Já passou da média de troca (${effRestante}d) e ${motivoEstoque}.` };
+  }
+
+  const dataNecessidadeMs = hoje + effRestante*86400000;
+  const reservaNaData = _ptReservaValidaNaData(produto, cor, dataNecessidadeMs);
+  const dentroDoPrazo = effRestante<=PRAZO_REPOSICAO_DIAS;
+
+  if(estoqueAtual===0 && dentroDoPrazo){
+    return { ..._PT_ACAO.comprar, motivo:`Faltam só ${effRestante}d pra essa tinta precisar de troca (previsto ${previsaoDataStr}) e não há reserva no estoque — sem folga pra esperar.` };
+  }
+  if(reservaNaData===0){
+    const razao = estoqueAtual===0 ? 'o estoque de reserva está zerado' : `a reserva atual vai passar do prazo de uso ${regraTxt} antes de ${previsaoDataStr}`;
+    return { ..._PT_ACAO.repor, motivo:`Ainda faltam ${effRestante}d pra essa tinta precisar trocar, mas ${razao} — vale comprar com calma antes que aperte.` };
+  }
+  if(dentroDoPrazo){
+    return { ..._PT_ACAO.programar, motivo:`Faltam ${effRestante}d (previsto ${previsaoDataStr}). Já há reserva válida no estoque — comece a programar essa compra.` };
+  }
+  return { ..._PT_ACAO.tranquilo, motivo:`Faltam ${effRestante}d, dentro do padrão dessa máquina, com reserva válida no estoque pra quando precisar.` };
+}
+function _ptExtrairPct(nota){
+  if(!nota) return null;
+  const m = String(nota).match(/(\d+)\s*%/);
+  return m ? parseInt(m[1],10) : null;
+}
+function _ptCorNivel(cor){
+  if(cor==='BLACK') return '#8b969b';
+  if(cor==='CYAN') return '#4ec8e8';
+  if(cor==='MAGENTA') return '#e85fb0';
+  if(cor==='YELLOW') return '#e8d24e';
+  if(cor==='CLEAR') return '#c3cbce';
+  if(cor==='PRIMER') return 'var(--blue)';
+  return 'var(--green)';
 }
 
 function _ptDataPrevisao(dias){
@@ -4760,13 +4821,14 @@ function calcularPrevisaoTinta(){
         effRestante = c.conferencia.diasRestantes - _diasDesde(c.conferencia.data);
         conferido = true;
       }
-      const status = _ptStatus(effRestante, produto?produto.estoque:null);
+      const previsaoData = effRestante!=null ? _ptDataPrevisao(effRestante) : null;
+      const status = _ptAvaliar(c.cor, effRestante, previsaoData, produto);
       rows.push({
         maqId:c.maqId, tintaIdx:c.tintaIdx, maquina:m.nome, modelo:m.modelo,
         cor:c.cor, corNome:c.nome, slotLabel:info?info.slotLabel:null,
         produtoNome, produto, diasAtual:c.diasAtual, media:c.media, ciclos:c.ciclos,
         rawRestante, effRestante, conferido, conferencia:c.conferencia,
-        previsaoData: effRestante!=null ? _ptDataPrevisao(effRestante) : null,
+        previsaoData,
         status,
       });
     });
@@ -4833,14 +4895,21 @@ function togglePtLinha(maqId, tintaIdx){
 
 function _ptDetalheHtml(r){
   const p = r.produto;
+  const veredictoHtml = `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;margin-bottom:10px;font-size:11.5px;border:1px solid var(--b1);background:var(--s2);">
+    <span style="font-weight:700;font-size:11px;white-space:nowrap;flex-shrink:0;padding-top:1px;color:${r.status.cor};">${r.status.label}</span>
+    <span style="color:var(--t2);line-height:1.5;">${_escMaq(r.status.motivo)}</span>
+  </div>`;
   let estoqueHtml;
   if(!p){
     estoqueHtml = `<div style="color:var(--t4);font-size:11px;">Sem produto correspondente cadastrado no estoque.</div>`;
   } else {
     const baixo = p.estoque <= (p.min||0);
+    const regraValTxt = r.cor==='PRIMER' ? 'sem extensão pro Primer' : 'usável até 1 ano após essa data';
     const valHtml = (p.val && p.val.length) ? p.val.map((v,i)=>{
-      const vencida = _parseDataBR(v) > 0 && _parseDataBR(v) < Date.now();
-      return `<span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Un.${i+1}: ${_escMaq(v)}${vencida?' (vencida)':''}</span>`;
+      const ateMs = _ptUsavelAte(v, r.cor);
+      const vencida = ateMs > 0 && ateMs < Date.now();
+      const ateTxt = ateMs>0 ? new Date(ateMs).toLocaleDateString('pt-BR') : null;
+      return `<span title="${regraValTxt}" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Un.${i+1}: ${_escMaq(v)}${r.cor!=='PRIMER' && ateTxt ? ' · usável até '+ateTxt : ''}${vencida?' (vencida)':''}</span>`;
     }).join(' ') : `<span style="color:var(--t4);font-size:11px;">Sem validade registrada.</span>`;
     estoqueHtml = `
       <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;margin-bottom:8px;">
@@ -4862,7 +4931,8 @@ function _ptDetalheHtml(r){
 
   const idDias = `ptdias-${r.maqId}-${r.tintaIdx}`;
   const idNota = `ptnota-${r.maqId}-${r.tintaIdx}`;
-  return `${estoqueHtml}
+  return `${veredictoHtml}
+    ${estoqueHtml}
     ${checkinAtual}
     <div style="padding-top:8px;border-top:1px dashed var(--b2);">
       <div style="font-size:11px;color:var(--t3);font-weight:600;margin-bottom:6px;">${c?'Refazer conferência física:':'Conferiu fisicamente na máquina? Registre aqui:'}</div>
@@ -4933,26 +5003,44 @@ function _ptParseDataObj(s){
   return new Date(parseInt(p[2],10), parseInt(p[1],10)-1, parseInt(p[0],10));
 }
 
-function _renderPtResumo(rows){
-  const el0 = document.getElementById('pt-chip-crit'); if(!el0) return;
-  const crit = rows.filter(r=>r.status.key==='crit');
-  const trocarok = rows.filter(r=>r.status.key==='trocarok');
-  const warn = rows.filter(r=>r.status.key==='warn');
-  const ok = rows.filter(r=>r.status.key==='ok');
-  _ptChipCard('pt-chip-crit', 'var(--red)', 'var(--red-a)', '🔴 Comprar urgente', 'passou da média e SEM reserva no estoque', crit.length, 'crit');
-  _ptChipCard('pt-chip-trocarok', 'var(--purple)', 'var(--purple-a)', '🟣 Pode trocar', 'passou da média, mas já tem reserva', trocarok.length, 'trocarok');
-  _ptChipCard('pt-chip-warn', 'var(--yellow)', 'var(--yellow-a)', '🟡 Programar', `dentro do prazo de reposição (${PRAZO_REPOSICAO_DIAS}d)`, warn.length, 'warn');
-  _ptChipCard('pt-chip-ok', 'var(--green)', 'var(--green-a)', '🟢 Tranquilo', 'ainda dentro do padrão da máquina', ok.length, 'ok');
-
-  const urg = [...crit].sort((a,b)=>(a.effRestante??99999)-(b.effRestante??99999)).slice(0,5);
-  const urgEl = document.getElementById('pt-urgentes-list');
-  if(urgEl){
-    urgEl.innerHTML = urg.length ? urg.map(r=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--b1);font-size:12px;">
+function _ptListaAcao(rows, acaoKey){
+  return rows
+    .filter(r=>r.status.key===acaoKey)
+    .sort((a,b)=>(a.effRestante??99999)-(b.effRestante??99999))
+    .slice(0,6);
+}
+function _ptAcaoItemHtml(r, cor){
+  return `
+    <div style="padding:8px 0;border-top:1px solid var(--b1);font-size:12px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span>
         <span style="flex:1;font-weight:600;">${_ptNomeCompleto(r)}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red);">${r.effRestante}d</span>
-      </div>`).join('') : `<div style="color:var(--t4);font-size:11.5px;padding:6px 0;">Nada crítico agora — nenhuma tinta sem reserva no estoque.</div>`;
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${cor};">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</span>
+      </div>
+      <div style="font-size:10.5px;color:var(--t4);margin-top:3px;line-height:1.45;padding-left:2px;">${_escMaq(r.status.motivo)}</div>
+    </div>`;
+}
+function _renderPtResumo(rows){
+  const el0 = document.getElementById('pt-chip-crit'); if(!el0) return;
+  const comprar = rows.filter(r=>r.status.key==='comprar');
+  const repor = rows.filter(r=>r.status.key==='repor');
+  const programar = rows.filter(r=>r.status.key==='programar');
+  const tranquilo = rows.filter(r=>r.status.key==='tranquilo');
+  _ptChipCard('pt-chip-crit', 'var(--red)', 'var(--red-a)', '🔴 Comprar', 'sem reserva válida pra trocar agora (ou sem folga de tempo) — comprar já', comprar.length, 'comprar');
+  _ptChipCard('pt-chip-trocarok', 'var(--purple)', 'var(--purple-a)', '🟣 Repor', 'já dá pra trocar (ou ainda há tempo), mas a reserva do estoque precisa ser reposta', repor.length, 'repor');
+  _ptChipCard('pt-chip-warn', 'var(--yellow)', 'var(--yellow-a)', '🟡 Programar', `dentro do prazo de reposição (${PRAZO_REPOSICAO_DIAS}d), com reserva válida`, programar.length, 'programar');
+  _ptChipCard('pt-chip-ok', 'var(--green)', 'var(--green-a)', '🟢 Tranquilo', 'consumo e reserva dentro do padrão da máquina', tranquilo.length, 'tranquilo');
+
+  const urg = _ptListaAcao(rows, 'comprar');
+  const urgEl = document.getElementById('pt-urgentes-list');
+  if(urgEl){
+    urgEl.innerHTML = urg.length ? urg.map(r=>_ptAcaoItemHtml(r,'var(--red)')).join('') : `<div style="color:var(--t4);font-size:11.5px;padding:6px 0;">Nada crítico agora — toda tinta tem reserva válida ou ainda há folga de tempo.</div>`;
+  }
+
+  const repEl = document.getElementById('pt-repor-list');
+  if(repEl){
+    const rep = _ptListaAcao(rows, 'repor');
+    repEl.innerHTML = rep.length ? rep.map(r=>_ptAcaoItemHtml(r,'var(--purple)')).join('') : `<div style="color:var(--t4);font-size:11.5px;padding:6px 0;">Nenhuma reserva pra repor no momento.</div>`;
   }
 
   const proxEl = document.getElementById('pt-proximo-mes');
@@ -4973,7 +5061,7 @@ function _renderPtResumo(rows){
   }
 }
 
-const FILTRO_PT_LABEL = { crit:'🔴 Comprar urgente', trocarok:'🟣 Pode trocar', warn:'🟡 Programar', ok:'🟢 Tranquilo' };
+const FILTRO_PT_LABEL = { comprar:'🔴 Comprar', repor:'🟣 Repor', programar:'🟡 Programar', tranquilo:'🟢 Tranquilo' };
 function _renderPtPedido(rows){
   const tb = document.getElementById('pt-tbody'); if(!tb) return;
   const filtroEl = document.getElementById('pt-filtro-ativo');
@@ -5005,8 +5093,8 @@ function _renderPtPedido(rows){
     const neg = r.effRestante!=null && r.effRestante<0;
     let aviso = '';
     if(r.conferido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--green);background:var(--green-a);padding:2px 7px;border-radius:20px;">✓ conferido</span>`;
-    else if(r.status.key==='crit') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⚠ comprar + conferir %</span>`;
-    else if(r.status.key==='trocarok') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--purple);background:var(--purple-a);padding:2px 7px;border-radius:20px;">✓ já tem reserva</span>`;
+    else if(r.status.key==='comprar') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⚠ comprar + conferir %</span>`;
+    else if(r.status.key==='repor') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--purple);background:var(--purple-a);padding:2px 7px;border-radius:20px;">↻ repor a reserva</span>`;
     const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
       <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span> <span class="mono" style="font-size:9.5px;color:var(--t4);">${_escMaq(r.modelo)}</span></td>
       <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;"></span>${_ptNomeCompleto(r)}</td>
@@ -5020,8 +5108,10 @@ function _renderPtPedido(rows){
   }).join('');
 }
 
+let _ptCalMeses = [];
+let _ptCalSelIdx = 0;
 function _renderPtCalendario(rows){
-  const grid = document.getElementById('pt-calendar-grid'); if(!grid) return;
+  const strip = document.getElementById('pt-calendar-strip'); if(!strip) return;
   const hoje = new Date();
   const futuros = rows.filter(r=>r.previsaoData && r.effRestante!=null && r.effRestante>0);
   const porMes = {};
@@ -5037,33 +5127,57 @@ function _renderPtCalendario(rows){
   for(let k=hoje.getFullYear()*12+hoje.getMonth(); k<=maxKey; k++){
     const y = Math.floor(k/12), m = k%12;
     const key = y+'-'+String(m+1).padStart(2,'0');
-    meses.push({ y, m, itens: (porMes[key]?.itens||[]) });
+    const itens = (porMes[key]?.itens||[]);
+    itens.sort((a,b)=>a.effRestante-b.effRestante);
+    const total = itens.reduce((s,r)=> s + (r.produto?r.produto.custo:0), 0);
+    meses.push({ y, m, itens, total });
   }
-  grid.innerHTML = meses.map((g,idx)=>{
-    const destaque = idx===0||idx===1;
+  _ptCalMeses = meses;
+  if(_ptCalSelIdx >= meses.length) _ptCalSelIdx = 0;
+
+  strip.innerHTML = meses.map((g,idx)=>{
     const tag = idx===0?'MÊS ATUAL':idx===1?'PRÓXIMO MÊS':'';
-    g.itens.sort((a,b)=>a.effRestante-b.effRestante);
-    let totalMes = 0;
-    const itensHtml = g.itens.length ? g.itens.map(r=>{
-      const custo = r.produto ? r.produto.custo : null;
-      if(custo!=null) totalMes += custo;
-      return `<div style="padding:6px 0;border-top:1px solid var(--b1);font-size:11.5px;">
-        <div style="display:flex;align-items:flex-start;gap:8px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;flex-shrink:0;">${_ptBadgeMaquina(r.maquina)}</span>
-          <span style="font-weight:600;flex:1;">${_ptNomeCompleto(r)}</span>
-          <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?R(custo):'—'}</span>
-        </div>
-        <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · previsto ${r.previsaoData}</div>
-      </div>`;
-    }).join('') : `<div style="font-size:11px;color:var(--t4);padding:4px 0;">Nenhuma tinta prevista pra esse mês.</div>`;
-    const totalHtml = g.itens.length ? `<div style="margin-top:10px;padding-top:9px;border-top:1px solid var(--b2);font-size:12px;color:var(--t2);text-align:right;">Total estimado: <b class="mono" style="color:var(--green);font-size:13.5px;">${R(totalMes)}</b></div>` : '';
-    const nomeMes = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'long'});
-    return `<div class="panel" style="padding:12px 14px;${destaque?'border-color:var(--green);':''}">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><span style="font-weight:700;font-size:13px;text-transform:capitalize;">${nomeMes} de ${g.y}</span>${tag?`<span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-a);color:var(--green);">${tag}</span>`:''}</div>
-      ${itensHtml}
-      ${totalHtml}
-    </div>`;
+    const vazio = g.itens.length===0;
+    const nomeMesAbrev = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+    const totalTxt = vazio ? '—' : R(g.total);
+    return `<button type="button" onclick="selecionarPtMesCalendario(${idx})" style="display:flex;flex-direction:column;gap:4px;min-width:98px;padding:7px 11px;background:${idx===_ptCalSelIdx?'var(--green-a)':'var(--s1)'};border:1px solid ${idx===_ptCalSelIdx?'var(--green)':'var(--b1)'};box-shadow:${idx===_ptCalSelIdx?'0 0 0 1px var(--green) inset':'none'};border-radius:var(--r10);cursor:pointer;text-align:left;font-family:inherit;color:inherit;opacity:${vazio?'.5':'1'};">
+      <div style="display:flex;align-items:center;gap:5px;"><span style="font-weight:700;font-size:11.5px;text-transform:capitalize;white-space:nowrap;">${nomeMesAbrev}/${String(g.y).slice(2)}</span>${tag?`<span title="${tag}" style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>`:''}</div>
+      <span style="font-size:9.5px;color:var(--t3);">${g.itens.length} ${g.itens.length===1?'item':'itens'}</span>
+      <span class="mono" style="font-size:10.5px;font-weight:600;color:${vazio?'var(--t4)':'var(--t2)'};">${totalTxt}</span>
+    </button>`;
   }).join('');
+
+  _renderPtCalendarioDetalhe();
+}
+function selecionarPtMesCalendario(idx){
+  _ptCalSelIdx = idx;
+  _renderPtCalendario(calcularPrevisaoTinta());
+}
+function _renderPtCalendarioDetalhe(){
+  const detail = document.getElementById('pt-calendar-detail'); if(!detail) return;
+  const g = _ptCalMeses[_ptCalSelIdx]; if(!g){ detail.innerHTML=''; return; }
+  const tag = _ptCalSelIdx===0?'MÊS ATUAL':_ptCalSelIdx===1?'PRÓXIMO MÊS':'';
+  const itensHtml = g.itens.length ? g.itens.map(r=>{
+    const custo = r.produto ? r.produto.custo : null;
+    return `<div style="padding:7px 0;border-top:1px solid var(--b1);font-size:11.5px;">
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;flex-shrink:0;">${_ptBadgeMaquina(r.maquina)}</span>
+        <span style="font-weight:600;flex:1;">${_ptNomeCompleto(r)}</span>
+        <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?R(custo):'—'}</span>
+      </div>
+      <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · previsto ${r.previsaoData}${r.conferido?' · <span style="color:var(--green);">✓ conferido</span>':''}</div>
+    </div>`;
+  }).join('') : `<div style="font-size:12px;color:var(--t4);padding:8px 0;">Nenhuma tinta prevista pra esse mês.</div>`;
+  const totalHtml = g.itens.length ? `<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;">${R(g.total)}</span>` : '';
+  const nomeMes = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'long'});
+  detail.innerHTML = `<div class="panel" style="padding:14px 16px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:10px;border-bottom:1px solid var(--b1);">
+      <span style="font-weight:700;font-size:15px;text-transform:capitalize;">${nomeMes} de ${g.y}</span>
+      ${tag?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-a);color:var(--green);">${tag}</span>`:''}
+      ${totalHtml}
+    </div>
+    ${itensHtml}
+  </div>`;
 }
 
 function _renderPtPorMaquina(rows){
@@ -5082,8 +5196,15 @@ function _renderPtPorMaquina(rows){
         const key = r.maqId+'|'+r.tintaIdx;
         const expandido = _ptExpandidos.has(key);
         const neg = r.effRestante!=null && r.effRestante<0;
+        const pct = r.conferido && r.conferencia ? _ptExtrairPct(r.conferencia.nota) : null;
+        const nivelHtml = pct!=null
+          ? `<div style="display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:14px;"><div style="width:52px;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;border:1px solid var(--b1);flex-shrink:0;"><div style="height:100%;border-radius:2px 0 0 2px;width:${pct}%;background:${_ptCorNivel(r.cor)};"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--t3);font-weight:600;white-space:nowrap;">${pct}%</span></div>`
+          : `<div style="display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:14px;"><div style="width:52px;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;border:1px solid var(--b1);flex-shrink:0;opacity:.3;"><div style="height:100%;width:100%;background:var(--b2);"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t4);font-style:italic;">sem nível</span></div>`;
         const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
-          <td style="display:flex;align-items:center;font-weight:600;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;flex-shrink:0;"></span>${_ptNomeCompleto(r)}</td>
+          <td style="font-weight:600;">
+            <div style="display:flex;align-items:center;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;flex-shrink:0;"></span>${_ptNomeCompleto(r)}</div>
+            ${nivelHtml}
+          </td>
           <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
           <td style="text-align:center;" class="mono">${r.media!=null?Math.round(r.media)+'d':'—'}</td>
           <td style="text-align:center;font-weight:700;color:${neg?'var(--red)':'var(--t2)'};" class="mono">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</td>
@@ -5096,7 +5217,7 @@ function _renderPtPorMaquina(rows){
         <div class="ph" style="padding:9px 12px;"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;margin-right:8px;">${_ptBadgeMaquina(m.nome)}</span><span class="ph-title" style="font-size:12.5px;">${m.nome} — ${m.modelo}</span></div>
         <div class="tbl-wrap" style="margin:0;">
           <table>
-            <thead><tr><th>Tinta</th><th style="text-align:center;">Instalada</th><th style="text-align:center;">Média</th><th style="text-align:center;">Restante</th><th>Previsão</th></tr></thead>
+            <thead><tr><th>Tinta / nível</th><th style="text-align:center;">Instalada</th><th style="text-align:center;">Média</th><th style="text-align:center;">Restante</th><th>Previsão</th></tr></thead>
             <tbody>${linhas}</tbody>
           </table>
         </div>

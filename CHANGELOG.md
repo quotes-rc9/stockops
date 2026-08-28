@@ -1,5 +1,23 @@
 # 📝 Changelog — StockOps
 
+## [2.24.0] — 2026-08-28
+
+### ✨ Melhoria — Motor de decisão único na Previsão de Troca de Tinta
+
+A tela "Previsão de Troca de Tinta" passou a cruzar os 3 sinais que já existiam separados (média histórica/conferência física, validade das unidades em estoque com a regra de +1 ano — exceto o Primer — e quantidade em estoque) num veredito único por tinta, em 4 categorias: **🔴 Comprar** (sem reserva válida pra trocar agora, ou sem folga de tempo), **🟣 Repor** (já pode trocar mas a reserva precisa ser reposta, ou a reserva vai vencer antes de ser usada), **🟡 Programar** (dentro do prazo de reposição, reserva ok) e **🟢 Tranquilo**. Cada linha e cada card mostram o motivo específico da classificação, e o detalhe expandido de cada tinta agora abre com esse veredito destacado no topo.
+
+Também: o **Calendário de compra** trocou a grade com todos os meses simultâneos por uma faixa de chips (todos os meses visíveis de uma vez, resumidos) + um painel de detalhe que mostra 1 mês por vez ao clicar — menos rolagem, mesma visão geral. E a aba **Por máquina** passou a mostrar, junto da previsão de cada tinta, uma barrinha com o nível real (%) da última conferência física registrada (direto do RasterLink6Plus), sem precisar abrir o detalhe da linha.
+
+### 🔧 Funções novas/alteradas no JS
+
+| Função | Descrição |
+|---|---|
+| `_ptAvaliar(cor, effRestante, previsaoData, produto)` | Substitui `_ptStatus` — motor único que cruza consumo + validade (+1 ano) + estoque, retorna `{key, cor, label, motivo}` |
+| `_ptUsavelAte(validadeStr, cor)` | Data até quando uma unidade em estoque pode ser usada (validade + 1 ano, sem extensão pro Primer) |
+| `_ptReservaValidaNaData(produto, cor, dataRef)` | Conta quantas unidades em estoque ainda estarão dentro do prazo de uso numa data futura |
+| `_ptExtrairPct(nota)` | Extrai o percentual de uma nota de conferência física (ex: "RasterLink6Plus: 82%") |
+| `selecionarPtMesCalendario(idx)` / `_renderPtCalendarioDetalhe()` | Novo modelo de Calendário de compra: faixa de chips + detalhe de 1 mês |
+
 ## [2.23.0] — 2026-08-25
 
 ### ✨ Nova funcionalidade — Previsão de Troca de Tinta
