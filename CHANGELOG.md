@@ -1,5 +1,15 @@
 # 📝 Changelog — StockOps
 
+## [2.26.0] — 2026-08-31
+
+### 🐛 Correção — Gráfico "Consumo real" do Dashboard não mostrava as barras
+
+Bug de CSS pré-existente: `.bar-g` (o agrupador de barras de cada mês) não tinha altura definida, então as barras internas (`.b-bar`, com `height` em %) sempre colapsavam pra 0px — mesmo com dados reais de saída no período. Corrigido adicionando `height:100%` em `.bar-g`, herdando a altura de 90px do container. Confirmado ao vivo no site publicado antes de corrigir.
+
+### 🧹 Simplificação — Detalhe da conferência física na Previsão de Troca de Tinta
+
+O box verde "✓ Conferido fisicamente..." duplicava a mesma informação que já aparecia no "Histórico de conferências" logo abaixo (mesma data, mesmo %, mesma estimativa). Removido o box separado — agora só existe o histórico, com a leitura mais recente destacada (badge "ATUAL") e o botão de apagar a conferência movido pra dentro dele.
+
 ## [2.25.1] — 2026-08-31
 
 ### 🧹 Remoção — Painéis "Críticos e Alertas" e "Validades próximas" do Dashboard

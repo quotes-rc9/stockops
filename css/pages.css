@@ -111,7 +111,7 @@
 
 /* Bar chart */
 .bars-wrap{display:flex;align-items:flex-end;gap:5px;height:90px;}
-.bar-g{display:flex;align-items:flex-end;gap:1px;flex:1;}
+.bar-g{display:flex;align-items:flex-end;gap:1px;flex:1;height:100%;}
 .b-bar{border-radius:2px 2px 0 0;flex:1;transition:opacity .15s;cursor:pointer;}
 .b-bar:hover{opacity:.75;}
 .bar-xlabels{display:flex;margin-top:5px;}

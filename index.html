@@ -4883,34 +4883,29 @@ function _ptDetalheHtml(r){
   const _ptMaqObj = MAQUINAS.find(x=>x.id===r.maqId);
   const _ptTintaObj = _ptMaqObj && _ptMaqObj.tintas ? _ptMaqObj.tintas[r.tintaIdx] : null;
   const hist = (_ptTintaObj && _ptTintaObj.conferenciaHistorico) ? _ptTintaObj.conferenciaHistorico : [];
-  const historicoHtml = hist.length ? `<div style="margin-bottom:10px;padding-top:8px;border-top:1px dashed var(--b2);">
-    <div style="font-size:9.5px;color:var(--t4);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Histórico de conferências (RasterLink6Plus)</div>
+  const c = r.conferencia;
+  const historicoHtml = hist.length ? `<div style="background:var(--green-a);border:1px solid rgba(var(--green-rgb),.3);border-radius:var(--r6);padding:10px 12px;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+      <span style="font-size:9.5px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;">✓ Histórico de conferências (RasterLink6Plus)</span>
+      <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10px;" onclick="limparConferenciaTinta('${r.maqId}',${r.tintaIdx})">Apagar mais recente</button>
+    </div>
     <div style="display:flex;flex-direction:column;gap:4px;">
-      ${hist.map(h=>{
+      ${hist.map((h,i)=>{
         const pct = _ptExtrairPct(h.nota);
         return `<div style="display:flex;align-items:center;gap:8px;font-size:11px;">
-          <span style="font-family:'JetBrains Mono',monospace;color:var(--t3);min-width:78px;">Dia ${_escMaq(_fmtData(h.data))}</span>
-          <span style="font-weight:600;">${pct!=null?pct+'%':'—'}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:${i===0?'var(--t1)':'var(--t3)'};min-width:78px;font-weight:${i===0?'700':'400'};">Dia ${_escMaq(_fmtData(h.data))}</span>
+          <span style="font-weight:${i===0?'700':'600'};">${pct!=null?pct+'%':'—'}</span>
           <span style="color:var(--t4);font-size:10px;">(estimativa na hora: +${h.diasRestantes}d)</span>
+          ${i===0?'<span style="margin-left:auto;font-size:9px;color:var(--green);font-weight:700;">ATUAL</span>':''}
         </div>`;
       }).join('')}
     </div>
   </div>` : '';
 
-  const c = r.conferencia;
-  const checkinAtual = c ? `
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.3);border-radius:var(--r6);padding:8px 12px;margin-bottom:10px;font-size:11.5px;">
-      <span>✓ Conferido fisicamente em ${_escMaq(_fmtData(c.data))}</span>
-      <span>Estimativa: ainda dura <b>${r.effRestante>=0?'+':''}${r.effRestante}d</b></span>
-      ${c.nota ? `<span style="font-style:italic;color:var(--t3);">"${_escMaq(c.nota)}"</span>` : ''}
-      <button class="nav-btn" style="padding:3px 9px;font-size:10px;" onclick="limparConferenciaTinta('${r.maqId}',${r.tintaIdx})">Apagar e voltar à média do sistema</button>
-    </div>` : '';
-
   const idDias = `ptdias-${r.maqId}-${r.tintaIdx}`;
   const idNota = `ptnota-${r.maqId}-${r.tintaIdx}`;
   return `${veredictoHtml}
     ${estoqueHtml}
-    ${checkinAtual}
     ${historicoHtml}
     <div style="padding-top:8px;border-top:1px dashed var(--b2);">
       <div style="font-size:11px;color:var(--t3);font-weight:600;margin-bottom:6px;">${c?'Refazer conferência física:':'Conferiu fisicamente na máquina? Registre aqui:'}</div>
