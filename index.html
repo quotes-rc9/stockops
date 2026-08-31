@@ -960,7 +960,7 @@
         <div style="flex:1;overflow-y:auto;padding:14px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
-              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📍 Setor Quotes <span style="font-weight:400;color:var(--t4);text-transform:none;letter-spacing:normal;">(nas máquinas)</span></div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📍 Setor Quotes <span style="font-weight:400;color:var(--t4);text-transform:none;letter-spacing:normal;">(reserva em estoque, junto das máquinas — não é a tinta instalada)</span></div>
               <div id="et-quotes-grid"></div>
             </div>
             <div>
@@ -5123,7 +5123,7 @@ function _renderPtPorMaquina(rows){
 }
 
 // ── Estoque de Tintas: 2 setores rastreados separadamente ──
-// Setor Quotes (nas máquinas, reserva de mão) x Setor Compras (com o Thiago, pulmão).
+// Setor Quotes (reserva em estoque junto das máquinas, NÃO é a tinta instalada) x Setor Compras (com o Thiago, pulmão).
 // A Previsão de Troca de Tinta usa só estoqueQuotes como reserva disponível pra trocar.
 const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear' };
 function _etLinhasModelo(modelo){

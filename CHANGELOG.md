@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.29.1] — 2026-08-31
+
+### ✏️ Correção de texto — Estoque Tintas
+
+O rótulo "Setor Quotes (nas máquinas)" dava a entender que era a tinta já instalada na impressora — na verdade é a **reserva em estoque**, guardada junto das máquinas mas separada da tinta instalada (essa já é rastreada em outro lugar do sistema). Texto corrigido pra "reserva em estoque, junto das máquinas — não é a tinta instalada".
+
 ## [2.29.0] — 2026-08-31
 
 ### 🔄 Substituição — "Estoque Mínimo" virou "Estoque Tintas" (2 setores)
