@@ -2,6 +2,10 @@
 
 ## [2.26.0] — 2026-08-31
 
+### 🐛 Correção — CSS não atualizava pra quem já tinha acessado o sistema
+
+O `pages.css` era carregado com `?v=20260814` fixo no HTML — como esse parâmetro nunca mudava, o navegador continuava usando a versão em cache mesmo depois de eu corrigir o CSS (confirmado ao vivo: o arquivo já estava certo no servidor, mas o navegador não buscava a versão nova). Atualizado pra `?v=20260831`. Daqui pra frente, toda vez que o CSS mudar, esse parâmetro precisa ser atualizado também — senão a correção não chega pra quem já usou o sistema antes.
+
 ### 🐛 Correção — Gráfico "Consumo real" do Dashboard não mostrava as barras
 
 Bug de CSS pré-existente: `.bar-g` (o agrupador de barras de cada mês) não tinha altura definida, então as barras internas (`.b-bar`, com `height` em %) sempre colapsavam pra 0px — mesmo com dados reais de saída no período. Corrigido adicionando `height:100%` em `.bar-g`, herdando a altura de 90px do container. Confirmado ao vivo no site publicado antes de corrigir.
