@@ -1,5 +1,18 @@
 # 📝 Changelog — StockOps
 
+## [2.25.0] — 2026-08-31
+
+### ✨ Nova funcionalidade — Histórico de conferências do RasterLink por tinta
+
+Cada conferência física registrada numa tinta agora fica guardada num histórico próprio (`conferenciaHistorico`), em vez de sobrescrever a anterior. O detalhe expandido de cada tinta na "Previsão de Troca de Tinta" mostra essa linha do tempo: "Dia DD/MM/AAAA — XX% (estimativa na hora: +Yd)", da mais recente pra mais antiga — dá pra acompanhar a evolução real do consumo de cada cor em cada máquina ao longo das semanas.
+
+### 🔧 Alterações no JS
+
+| Função | Mudança |
+|---|---|
+| `salvarConferenciaTinta(maqId, tintaIdx, dias, nota)` | Além de atualizar `t.conferencia` (a mais recente), agora também acrescenta a leitura em `t.conferenciaHistorico` (array, mais recente primeiro) |
+| `_ptDetalheHtml(r)` | Nova seção "Histórico de conferências" no detalhe expandido, lida de `t.conferenciaHistorico` |
+
 ## [2.24.0] — 2026-08-28
 
 ### ✨ Melhoria — Motor de decisão único na Previsão de Troca de Tinta
