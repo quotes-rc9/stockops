@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.25.1] — 2026-08-31
+
+### 🧹 Remoção — Painéis "Críticos e Alertas" e "Validades próximas" do Dashboard
+
+Removidos os dois painéis de lista da linha do meio do Dashboard (a fileira de KPIs no topo — Itens críticos, Vencendo em 30 dias — continua igual). O painel "Ações rápidas" passou a ocupar sozinho a linha, sem colunas vazias ao lado.
+
 ## [2.25.0] — 2026-08-31
 
 ### ✨ Nova funcionalidade — Histórico de conferências do RasterLink por tinta

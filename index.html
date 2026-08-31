@@ -245,19 +245,7 @@
           </div>
 
           <!-- MIDDLE ROW -->
-          <div class="mid-row">
-
-            <!-- Alert list -->
-            <div class="panel" style="max-height:280px;">
-              <div class="ph"><span class="ph-title">🔴 Críticos e Alertas</span><span class="ph-sub" id="al-count"></span></div>
-              <div class="tbl-wrap" id="alert-list" style="padding:8px;"></div>
-            </div>
-
-            <!-- Validades próximas -->
-            <div class="panel" style="max-height:280px;">
-              <div class="ph"><span class="ph-title">⏱ Validades próximas</span><span class="ph-sub" id="val-count"></span></div>
-              <div class="tbl-wrap" id="val-list" style="padding:8px;"></div>
-            </div>
+          <div class="mid-row" style="grid-template-columns:280px;">
 
             <!-- Ações rápidas -->
             <div class="actions-panel">
@@ -1778,34 +1766,6 @@ function renderKPIs(){
   $('nb-exp').textContent=k.expUnits;
 }
 
-// ── ALERT LIST ────────────────────────────────────────────────
-function renderAlertList(){
-  const list=P.filter(p=>status(p)!=='OK').sort((a,b)=>diasEst(a)-diasEst(b));
-  $('al-count').textContent=list.length+' itens';
-  $('alert-list').innerHTML=list.slice(0,10).map(p=>{
-    const st=status(p);
-    return `<div class="alert-item ${st==='Crítico'?'crit':'warn'}">
-      <div style="flex:1;min-width:0;"><div class="ai-name">${p.nome}</div><div style="font-size:10px;color:var(--t3);">${p.cod} · ${p.forn}</div></div>
-      <div class="ai-val" style="color:${st==='Crítico'?'var(--red)':'var(--yellow)'};">${p.estoque} un</div>
-    </div>`;
-  }).join('');
-}
-
-// ── VALIDADE LIST ─────────────────────────────────────────────
-function renderValList(){
-  const rows=[];
-  P.forEach(p=>(p.val||[]).forEach(v=>{const d=diasAteVal(v);if(d<=60)rows.push({p,v,d});}));
-  rows.sort((a,b)=>a.d-b.d);
-  $('val-count').textContent=rows.length+' unidades';
-  $('val-list').innerHTML=rows.slice(0,10).map(r=>{
-    const col=r.d<0?'var(--red)':r.d<=30?'var(--orange)':'var(--yellow)';
-    return `<div class="alert-item exp">
-      <div style="flex:1;min-width:0;"><div class="ai-name">${r.p.nome}</div><div style="font-size:10px;color:var(--t3);">${r.p.cod}</div></div>
-      <div class="ai-val" style="color:${col};">${r.d<0?'VENC.':r.d+'d'}</div>
-    </div>`;
-  }).join('');
-}
-
 // ── CAT SUMMARY ───────────────────────────────────────────────
 function renderCatSummary(){
   const cats=['Insumo','Peça','Consumível'];
@@ -2762,7 +2722,7 @@ function renderCharts(){
 }
 
 function renderAll(){
-  renderKPIs(); renderAlertList(); renderValList(); renderCatSummary(); renderCharts();
+  renderKPIs(); renderCatSummary(); renderCharts();
   if(currentPage==='compras')         renderCompras();
   else if(currentPage==='abc')        renderABC();
   else if(currentPage==='previsao')   renderPrevisao();
