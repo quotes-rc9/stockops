@@ -1,5 +1,21 @@
 # 📝 Changelog — StockOps
 
+## [2.27.0] — 2026-08-31
+
+### ✨ Nova funcionalidade — Checagem de validade do Primer instalado
+
+O motor de decisão (Comprar/Repor/Programar/Tranquilo) agora também verifica a validade da unidade de **Primer já instalada** em cada máquina — antes só checava a validade da reserva no estoque. Como o Primer não tem a extensão de +1 ano das outras tintas, qualquer máquina rodando com Primer vencido cai automaticamente em 🔴 Comprar, com o motivo específico ("Primer vencido há Xd, sem extensão — trocar já"), independente do nível de tinta que ainda resta. Aparece com um ícone ⏰ na tabela do Pedido consolidado e nos cards de Por máquina.
+
+Corrigido também um registro órfão: o produto Tinta Neutra PR 200 tinha estoque zerado mas 2 datas de validade presas no cadastro (mesma inconsistência já corrigida na Tinta Preta LH100).
+
+### 🔧 Alterações no JS
+
+| Função | Mudança |
+|---|---|
+| `calcularConsumoPorMaquina()` | Passa a incluir `validadeInstalada` (a validade impressa da unidade ativa) por cor |
+| `_ptAvaliar(cor, effRestante, previsaoData, produto, validadeInstaladaStr)` | Novo parâmetro; checagem específica do Primer no topo da função, retorna `primerVencido:true` quando aplicável |
+| `_renderPtPedido` / `_renderPtPorMaquina` | Novo aviso "⏰ Primer vencido — trocar já" quando `status.primerVencido` |
+
 ## [2.26.0] — 2026-08-31
 
 ### 🐛 Correção — CSS não atualizava pra quem já tinha acessado o sistema

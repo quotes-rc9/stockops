@@ -4675,7 +4675,7 @@ function calcularConsumoPorMaquina(){
       const nivel = razao==null ? 'ok' : razao>=2 ? 'crit' : razao>=1.3 ? 'warn' : 'ok';
       const tintaIdx = m.tintas.indexOf(atual);
       return { cor, nome:AMIN_NOME_COR[cor], diasAtual, media, ciclos:durs.length, razao, nivel,
-               maqId:m.id, tintaIdx, conferencia:atual.conferencia||null };
+               maqId:m.id, tintaIdx, conferencia:atual.conferencia||null, validadeInstalada:atual.validade||null };
     }).filter(Boolean);
     return { nome:m.nome, modelo:m.modelo, cores };
   });
@@ -4712,7 +4712,18 @@ function _ptReservaValidaNaData(produto, cor, dataRefMs){
   if(!produto || !produto.val || !produto.val.length) return 0;
   return produto.val.filter(v=>_ptUsavelAte(v, cor) >= dataRefMs).length;
 }
-function _ptAvaliar(cor, effRestante, previsaoDataStr, produto){
+function _ptAvaliar(cor, effRestante, previsaoDataStr, produto, validadeInstaladaStr){
+  // Regra do Primer: NÃO tem a extensão de +1 ano das outras tintas — se a unidade
+  // instalada na máquina já passou da validade impressa, precisa trocar já,
+  // independente de quanto nível ainda resta ou do que diz a média/conferência.
+  if(cor==='PRIMER' && validadeInstaladaStr){
+    const valInstMs = _parseData(validadeInstaladaStr);
+    if(valInstMs && valInstMs.getTime() < Date.now()){
+      const diasVencido = Math.round((Date.now() - valInstMs.getTime())/86400000);
+      return { ..._PT_ACAO.comprar, primerVencido:true,
+        motivo:`O Primer instalado nessa máquina venceu em ${valInstMs.toLocaleDateString('pt-BR')} (há ${diasVencido}d). O Primer não tem a extensão de +1 ano das outras tintas — precisa trocar por um novo assim que possível, independente do nível que ainda resta.` };
+    }
+  }
   if(effRestante==null){
     return { ..._PT_ACAO.semhist, motivo:'Ainda não há ciclos suficientes registrados nessa máquina pra calcular uma média confiável.' };
   }
@@ -4782,10 +4793,10 @@ function calcularPrevisaoTinta(){
         conferido = true;
       }
       const previsaoData = effRestante!=null ? _ptDataPrevisao(effRestante) : null;
-      const status = _ptAvaliar(c.cor, effRestante, previsaoData, produto);
+      const status = _ptAvaliar(c.cor, effRestante, previsaoData, produto, c.validadeInstalada);
       rows.push({
         maqId:c.maqId, tintaIdx:c.tintaIdx, maquina:m.nome, modelo:m.modelo,
-        cor:c.cor, corNome:c.nome, slotLabel:info?info.slotLabel:null,
+        cor:c.cor, corNome:c.nome, slotLabel:info?info.slotLabel:null, validadeInstalada:c.validadeInstalada,
         produtoNome, produto, diasAtual:c.diasAtual, media:c.media, ciclos:c.ciclos,
         rawRestante, effRestante, conferido, conferencia:c.conferencia,
         previsaoData,
@@ -5067,12 +5078,13 @@ function _renderPtPedido(rows){
     const expandido = _ptExpandidos.has(key);
     const neg = r.effRestante!=null && r.effRestante<0;
     let aviso = '';
-    if(r.conferido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--green);background:var(--green-a);padding:2px 7px;border-radius:20px;">✓ conferido</span>`;
+    if(r.status.primerVencido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⏰ Primer vencido — trocar já</span>`;
+    else if(r.conferido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--green);background:var(--green-a);padding:2px 7px;border-radius:20px;">✓ conferido</span>`;
     else if(r.status.key==='comprar') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⚠ comprar + conferir %</span>`;
     else if(r.status.key==='repor') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--purple);background:var(--purple-a);padding:2px 7px;border-radius:20px;">↻ repor a reserva</span>`;
     const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
       <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span> <span class="mono" style="font-size:9.5px;color:var(--t4);">${_escMaq(r.modelo)}</span></td>
-      <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;"></span>${_ptNomeCompleto(r)}</td>
+      <td>${r.status.primerVencido?'<span title="Primer vencido, sem extensao" style="margin-right:5px;">⏰</span>':''}<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;"></span>${_ptNomeCompleto(r)}</td>
       <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
       <td style="text-align:center;" class="mono">${r.media!=null?Math.round(r.media)+'d':'—'}</td>
       <td style="text-align:center;font-weight:700;color:${neg?'var(--red)':'var(--t2)'};" class="mono">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</td>
@@ -5177,7 +5189,7 @@ function _renderPtPorMaquina(rows){
           : `<div style="display:flex;align-items:center;gap:5px;margin-top:4px;padding-left:14px;"><div style="width:52px;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;border:1px solid var(--b1);flex-shrink:0;opacity:.3;"><div style="height:100%;width:100%;background:var(--b2);"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t4);font-style:italic;">sem nível</span></div>`;
         const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
           <td style="font-weight:600;">
-            <div style="display:flex;align-items:center;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;flex-shrink:0;"></span>${_ptNomeCompleto(r)}</div>
+            <div style="display:flex;align-items:center;">${r.status.primerVencido?'<span title="Primer vencido, sem extensao" style="margin-right:5px;">⏰</span>':''}<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;flex-shrink:0;"></span>${_ptNomeCompleto(r)}</div>
             ${nivelHtml}
           </td>
           <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
