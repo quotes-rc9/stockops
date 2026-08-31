@@ -1,5 +1,18 @@
 # 📝 Changelog — StockOps
 
+## [2.28.0] — 2026-08-31
+
+### ✨ Melhoria — Ordenação na aba "Por máquina"
+
+As tabelas de cada máquina (aba Por máquina) agora têm cabeçalho clicável, igual ao Pedido consolidado — clique em Tinta, Instalada, Média, Restante ou Previsão pra ordenar do maior pro menor ou vice-versa (clique de novo pra inverter). A ordenação vale pra todas as máquinas ao mesmo tempo, com uma seta (▲/▼) indicando a coluna e direção ativas. Serve pra ver rápido, em cada máquina, quais tintas ainda têm folga e quais estão precisando de compra.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `sortPtMaquinaBy(campo)` | Alterna a ordenação (mesmo campo = inverte direção) e re-renderiza |
+| `_ptMaqTh(campo, label, center)` | Gera o `<th>` clicável com a seta de direção ativa |
+
 ## [2.27.0] — 2026-08-31
 
 ### ✨ Nova funcionalidade — Checagem de validade do Primer instalado
