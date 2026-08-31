@@ -5167,17 +5167,6 @@ function _renderPtCalendarioDetalhe(){
   </div>`;
 }
 
-let _ptMaqSort = { campo:'restante', dir:'asc' };
-function sortPtMaquinaBy(campo){
-  if(_ptMaqSort.campo===campo) _ptMaqSort.dir = _ptMaqSort.dir==='asc'?'desc':'asc';
-  else _ptMaqSort = { campo, dir:'asc' };
-  renderPrevisaoTinta();
-}
-function _ptMaqTh(campo, label, center){
-  const ativo = _ptMaqSort.campo===campo;
-  const arrow = ativo ? (_ptMaqSort.dir==='asc'?' ▲':' ▼') : '';
-  return `<th style="cursor:pointer;user-select:none;${center?'text-align:center;':''}${ativo?'color:var(--green);':''}" onclick="sortPtMaquinaBy('${campo}')">${label}${arrow}</th>`;
-}
 function _renderPtPorMaquina(rows){
   const grid = document.getElementById('pt-maquinas-grid'); if(!grid) return;
   const porMaquina = {};
@@ -5187,16 +5176,10 @@ function _renderPtPorMaquina(rows){
   });
   const maquinas = Object.values(porMaquina).sort((a,b)=>a.nome.localeCompare(b.nome));
   const modelos = [...new Set(maquinas.map(m=>m.modelo))];
-  const dirMul = _ptMaqSort.dir==='asc'?1:-1;
   grid.innerHTML = modelos.map(modelo=>{
     const doModelo = maquinas.filter(m=>m.modelo===modelo);
     const cards = doModelo.map(m=>{
-      const itensOrdenados = [...m.itens].sort((a,b)=>{
-        const va=_ptSortVal(a,_ptMaqSort.campo), vb=_ptSortVal(b,_ptMaqSort.campo);
-        if(typeof va==='string') return va.localeCompare(vb)*dirMul;
-        return (va-vb)*dirMul;
-      });
-      const linhas = itensOrdenados.map(r=>{
+      const linhas = m.itens.map(r=>{
         const key = r.maqId+'|'+r.tintaIdx;
         const expandido = _ptExpandidos.has(key);
         const neg = r.effRestante!=null && r.effRestante<0;
@@ -5221,7 +5204,7 @@ function _renderPtPorMaquina(rows){
         <div class="ph" style="padding:9px 12px;"><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;margin-right:8px;">${_ptBadgeMaquina(m.nome)}</span><span class="ph-title" style="font-size:12.5px;">${m.nome} — ${m.modelo}</span></div>
         <div class="tbl-wrap" style="margin:0;">
           <table>
-            <thead><tr>${_ptMaqTh('tinta','Tinta / nível')}${_ptMaqTh('diasAtual','Instalada',true)}${_ptMaqTh('media','Média',true)}${_ptMaqTh('restante','Restante',true)}${_ptMaqTh('previsao','Previsão')}</tr></thead>
+            <thead><tr><th>Tinta / nível</th><th style="text-align:center;">Instalada</th><th style="text-align:center;">Média</th><th style="text-align:center;">Restante</th><th>Previsão</th></tr></thead>
             <tbody>${linhas}</tbody>
           </table>
         </div>

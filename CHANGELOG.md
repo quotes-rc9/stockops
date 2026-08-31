@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.28.1] — 2026-08-31
+
+### ⏪ Reversão — Ordenação na aba "Por máquina"
+
+A ordenação adicionada na versão anterior fazia cada card de máquina reordenar suas próprias linhas de forma independente — como cada máquina tem valores diferentes, a mesma tinta (ex: Preta) parava de aparecer sempre na mesma posição entre os cards, dificultando comparar cor a cor entre as 6 máquinas. Revertido: a aba "Por máquina" volta pra ordem fixa (Preta, Ciano, Magenta, Amarela, Verniz, Primer, Branco-07, Branco-08), igual em todos os cards. A ordenação por maior/menor continua disponível — e é o lugar certo pra isso — na aba "Pedido consolidado", onde todas as colunas ficam visíveis.
+
 ## [2.28.0] — 2026-08-31
 
 ### ✨ Melhoria — Ordenação na aba "Por máquina"
