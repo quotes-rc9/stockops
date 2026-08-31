@@ -1,5 +1,25 @@
 # 📝 Changelog — StockOps
 
+## [2.29.0] — 2026-08-31
+
+### 🔄 Substituição — "Estoque Mínimo" virou "Estoque Tintas" (2 setores)
+
+A tela e o menu "Estoque Mínimo de Tintas" (nível sugerido, capital liberável, diagnóstico por máquina) foram substituídos por **Estoque Tintas** — duas telas lado a lado, **Setor Quotes** (nas máquinas, reserva de mão) e **Setor Compras** (com o Thiago, pulmão), com a quantidade de cada tinta por modelo e cor em cada uma.
+
+Motivo: o estoque de tinta MIMAKI passou a ser rastreado em 2 locais físicos separados — quando o Setor Quotes zera um item, a equipe pede reposição do Setor Compras. Os campos novos `estoqueQuotes`/`estoqueCompras` foram adicionados às 12 tintas MIMAKI (contagem do Setor Quotes já registrada; Setor Compras aparece como "não contado ainda" até a próxima atualização). O total antigo `estoque` continua existindo sem mudança, usado pelas outras telas (Dashboard, Estoque completo).
+
+**Importante**: o motor de decisão da Previsão de Troca de Tinta (Comprar/Repor/Programar) ainda usa o `estoque` total — a próxima etapa é migrar essa checagem para usar só `estoqueQuotes`, já que é a reserva de fato disponível pra trocar na máquina.
+
+**Permissão**: mantida `ver_analise_min` (mesmo id, só o rótulo mudou, pra não quebrar permissões já configuradas pra usuários existentes).
+
+### 🔧 Funções novas / removidas no JS
+
+| Função | Situação |
+|---|---|
+| `renderAnaliseMin()` | Reescrita — agora popula `#et-quotes-grid`/`#et-compras-grid` em vez da tabela antiga |
+| `_etLinhasModelo`, `_etLinhaHtml`, `_etCardModelo`, `_etCardPrimer` | Novas |
+| `calcularAnaliseTintas`, `_aminTier`, `_aminCalcGrupo`, `setAminJanela`, `sortAminBy`, `toggleAminFiltro`, `toggleAminAlerta`, `exportarAnaliseMinPDF` | Removidas (só eram usadas pela tela antiga) |
+
 ## [2.28.1] — 2026-08-31
 
 ### ⏪ Reversão — Ordenação na aba "Por máquina"

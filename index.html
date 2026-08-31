@@ -167,7 +167,7 @@
       <div class="sb-section">
         <div class="sb-lbl">Equipamentos</div>
         <button class="sb-item" onclick="showPage('maquinas',this)"><span class="sb-icon">🖨</span>Máquinas<span class="sb-badge sbb-p" id="nb-maq" style="display:none;">0</span></button>
-        <button class="sb-item" onclick="showPage('analise-min',this)"><span class="sb-icon">🧪</span>Estoque Mínimo</button>
+        <button class="sb-item" onclick="showPage('analise-min',this)"><span class="sb-icon">🏭</span>Estoque Tintas</button>
         <button class="sb-item" onclick="showPage('previsao-tinta',this)"><span class="sb-icon">🗓</span>Previsão de Troca de Tinta</button>
       </div>
       <div class="sb-section">
@@ -950,55 +950,24 @@
       <!-- ══ ESTOQUE MÍNIMO DE TINTAS ═══════════════════════════ -->
       <div class="page" id="page-analise-min">
         <div class="ph" style="flex-shrink:0;padding:10px 14px;">
-          <span class="ph-title">🧪 Estoque Mínimo de Tintas</span>
-          <div class="ph-right">
-            <button class="btn-export" onclick="exportarAnaliseMinPDF()">📄 PDF</button>
-          </div>
+          <span class="ph-title">🏭 Estoque de Tintas</span>
         </div>
         <div style="background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.15);padding:6px 14px;flex-shrink:0;">
           <span style="font-size:11px;color:var(--blue);">
-            💡 <b>Como funciona:</b> calcula, pra cada tinta, quantos dias em média ela fica instalada até ser trocada (histórico real das 6 máquinas), divide pelo nº de máquinas/posições que usam essa mesma tinta ao mesmo tempo, e chega numa <b>cadência do setor</b> — de quanto em quanto tempo, na média, alguma máquina troca essa tinta. Se essa cadência for maior que 2× o prazo de reposição (60 dias), sobra folga suficiente pra pedir e receber a próxima antes de precisar — e como a tinta aguenta <b>+1 ano de uso após a validade impressa</b> uma vez instalada, manter só 1 unidade reserva não corre risco real de vencer parada no estoque.
+            💡 <b>Dois estoques separados:</b> <b>Setor Quotes</b> é a reserva de mão, guardada perto das máquinas — assim que zera, quem opera pede reposição. <b>Setor Compras</b> é o pulmão que fica com você, usado pra repor o Quotes quando ele avisa que zerou. A Previsão de Troca de Tinta usa só o Setor Quotes como reserva disponível pra trocar.
           </span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;padding:12px 14px;flex-shrink:0;">
-          <div class="panel" id="amin-vermelho-card"></div>
-          <div class="panel" id="amin-amarelo-card"></div>
-          <div class="panel" id="amin-verde-card"></div>
-          <div class="panel" id="amin-capital-card"></div>
-        </div>
-        <div style="display:flex;gap:6px;padding:0 14px 10px;flex-shrink:0;">
-          <button class="nav-btn" id="amin-janela-total" onclick="setAminJanela('total')">Histórico completo</button>
-          <button class="nav-btn" id="amin-janela-recente" onclick="setAminJanela('recente')">Últimos 5 ciclos</button>
-        </div>
-        <div id="amin-alerta-wrap" style="padding:0 14px 12px;flex-shrink:0;display:none;">
-          <div style="display:flex;align-items:flex-start;gap:10px;background:var(--red-a);border:1px solid rgba(var(--red-rgb),.3);border-radius:var(--r6);padding:9px 12px;cursor:pointer;font-size:11.5px;color:var(--red);" onclick="toggleAminAlerta()">
-            <span style="font-size:14px;">⚠</span>
-            <span id="amin-alerta-txt" style="flex:1;"></span>
-            <span class="mono" id="amin-alerta-chev" style="font-size:10px;flex-shrink:0;">▾ ver quais</span>
+        <div style="flex:1;overflow-y:auto;padding:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📍 Setor Quotes <span style="font-weight:400;color:var(--t4);text-transform:none;letter-spacing:normal;">(nas máquinas)</span></div>
+              <div id="et-quotes-grid"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📦 Setor Compras <span style="font-weight:400;color:var(--t4);text-transform:none;letter-spacing:normal;">(com você)</span></div>
+              <div id="et-compras-grid"></div>
+            </div>
           </div>
-          <div id="amin-alerta-detalhe" style="display:none;background:var(--s1);border:1px solid var(--b2);border-top:none;border-radius:0 0 var(--r6) var(--r6);padding:8px 12px;font-size:11px;color:var(--t3);"></div>
-        </div>
-        <div style="flex:1;overflow-y:auto;padding-bottom:14px;">
-          <div class="tbl-wrap" style="margin:0 14px;">
-            <table>
-              <thead><tr>
-                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('maquina')">Máquina <span id="amin-arrow-maquina"></span></th>
-                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('cor')">Cor / Tinta <span id="amin-arrow-cor"></span></th>
-                <th style="cursor:pointer;user-select:none;" onclick="sortAminBy('produto')">Produto <span id="amin-arrow-produto"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('slots')">Máquinas/slots <span id="amin-arrow-slots"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('mediaDias')">Média dias/ciclo <span id="amin-arrow-mediaDias"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('cadencia')">Cadência do Setor <span id="amin-arrow-cadencia"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('estoque')">Estoque atual <span id="amin-arrow-estoque"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('min')">Mínimo atual <span id="amin-arrow-min"></span></th>
-                <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortAminBy('sugerido')">Mínimo sugerido <span id="amin-arrow-sugerido"></span></th>
-                <th>Justificativa</th>
-              </tr></thead>
-              <tbody id="amin-tbody"></tbody>
-            </table>
-          </div>
-
-          <div style="margin:22px 14px 0;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);border-bottom:1px solid var(--b2);padding-bottom:8px;">🖨 Consumo por máquina — diagnóstico</div>
-          <div id="amin-maquinas-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:12px 14px 0;"></div>
         </div>
       </div>
 
@@ -4031,7 +4000,7 @@ const TODAS_PERMISSOES = [
   { id:'gerenciar_usuarios', icon:'👥', label:'Gerenciar Usuários',       desc:'Criar, editar e excluir usuários' },
   { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
   { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
-  { id:'ver_analise_min',    icon:'🧪', label:'Ver Estoque Mínimo de Tintas', desc:'Recomendação de mínimo por giro de tinta' },
+  { id:'ver_analise_min',    icon:'🏭', label:'Ver Estoque de Tintas',        desc:'Quantidade por setor (Quotes x Compras), por modelo e cor' },
   { id:'ver_previsao_tinta', icon:'🗓', label:'Ver Previsão de Troca de Tinta', desc:'Pedido consolidado e calendário de compra de tintas' },
   { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
 ];
@@ -4591,70 +4560,6 @@ const TINTA_MAPA = [
 // Primer: produto único, compartilhado pelas 6 máquinas (não separa por modelo de máquina)
 const TINTA_PRIMER = { cores:['PRIMER'], produtoNome:'Tinta Neutra PR 200' };
 const PRAZO_REPOSICAO_DIAS = 30; // dias estimados entre pedir e receber uma remessa MIMAKI — ajustável
-
-function _aminTier(cadencia){
-  if (cadencia==null || !isFinite(cadencia)) return { nivel:'—', sugerido:null, badge:'', texto:'Histórico insuficiente ainda.' };
-  if (cadencia < PRAZO_REPOSICAO_DIAS) return { nivel:'🔴 Alto giro', sugerido:2, badge:'b-crit', texto:'Gira mais rápido que o prazo de reposição.' };
-  if (cadencia < PRAZO_REPOSICAO_DIAS*2) return { nivel:'🟡 Atenção', sugerido:2, badge:'b-warn', texto:'Cadência perto do prazo de reposição.' };
-  return { nivel:'🟢 Giro lento', sugerido:1, badge:'b-ok', texto:'Giro lento — seguro reduzir pra 1 (aguenta +1 ano após vencer).' };
-}
-
-const AMIN_JANELA_N = 5; // "últimos N ciclos" quando a janela = recente
-function _aminCalcGrupo(maquinasDoGrupo, cores, produtoNome, janela){
-  let ciclos=[]; // {dur, fim}
-  let maquinasUsando=0;
-  maquinasDoGrupo.forEach(m=>{
-    const doGrupo=(m.tintas||[]).filter(t=>cores.includes(String(t.modelo||'').toUpperCase().trim()));
-    if(doGrupo.length) maquinasUsando++;
-    doGrupo.forEach(t=>{ if(t.fim){ const d=_duracaoDias(t.inicio,t.fim); if(d!=null) ciclos.push({dur:d, fim:t.fim}); } });
-  });
-  ciclos.sort((a,b)=> (b.fim||'').localeCompare(a.fim||'')); // mais recente primeiro
-  if(janela==='recente') ciclos = ciclos.slice(0, AMIN_JANELA_N);
-  const vals = ciclos.map(c=>c.dur);
-  const mediaDias = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-  const minDias = vals.length ? Math.min(...vals) : null;
-  const maxDias = vals.length ? Math.max(...vals) : null;
-  return { ciclos:vals.length, mediaDias, minDias, maxDias, maquinasUsando };
-}
-
-let _aminJanela = 'recente';
-function setAminJanela(j){
-  _aminJanela = j;
-  renderAnaliseMin();
-}
-
-function calcularAnaliseTintas(){
-  const linhas=[];
-  TINTA_MAPA.forEach(entry=>{
-    const maquinasDoModelo=MAQUINAS.filter(m=>m.modelo===entry.maqModelo);
-    const g=_aminCalcGrupo(maquinasDoModelo, entry.cores, entry.produtoNome, _aminJanela);
-    const slots=g.maquinasUsando*entry.slotsPorMaquina;
-    const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
-    const tier=_aminTier(cadencia);
-    const produto=P.find(p=>String(p.nome||'').trim().toLowerCase()===entry.produtoNome.trim().toLowerCase());
-    linhas.push({
-      maquina:entry.maqModelo, cor:entry.cores.join('/'), produtoNome:entry.produtoNome, produto,
-      slots, ciclos:g.ciclos, mediaDias:g.mediaDias, minDias:g.minDias, maxDias:g.maxDias,
-      cadencia, tier:tier.nivel, badge:tier.badge, sugerido:tier.sugerido, justificativa:tier.texto,
-      estoque:produto?produto.estoque:null, min:produto?produto.min:null, custo:produto?produto.custo:null,
-    });
-  });
-  // Primer: agrupa as 6 máquinas juntas, sem separar por modelo
-  {
-    const g=_aminCalcGrupo(MAQUINAS, TINTA_PRIMER.cores, TINTA_PRIMER.produtoNome, _aminJanela);
-    const slots=g.maquinasUsando*1;
-    const cadencia=(g.mediaDias!=null && slots>0) ? g.mediaDias/slots : null;
-    const tier=_aminTier(cadencia);
-    const produto=P.find(p=>String(p.nome||'').trim().toLowerCase()===TINTA_PRIMER.produtoNome.trim().toLowerCase());
-    linhas.push({
-      maquina:'Todas (compartilhado)', cor:'PRIMER', produtoNome:TINTA_PRIMER.produtoNome, produto,
-      slots, ciclos:g.ciclos, mediaDias:g.mediaDias, minDias:g.minDias, maxDias:g.maxDias,
-      cadencia, tier:tier.nivel, badge:tier.badge, sugerido:tier.sugerido, justificativa:tier.texto,
-      estoque:produto?produto.estoque:null, min:produto?produto.min:null, custo:produto?produto.custo:null,
-    });
-  }
-  return linhas;
-}
 
 // ── Diagnóstico por máquina: compara o pote atual (sem fim) com a média
 // HISTÓRICA daquela máquina especificamente pra aquela cor (não a média agregada
@@ -5217,164 +5122,47 @@ function _renderPtPorMaquina(rows){
   }).join('');
 }
 
-let _aminSort = { campo: null, dir: 'asc' };
-function sortAminBy(campo) {
-  if (_aminSort.campo === campo) _aminSort.dir = _aminSort.dir === 'asc' ? 'desc' : 'asc';
-  else { _aminSort.campo = campo; _aminSort.dir = 'asc'; }
-  renderAnaliseMin();
-}
-
-let _aminFiltro = null;
-function toggleAminFiltro(badge){
-  _aminFiltro = (_aminFiltro === badge) ? null : badge;
-  renderAnaliseMin();
-}
-
-function renderAnaliseMin(){
-  const tbody=$('amin-tbody'); if(!tbody) return;
-  const linhas=calcularAnaliseTintas();
-
-  const vermelhas=linhas.filter(l=>l.badge==='b-crit');
-  const amarelas=linhas.filter(l=>l.badge==='b-warn');
-  const verdes=linhas.filter(l=>l.badge==='b-ok');
-  const capitalLiberado=verdes.reduce((a,l)=>{
-    if(l.min!=null && l.sugerido!=null && l.min>l.sugerido && l.custo){ return a+(l.min-l.sugerido)*l.custo; }
-    return a;
-  },0);
-
-  const cardHtml=(id,icon,titulo,cor,corA,qtd,sub,badge)=>{
-    const el=$(id); if(!el) return;
-    const clicavel = !!badge;
-    const ativo = clicavel && _aminFiltro === badge;
-    el.style.cursor = clicavel ? 'pointer' : '';
-    el.style.background = ativo ? corA : '';
-    el.onclick = clicavel ? (()=>toggleAminFiltro(badge)) : null;
-    el.innerHTML=`
-      <div class="ph"><span style="font-size:16px;">${icon}</span><span class="ph-title" style="color:${cor};">${titulo}</span>${ativo?`<span style="margin-left:auto;font-size:9px;color:${cor};">✕ limpar</span>`:''}</div>
-      <div style="padding:12px;">
-        <div style="font-size:26px;font-weight:700;color:${cor};">${qtd}</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:2px;">${sub}</div>
-      </div>`;
-  };
-  cardHtml('amin-vermelho-card','🔴','Alto giro','var(--red)','var(--red-a)',vermelhas.length,'mantêm mínimo 2 — trocam rápido demais','b-crit');
-  cardHtml('amin-amarelo-card','🟡','Atenção','var(--yellow)','var(--yellow-a)',amarelas.length,'mantêm mínimo 2 por ora — folga pequena','b-warn');
-  cardHtml('amin-verde-card','🟢','Giro lento','var(--green)','var(--green-a)',verdes.length,'podem reduzir para mínimo 1','b-ok');
-  cardHtml('amin-capital-card','💰','Capital liberável','var(--blue)','var(--blue-a)',R(capitalLiberado),'se aplicar as reduções sugeridas');
-
-  const itensTabela = _aminFiltro ? linhas.filter(l=>l.badge===_aminFiltro) : linhas;
-
-  const aminSortVal=(l,campo)=>{
-    if(campo==='maquina') return l.maquina;
-    if(campo==='cor') return l.cor;
-    if(campo==='produto') return l.produtoNome;
-    if(campo==='slots') return l.slots||0;
-    if(campo==='mediaDias') return l.mediaDias||0;
-    if(campo==='cadencia') return l.cadencia||0;
-    if(campo==='estoque') return l.estoque||0;
-    if(campo==='min') return l.min||0;
-    if(campo==='sugerido') return l.sugerido||0;
-    return '';
-  };
-  const ordenadas=_sortArr(itensTabela,_aminSort,aminSortVal);
-  _atualizarSetas('amin',['maquina','cor','produto','slots','mediaDias','cadencia','estoque','min','sugerido'],_aminSort);
-
-  tbody.innerHTML=ordenadas.map(l=>{
-    const produtoTxt=l.produto?_escMaq(l.produtoNome):`<span style="color:var(--t4);">${_escMaq(l.produtoNome)} (não localizado)</span>`;
-    const cadenciaTxt=l.cadencia!=null?`${Math.round(l.cadencia)}d`:'—';
-    const mediaTxt=l.mediaDias!=null?`${Math.round(l.mediaDias)}d (${l.ciclos} ciclos)`:'—';
-    const sugTxt=l.sugerido!=null?l.sugerido:'—';
-    const badgeCls=l.badge?`badge ${l.badge}`:'';
-    return `<tr>
-      <td class="mono" style="font-size:11px;color:var(--blue);">${_escMaq(l.maquina)}</td>
-      <td style="font-weight:600;">${_escMaq(l.cor)}</td>
-      <td>${produtoTxt}</td>
-      <td style="text-align:center;">${l.slots||'—'}</td>
-      <td style="text-align:center;color:var(--t3);">${mediaTxt}</td>
-      <td style="text-align:center;font-weight:600;">${cadenciaTxt}</td>
-      <td style="text-align:center;">${l.estoque!=null?l.estoque:'—'}</td>
-      <td style="text-align:center;color:var(--t3);">${l.min!=null?l.min:'—'}</td>
-      <td style="text-align:center;font-weight:700;">${sugTxt}</td>
-      <td>${l.tier?`<span class="${badgeCls}">${_escMaq(l.tier)}</span> `:''}<span style="font-size:10.5px;color:var(--t3);">${_escMaq(l.justificativa)}</span></td>
-    </tr>`;
-  }).join('');
-
-  const btnTotal=$('amin-janela-total'), btnRecente=$('amin-janela-recente');
-  if(btnTotal && btnRecente){
-    btnTotal.classList.toggle('primary', _aminJanela==='total');
-    btnRecente.classList.toggle('primary', _aminJanela==='recente');
-  }
-
-  // ── Banner de tinta parada ──
-  const consumo=calcularConsumoPorMaquina();
-  const outliers=[];
-  consumo.forEach(m=>m.cores.forEach(c=>{ if(c.nivel!=='ok') outliers.push({maquina:m.nome, ...c}); }));
-  outliers.sort((a,b)=>(b.razao||0)-(a.razao||0));
-  const alertaWrap=$('amin-alerta-wrap');
-  if(alertaWrap){
-    if(outliers.length){
-      alertaWrap.style.display='';
-      $('amin-alerta-txt').innerHTML=`<b>${outliers.length} tinta${outliers.length!==1?'s':''}</b> instalada${outliers.length!==1?'s':''} bem além do normal daquela máquina — vale conferência física antes da próxima compra.`;
-      $('amin-alerta-detalhe').innerHTML=outliers.map(o=>{
-        const cor=o.nivel==='crit'?'var(--red)':'var(--yellow)';
-        return `<div style="display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--b1);"><span style="width:100px;flex-shrink:0;color:var(--t1);">${_escMaq(o.maquina)}</span><span>${_escMaq(o.nome)} — ${o.diasAtual}d em uso (média da máquina: ${Math.round(o.media)}d · <b style="color:${cor};">${o.razao.toFixed(1)}×</b>)</span></div>`;
-      }).join('');
-    } else {
-      alertaWrap.style.display='none';
-    }
-  }
-
-  // ── Grade de diagnóstico por máquina ──
-  const grid=$('amin-maquinas-grid');
-  if(grid){
-    grid.innerHTML=consumo.map(m=>{
-      const rows=m.cores.map(c=>{
-        const led=c.nivel==='crit'?'crit':c.nivel==='warn'?'warn':'ok';
-        const ledCor=led==='crit'?'var(--red)':led==='warn'?'var(--yellow)':'var(--green)';
-        const obs=c.nivel==='crit'?`${c.razao.toFixed(1)}× a média — conferir`:c.nivel==='warn'?`${c.razao.toFixed(1)}× a média`:(c.media?'dentro do padrão':'sem histórico ainda');
-        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--b1);font-size:11px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:${ledCor};flex-shrink:0;"></span>
-          <span style="font-weight:600;width:62px;flex-shrink:0;">${_escMaq(c.nome)}</span>
-          <span style="flex:1;color:var(--t3);font-size:10px;">${obs}</span>
-          <span class="mono" style="font-weight:600;color:var(--t2);">${c.diasAtual}d</span>
-        </div>`;
-      }).join('');
-      return `<div class="panel" style="padding:12px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-weight:700;font-size:12.5px;">🖨 ${_escMaq(m.nome)}</span><span class="mono" style="font-size:10px;color:var(--t3);margin-left:auto;">${_escMaq(m.modelo)}</span></div>
-        ${rows}
-      </div>`;
-    }).join('');
-  }
-}
-
-function toggleAminAlerta(){
-  const d=$('amin-alerta-detalhe');
-  const chev=$('amin-alerta-chev');
-  const open=d.style.display==='block';
-  d.style.display=open?'none':'block';
-  chev.textContent=open?'▾ ver quais':'▴ esconder';
-}
-
-function exportarAnaliseMinPDF(){
-  const linhas=calcularAnaliseTintas();
-  const verdes=linhas.filter(l=>l.badge==='b-ok');
-  const capitalLiberado=verdes.reduce((a,l)=>{
-    if(l.min!=null && l.sugerido!=null && l.min>l.sugerido && l.custo){ return a+(l.min-l.sugerido)*l.custo; }
-    return a;
-  },0);
-  const colunas=['Máquina','Cor','Produto','Slots','Média dias/ciclo','Cadência do Setor','Estoque','Mín. atual','Mín. sugerido','Justificativa'];
-  const corpo=linhas.map(l=>[
-    l.maquina, l.cor, l.produto?l.produtoNome:`${l.produtoNome} (não localizado)`,
-    l.slots||'—',
-    l.mediaDias!=null?`${Math.round(l.mediaDias)}d (${l.ciclos} ciclos)`:'—',
-    l.cadencia!=null?`${Math.round(l.cadencia)}d`:'—',
-    l.estoque!=null?l.estoque:'—',
-    l.min!=null?l.min:'—',
-    l.sugerido!=null?l.sugerido:'—',
-    l.justificativa,
-  ]);
-  exportarPDF('Estoque Mínimo de Tintas', colunas, corpo, {
-    resumo:`${linhas.length} tintas analisadas · ${verdes.length} podem reduzir para mínimo 1 · Capital estimado liberável: ${R(capitalLiberado)}`
+// ── Estoque de Tintas: 2 setores rastreados separadamente ──
+// Setor Quotes (nas máquinas, reserva de mão) x Setor Compras (com o Thiago, pulmão).
+// A Previsão de Troca de Tinta usa só estoqueQuotes como reserva disponível pra trocar.
+const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear' };
+function _etLinhasModelo(modelo){
+  return TINTA_MAPA.filter(e=>e.maqModelo===modelo).map(e=>{
+    const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===e.produtoNome.trim().toLowerCase());
+    const label = e.cores.length>1 ? 'Branca' : (_ET_NOME_COR[e.cores[0]]||e.cores[0]);
+    return { label, produtoNome:e.produtoNome, produto };
   });
+}
+function _etLinhaHtml(label, valor){
+  const semDado = valor==null;
+  const zero = valor===0;
+  const corTxt = semDado ? 'var(--t4)' : zero ? 'var(--red)' : 'var(--t1)';
+  const txt = semDado ? '— (não contado ainda)' : valor+' un';
+  return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border-top:1px solid var(--b1);font-size:12px;">
+    <span style="${zero?'color:var(--red);font-weight:600;':''}">${_escMaq(label)}</span>
+    <b class="mono" style="color:${corTxt};font-size:12.5px;white-space:nowrap;">${txt}</b>
+  </div>`;
+}
+function _etCardModelo(modelo, campo){
+  const linhas = _etLinhasModelo(modelo);
+  return `<div class="panel" style="overflow:hidden;margin-bottom:10px;">
+    <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">${_escMaq(modelo)}</span></div>
+    <div>${linhas.map(l=>_etLinhaHtml(l.label, l.produto?l.produto[campo]:null)).join('')}</div>
+  </div>`;
+}
+function _etCardPrimer(campo){
+  const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===TINTA_PRIMER.produtoNome.trim().toLowerCase());
+  return `<div class="panel" style="overflow:hidden;">
+    <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">Primer <span style="font-weight:400;color:var(--t4);">(compartilhado entre as 6 máquinas)</span></span></div>
+    <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null)}</div>
+  </div>`;
+}
+function renderAnaliseMin(){
+  const gQ = document.getElementById('et-quotes-grid'); if(!gQ) return;
+  const gC = document.getElementById('et-compras-grid'); if(!gC) return;
+  const modelos = [...new Set(TINTA_MAPA.map(e=>e.maqModelo))];
+  gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardPrimer('estoqueQuotes');
+  gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardPrimer('estoqueCompras');
 }
 
   // ═══════════════════════════════════════════════════════════════
