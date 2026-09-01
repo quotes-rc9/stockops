@@ -4065,6 +4065,10 @@ const TODAS_PERMISSOES = [
   { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
   { id:'ver_analise_min',    icon:'🏭', label:'Ver Estoque de Tintas',        desc:'Quantidade por setor (Quotes x Compras), por modelo e cor' },
   { id:'ver_previsao_tinta', icon:'🗓', label:'Ver Previsão de Troca de Tinta', desc:'Pedido consolidado e calendário de compra de tintas' },
+  { id:'ver_pt_resumo',      icon:'📊', label:'· Aba Resumo',              desc:'Sub-permissão de Previsão de Troca de Tinta — chips e listas Comprar/Repor' },
+  { id:'ver_pt_pedido',      icon:'🛒', label:'· Aba Pedido consolidado',  desc:'Sub-permissão de Previsão de Troca de Tinta — tabela com valores em R$' },
+  { id:'ver_pt_calendario',  icon:'🗓️', label:'· Aba Calendário de compra',desc:'Sub-permissão de Previsão de Troca de Tinta — meses e compras previstas' },
+  { id:'ver_pt_maquina',     icon:'🖨', label:'· Aba Por máquina',         desc:'Sub-permissão de Previsão de Troca de Tinta — nível e previsão por máquina' },
   { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
 ];
 
@@ -4930,8 +4934,22 @@ function limparConferenciaTinta(maqId, tintaIdx){
   toast('Conferência removida.','success');
 }
 
+// Sub-permissões por aba (além de ver_previsao_tinta pra ver a página): admin
+// tem tudo por padrão; outros usuários só veem a aba explicitamente liberada.
+const PT_TAB_PERM = { resumo:'ver_pt_resumo', pedido:'ver_pt_pedido', calendario:'ver_pt_calendario', maquina:'ver_pt_maquina' };
+function _ptAplicarPermissoesAbas(){
+  const permitidas = ['resumo','pedido','calendario','maquina'].filter(t=>temPermissao(PT_TAB_PERM[t]));
+  ['resumo','pedido','calendario','maquina'].forEach(t=>{
+    const btn = document.getElementById('ptt-'+t);
+    if(btn) btn.style.display = permitidas.includes(t) ? '' : 'none';
+  });
+  if(!permitidas.includes(_ptTab) && permitidas.length){
+    switchPrevisaoTintaTab(permitidas[0]);
+  }
+}
 function renderPrevisaoTinta(){
   if(!document.getElementById('page-previsao-tinta')) return;
+  _ptAplicarPermissoesAbas();
   const rows = calcularPrevisaoTinta();
   _renderPtResumo(rows);
   _renderPtPedido(rows);

@@ -1,5 +1,20 @@
 # 📝 Changelog — StockOps
 
+## [2.36.0] — 2026-08-31
+
+### ✨ Nova funcionalidade — Permissão por aba na Previsão de Troca de Tinta
+
+Até agora, quem tinha acesso à página via `ver_previsao_tinta` via todas as 4 abas (Resumo, Pedido consolidado, Calendário de compra, Por máquina) de uma vez. Agora cada aba tem sua própria sub-permissão (`ver_pt_resumo`, `ver_pt_pedido`, `ver_pt_calendario`, `ver_pt_maquina`) — admin continua vendo tudo por padrão, e outros usuários só veem a(s) aba(s) explicitamente liberada(s) em Gerenciar Usuários. Se a aba ativa não estiver liberada, o sistema troca automaticamente pra primeira aba permitida.
+
+Aplicado agora: a Vero (viewer) recebeu só `ver_pt_maquina` — vê apenas a aba "Por máquina", sem acesso ao Pedido consolidado (que mostra valores em R$) nem ao Resumo/Calendário.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `_ptAplicarPermissoesAbas()` | Esconde os botões de aba sem permissão e troca pra primeira aba permitida se a atual estiver bloqueada |
+| `PT_TAB_PERM` | Mapa aba → id da sub-permissão |
+
 ## [2.35.1] — 2026-08-31
 
 ### 🐛 Correção — Permissão de "Previsão de Troca de Tinta" não aparecia no menu
