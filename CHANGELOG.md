@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.32.0] — 2026-08-31
+
+### ⏪ Troca — Ordenação por urgência dos cards → ordenação de coluna dentro dos cards
+
+A pedido do usuário: tira o toggle "Nome / Mais crítica primeiro" que reordenava os cards de máquina (2.31.0), e volta a ordenação por clique nas colunas (Tinta, Instalada, Média, Restante, Previsão) **dentro** de cada card — igual ao Pedido consolidado, aplicada a todas as máquinas ao mesmo tempo.
+
 ## [2.31.0] — 2026-08-31
 
 ### ✨ Melhoria — Ordenação por urgência na aba "Por máquina"
