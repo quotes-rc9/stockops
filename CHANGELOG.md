@@ -1,5 +1,20 @@
 # 📝 Changelog — StockOps
 
+## [2.30.0] — 2026-08-31
+
+### ✨ Dados — Setor Compras registrado + LUS-175 no Estoque Tintas
+
+Contagem física do **Setor Compras** registrada pra 18 tintas (LH-100, LUS-120 e LUS-175). A tela "Estoque Tintas" ganhou um 3º grupo, **LUS-175**, mostrando as 7 tintas desse modelo (Preta, Ciano, Ciano Claro, Magenta, Magenta Claro, Amarela, Branca) nos dois setores — os produtos já existiam cadastrados, mas nenhuma máquina LUS-175 está registrada em `MAQUINAS` ainda, então esse grupo fica com lista fixa (não vem de `TINTA_MAPA`) até a máquina ser cadastrada de verdade.
+
+**Pendente**: a relação de máquina(s)/histórico de tintas da LUS-175 (o Thiago vai passar depois, como fez com as outras 6 máquinas) — só depois disso ela entra na Previsão de Troca de Tinta e no `TINTA_MAPA`.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `_etCardLUS175(campo)` | Card fixo da LUS-175 (não depende de `TINTA_MAPA`/máquina registrada) |
+| `_ET_LUS175_PRODUTOS` | Lista dos 7 produtos LUS-175 com seus rótulos de cor |
+
 ## [2.29.1] — 2026-08-31
 
 ### ✏️ Correção de texto — Estoque Tintas

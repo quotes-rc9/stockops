@@ -5157,12 +5157,34 @@ function _etCardPrimer(campo){
     <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null)}</div>
   </div>`;
 }
+// LUS-175: produtos já cadastrados, mas a(s) máquina(s) ainda não foram registradas em MAQUINAS
+// (o Thiago vai passar a relação de máquina/tintas separadamente) — por isso não entra em
+// TINTA_MAPA ainda, e essa lista fica hardcoded até a máquina existir de verdade no sistema.
+const _ET_LUS175_PRODUTOS = [
+  { label:'Preta',         nome:'Tinta Preta LUS175' },
+  { label:'Ciano',         nome:'Tinta Ciano LUS175' },
+  { label:'Ciano Claro',   nome:'Ciano Claro LUS175' },
+  { label:'Magenta',       nome:'Tinta Magenta LUS175' },
+  { label:'Magenta Claro', nome:'Magenta Claro LUS175' },
+  { label:'Amarela',       nome:'Tinta Amarela LUS175' },
+  { label:'Branca',        nome:'Tinta Branca LUS175' },
+];
+function _etCardLUS175(campo){
+  const linhas = _ET_LUS175_PRODUTOS.map(x=>{
+    const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===x.nome.trim().toLowerCase());
+    return _etLinhaHtml(x.label, produto?produto[campo]:null);
+  }).join('');
+  return `<div class="panel" style="overflow:hidden;margin-bottom:10px;">
+    <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">LUS-175 <span style="font-weight:400;color:var(--t4);">(máquina ainda não cadastrada)</span></span></div>
+    <div>${linhas}</div>
+  </div>`;
+}
 function renderAnaliseMin(){
   const gQ = document.getElementById('et-quotes-grid'); if(!gQ) return;
   const gC = document.getElementById('et-compras-grid'); if(!gC) return;
   const modelos = [...new Set(TINTA_MAPA.map(e=>e.maqModelo))];
-  gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardPrimer('estoqueQuotes');
-  gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardPrimer('estoqueCompras');
+  gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardLUS175('estoqueQuotes') + _etCardPrimer('estoqueQuotes');
+  gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardLUS175('estoqueCompras') + _etCardPrimer('estoqueCompras');
 }
 
   // ═══════════════════════════════════════════════════════════════
