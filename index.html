@@ -5013,6 +5013,14 @@ function _renderPtCalendario(rows){
     if(!porMes[key]) porMes[key] = { y:dt.getFullYear(), m:dt.getMonth(), itens:[] };
     porMes[key].itens.push(r);
   });
+  // Itens já vencidos/urgentes (status Comprar) entram no mês atual também — comprar
+  // "atrasado" ainda é uma compra que precisa acontecer agora, dentro do mês corrente.
+  const urgentes = rows.filter(r=>r.status && r.status.key==='comprar');
+  if(urgentes.length){
+    const keyAtual = hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+    if(!porMes[keyAtual]) porMes[keyAtual] = { y:hoje.getFullYear(), m:hoje.getMonth(), itens:[] };
+    porMes[keyAtual].itens = urgentes.concat(porMes[keyAtual].itens);
+  }
   let maxKey = hoje.getFullYear()*12+hoje.getMonth();
   Object.values(porMes).forEach(g=>{ maxKey = Math.max(maxKey, g.y*12+g.m); });
   const meses = [];
@@ -5051,13 +5059,17 @@ function _renderPtCalendarioDetalhe(){
   const tag = _ptCalSelIdx===0?'MÊS ATUAL':_ptCalSelIdx===1?'PRÓXIMO MÊS':'';
   const itensHtml = g.itens.length ? g.itens.map(r=>{
     const custo = r.produto ? r.produto.custo : null;
-    return `<div style="padding:7px 0;border-top:1px solid var(--b1);font-size:11.5px;">
+    const atrasado = r.effRestante!=null && r.effRestante<=0;
+    const dataTxt = atrasado
+      ? `<span style="color:var(--red);font-weight:700;">⚠ atrasado há ${Math.abs(r.effRestante)}d</span>`
+      : `previsto ${r.previsaoData}${r.conferido?' · <span style="color:var(--green);">✓ conferido</span>':''}`;
+    return `<div style="padding:7px 0;border-top:1px solid var(--b1);font-size:11.5px;${atrasado?'background:var(--red-a);margin:0 -16px;padding-left:16px;padding-right:16px;':''}">
       <div style="display:flex;align-items:flex-start;gap:8px;">
         <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;flex-shrink:0;">${_ptBadgeMaquina(r.maquina)}</span>
-        <span style="font-weight:600;flex:1;">${_ptNomeCompleto(r)}</span>
+        <span style="font-weight:600;flex:1;">${r.status.primerVencido?'⏰ ':''}${_ptNomeCompleto(r)}</span>
         <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?R(custo):'—'}</span>
       </div>
-      <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · previsto ${r.previsaoData}${r.conferido?' · <span style="color:var(--green);">✓ conferido</span>':''}</div>
+      <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · ${dataTxt}</div>
     </div>`;
   }).join('') : `<div style="font-size:12px;color:var(--t4);padding:8px 0;">Nenhuma tinta prevista pra esse mês.</div>`;
   const totalHtml = g.itens.length ? `<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;">${R(g.total)}</span>` : '';

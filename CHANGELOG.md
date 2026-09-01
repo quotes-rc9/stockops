@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.33.0] — 2026-08-31
+
+### ✨ Melhoria — Itens urgentes (🔴 Comprar) entram no mês atual do Calendário
+
+Antes, o Calendário de compra só mostrava tintas dentro do prazo — o que já estava atrasado (como o Primer vencido, sem reserva) ficava de fora, só visível na aba Resumo. Agora esses itens entram no card do **mês atual**, no topo da lista, destacados com fundo vermelho e "⚠ atrasado há Xd" no lugar da data prevista (que estaria no passado). O total do mês passa a refletir esse gasto urgente também.
+
 ## [2.32.0] — 2026-08-31
 
 ### ⏪ Troca — Ordenação por urgência dos cards → ordenação de coluna dentro dos cards
