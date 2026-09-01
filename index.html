@@ -5005,7 +5005,10 @@ let _ptCalSelIdx = 0;
 function _renderPtCalendario(rows){
   const strip = document.getElementById('pt-calendar-strip'); if(!strip) return;
   const hoje = new Date();
-  const futuros = rows.filter(r=>r.previsaoData && r.effRestante!=null && r.effRestante>0);
+  // Itens com status "Comprar" (urgente — seja por consumo já vencido, seja pela regra de
+  // validade do Primer) sempre caem no mês atual, nunca no mês estatístico da previsão —
+  // por isso ficam fora do "futuros" aqui e são injetados à parte, sem duplicar.
+  const futuros = rows.filter(r=>(!r.status || r.status.key!=='comprar') && r.previsaoData && r.effRestante!=null && r.effRestante>0);
   const porMes = {};
   futuros.forEach(r=>{
     const dt = _ptParseDataObj(r.previsaoData);
@@ -5013,8 +5016,6 @@ function _renderPtCalendario(rows){
     if(!porMes[key]) porMes[key] = { y:dt.getFullYear(), m:dt.getMonth(), itens:[] };
     porMes[key].itens.push(r);
   });
-  // Itens já vencidos/urgentes (status Comprar) entram no mês atual também — comprar
-  // "atrasado" ainda é uma compra que precisa acontecer agora, dentro do mês corrente.
   const urgentes = rows.filter(r=>r.status && r.status.key==='comprar');
   if(urgentes.length){
     const keyAtual = hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
@@ -5028,7 +5029,11 @@ function _renderPtCalendario(rows){
     const y = Math.floor(k/12), m = k%12;
     const key = y+'-'+String(m+1).padStart(2,'0');
     const itens = (porMes[key]?.itens||[]);
-    itens.sort((a,b)=>a.effRestante-b.effRestante);
+    itens.sort((a,b)=>{
+      const au = a.status && a.status.key==='comprar' ? 0 : 1;
+      const bu = b.status && b.status.key==='comprar' ? 0 : 1;
+      return au!==bu ? au-bu : a.effRestante-b.effRestante;
+    });
     const total = itens.reduce((s,r)=> s + (r.produto?r.produto.custo:0), 0);
     meses.push({ y, m, itens, total });
   }
@@ -5059,9 +5064,9 @@ function _renderPtCalendarioDetalhe(){
   const tag = _ptCalSelIdx===0?'MÊS ATUAL':_ptCalSelIdx===1?'PRÓXIMO MÊS':'';
   const itensHtml = g.itens.length ? g.itens.map(r=>{
     const custo = r.produto ? r.produto.custo : null;
-    const atrasado = r.effRestante!=null && r.effRestante<=0;
+    const atrasado = r.status && r.status.key==='comprar';
     const dataTxt = atrasado
-      ? `<span style="color:var(--red);font-weight:700;">⚠ atrasado há ${Math.abs(r.effRestante)}d</span>`
+      ? `<span style="color:var(--red);font-weight:700;">⚠ ${_escMaq(r.status.motivo)}</span>`
       : `previsto ${r.previsaoData}${r.conferido?' · <span style="color:var(--green);">✓ conferido</span>':''}`;
     return `<div style="padding:7px 0;border-top:1px solid var(--b1);font-size:11.5px;${atrasado?'background:var(--red-a);margin:0 -16px;padding-left:16px;padding-right:16px;':''}">
       <div style="display:flex;align-items:flex-start;gap:8px;">

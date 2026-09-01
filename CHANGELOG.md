@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.33.1] — 2026-08-31
+
+### 🐛 Correção — Primer vencido duplicava no Calendário de compra
+
+A versão anterior (2.33.0) assumia que todo item "Comprar" tinha dias restantes negativos (atrasado por consumo). Mas o Primer vencido é urgente pela **validade**, não pelo consumo — ainda tem bastante % de tinta e dias positivos de estimativa. Isso fazia ele aparecer **duas vezes**: uma vez forçado no mês atual, outra no mês estatístico da previsão (ex: outubro). Corrigido: itens com status Comprar agora saem completamente do cálculo por mês estatístico e só existem no mês atual. O motivo específico (ex: "Primer venceu em 17/07/2025, há 411d") aparece no lugar da data prevista, em vez de um genérico "atrasado há Xd" que não fazia sentido pro caso do Primer.
+
 ## [2.33.0] — 2026-08-31
 
 ### ✨ Melhoria — Itens urgentes (🔴 Comprar) entram no mês atual do Calendário
