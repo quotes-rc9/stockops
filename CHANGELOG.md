@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.35.1] — 2026-08-31
+
+### 🐛 Correção — Permissão de "Previsão de Troca de Tinta" não aparecia no menu
+
+Bug real encontrado testando a conta da Vero: mesmo com `ver_previsao_tinta` na lista de permissões dela, o item não aparecia na sidebar. Causa: `aplicarPermissoes()` decidia qual permissão checar comparando se o texto do `onclick` do botão *contém* o id da página (`onclick.includes(page)`) — como `"previsao-tinta"` contém `"previsao"`, o item de Previsão de Troca de Tinta caía na entrada errada do mapa (`page-previsao` → `ver_previsao`, da Previsão de Compra) e ficava escondido por uma permissão que não é a dela. Corrigido pra comparar o id entre aspas exatas (`'previsao-tinta'`), evitando esse tipo de colisão por prefixo — geral, não só pra esse caso.
+
 ## [2.35.0] — 2026-08-31
 
 ### ✨ Nova funcionalidade — Central de Atenção no Dashboard

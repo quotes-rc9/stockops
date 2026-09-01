@@ -3934,7 +3934,10 @@ function aplicarPermissoes() {
   document.querySelectorAll('.sb-item').forEach(btn => {
     const onclick = btn.getAttribute('onclick') || '';
     for (const [page, perm] of Object.entries(sidebarMap)) {
-      if (onclick.includes(page.replace('page-',''))) {
+      // match exato do id entre aspas (ex: showPage('previsao-tinta',...)) — usar
+      // includes() sem aspas colidia "previsao" com "previsao-tinta" (prefixo em
+      // comum), escondendo o item errado com a permissão errada.
+      if (onclick.includes(`'${page.replace('page-','')}'`)) {
         btn.style.display = temPermissao(perm) ? '' : 'none';
         break;
       }
