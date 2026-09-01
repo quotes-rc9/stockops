@@ -1033,6 +1033,11 @@
         </div>
 
         <div id="ptt-panel-maquina" style="display:none;flex:1;overflow-y:auto;padding:14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:11px;color:var(--t3);">Ordenar máquinas:</span>
+            <button class="nav-btn" id="pt-maqcard-sort-nome" style="padding:4px 10px;font-size:10.5px;" onclick="togglePtMaqCardSort()">Nome (M01→M06)</button>
+            <button class="nav-btn" id="pt-maqcard-sort-critica" style="padding:4px 10px;font-size:10.5px;" onclick="togglePtMaqCardSort()">🔴 Mais crítica primeiro</button>
+          </div>
           <div id="pt-maquinas-grid" style="display:flex;flex-direction:column;gap:20px;"></div>
         </div>
       </div>
@@ -5072,8 +5077,28 @@ function _renderPtCalendarioDetalhe(){
   </div>`;
 }
 
+let _ptMaqCardSort = 'nome'; // 'nome' | 'critica' — ordena os CARDS de maquina, nao as linhas dentro deles
+function togglePtMaqCardSort(){
+  _ptMaqCardSort = _ptMaqCardSort==='nome' ? 'critica' : 'nome';
+  renderPrevisaoTinta();
+}
+const _PT_ACAO_RANK = { comprar:0, repor:1, programar:2, tranquilo:3, semhist:4 };
+function _ptMaqSeveridade(itens){
+  let melhorRank = 5, melhorRestante = 999999;
+  itens.forEach(r=>{
+    const rank = _PT_ACAO_RANK[r.status.key] ?? 5;
+    const restante = r.effRestante ?? 999999;
+    if(rank<melhorRank || (rank===melhorRank && restante<melhorRestante)){ melhorRank=rank; melhorRestante=restante; }
+  });
+  return { rank:melhorRank, restante:melhorRestante };
+}
 function _renderPtPorMaquina(rows){
   const grid = document.getElementById('pt-maquinas-grid'); if(!grid) return;
+  const btnNome = document.getElementById('pt-maqcard-sort-nome'), btnCritica = document.getElementById('pt-maqcard-sort-critica');
+  if(btnNome && btnCritica){
+    btnNome.classList.toggle('primary', _ptMaqCardSort==='nome');
+    btnCritica.classList.toggle('primary', _ptMaqCardSort==='critica');
+  }
   const porMaquina = {};
   rows.forEach(r=>{
     if(!porMaquina[r.maqId]) porMaquina[r.maqId] = { nome:r.maquina, modelo:r.modelo, itens:[] };
@@ -5083,6 +5108,12 @@ function _renderPtPorMaquina(rows){
   const modelos = [...new Set(maquinas.map(m=>m.modelo))];
   grid.innerHTML = modelos.map(modelo=>{
     const doModelo = maquinas.filter(m=>m.modelo===modelo);
+    if(_ptMaqCardSort==='critica'){
+      doModelo.sort((a,b)=>{
+        const sa=_ptMaqSeveridade(a.itens), sb=_ptMaqSeveridade(b.itens);
+        return sa.rank!==sb.rank ? sa.rank-sb.rank : sa.restante-sb.restante;
+      });
+    }
     const cards = doModelo.map(m=>{
       const linhas = m.itens.map(r=>{
         const key = r.maqId+'|'+r.tintaIdx;

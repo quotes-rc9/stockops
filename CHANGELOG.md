@@ -1,5 +1,18 @@
 # 📝 Changelog — StockOps
 
+## [2.31.0] — 2026-08-31
+
+### ✨ Melhoria — Ordenação por urgência na aba "Por máquina"
+
+De volta a pedido do usuário, mas de um jeito diferente do que tinha sido revertido: em vez de reordenar as linhas *dentro* de cada card (o que quebrava o alinhamento entre máquinas), agora dá pra ordenar a **posição dos cards** — clique em "🔴 Mais crítica primeiro" pra ver, dentro de cada modelo (LH-100/LUS-120), a máquina com a tinta mais urgente (Comprar > Repor > Programar > Tranquilo, empate desempatado pelo menor Restante) primeiro. As linhas de cada card continuam na ordem fixa de sempre. Botão "Nome (M01→M06)" volta pra ordem padrão.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `togglePtMaqCardSort()` | Alterna entre ordem por nome e por urgência dos cards |
+| `_ptMaqSeveridade(itens)` | Pior status + menor restante de um card, usado como critério de ordenação |
+
 ## [2.30.0] — 2026-08-31
 
 ### ✨ Dados — Setor Compras registrado + LUS-175 no Estoque Tintas
