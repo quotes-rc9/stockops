@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.34.0] — 2026-08-31
+
+### 🎨 Melhoria — Layout do Dashboard sem espaço vazio
+
+Desde que os painéis "Críticos e Alertas"/"Validades próximas" saíram (2.25.1), o Dashboard ficou com "Ações rápidas" e "Resumo por categoria" isolados numa coluna estreita à esquerda, com uma área enorme em branco ao lado — e os gráficos (Consumo real, Curva ABC) numa linha separada abaixo. Unificado numa linha só: Ações rápidas + Resumo por categoria (coluna fixa à esquerda) ao lado dos dois gráficos, ocupando a largura toda. Responsivo mantido (tablet: ações no topo, gráficos embaixo lado a lado; mobile: tudo empilhado).
+
 ## [2.33.1] — 2026-08-31
 
 ### 🐛 Correção — Primer vencido duplicava no Calendário de compra
