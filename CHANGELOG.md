@@ -1,5 +1,18 @@
 # 📝 Changelog — StockOps
 
+## [2.35.0] — 2026-08-31
+
+### ✨ Nova funcionalidade — Central de Atenção no Dashboard
+
+Novo painel interativo no Dashboard, entre "Pedidos em Trânsito" e "Ações rápidas": 3 chips grandes e clicáveis (🔴 Críticos, 🟡 Alertas, 🟠 Vencendo em ≤30 dias) mostrando só o número — clicar num chip expande uma lista curta (até 8 itens + link "ver todos") logo abaixo, sem ocupar espaço até o usuário pedir. Substitui, de um jeito mais compacto e interativo, os painéis "Críticos e Alertas"/"Validades próximas" que tinham sido removidos (2.25.1) por ficarem grandes demais sempre abertos.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `renderAtencao()` | Monta os 3 chips e a lista filtrada da Central de Atenção |
+| `toggleAtencaoFiltro(tipo)` | Alterna qual chip está expandido (clicar de novo fecha) |
+
 ## [2.34.0] — 2026-08-31
 
 ### 🎨 Melhoria — Layout do Dashboard sem espaço vazio

@@ -19,7 +19,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="css/theme.css?v=20260814">
 <link rel="stylesheet" href="css/components.css?v=20260814">
-<link rel="stylesheet" href="css/pages.css?v=20260831b">
+<link rel="stylesheet" href="css/pages.css?v=20260831c">
 </head>
 <body>
 
@@ -242,6 +242,13 @@
               </div>
             </div>
             <div id="pedidos-transito-list" style="padding:8px;"></div>
+          </div>
+
+          <!-- Central de Atenção: chips clicáveis, expande a lista só quando clicado -->
+          <div class="panel" style="flex-shrink:0;">
+            <div class="ph"><span class="ph-title">🎯 Central de Atenção</span><span class="ph-sub" style="font-size:10px;color:var(--t4);">clique num card pra ver a lista</span></div>
+            <div id="atencao-chips" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px;"></div>
+            <div id="atencao-lista" style="display:none;padding:0 12px 12px;"></div>
           </div>
 
           <!-- MIDDLE ROW: ações rápidas + resumo por categoria, lado a lado com os gráficos -->
@@ -1752,6 +1759,61 @@ function renderCatSummary(){
   }).join('');
 }
 
+// ── Central de Atenção: 3 chips clicáveis (Críticos/Alertas/Validade),
+// a lista só aparece quando um chip é clicado — resume tudo que precisa
+// de olhar sem tomar espaço da tela até o usuário pedir.
+let _atencaoFiltro = null;
+function toggleAtencaoFiltro(tipo){
+  _atencaoFiltro = (_atencaoFiltro===tipo) ? null : tipo;
+  renderAtencao();
+}
+function renderAtencao(){
+  const chipsEl = $('atencao-chips'); if(!chipsEl) return;
+  const criticos = P.filter(p=>status(p)==='Crítico').sort((a,b)=>diasEst(a)-diasEst(b));
+  const alertas = P.filter(p=>status(p)==='Alerta').sort((a,b)=>diasEst(a)-diasEst(b));
+  const validades = [];
+  P.forEach(p=>(p.val||[]).forEach(v=>{ const d=diasAteVal(v); if(d<=30) validades.push({p,v,d}); }));
+  validades.sort((a,b)=>a.d-b.d);
+
+  const defs = [
+    { key:'crit',  label:'🔴 Críticos',      n:criticos.length,  cor:'var(--red)',    corA:'var(--red-a)' },
+    { key:'alert', label:'🟡 Alertas',       n:alertas.length,   cor:'var(--yellow)', corA:'var(--yellow-a)' },
+    { key:'val',   label:'🟠 Vencendo ≤30d', n:validades.length, cor:'var(--orange)', corA:'var(--orange-a)' },
+  ];
+  chipsEl.innerHTML = defs.map(d=>{
+    const ativo = _atencaoFiltro===d.key;
+    return `<button type="button" class="atencao-chip" style="border-color:${ativo?d.cor:'var(--b1)'};background:${ativo?d.corA:'var(--s1)'};" onclick="toggleAtencaoFiltro('${d.key}')">
+      <span style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${d.cor};line-height:1;">${d.n}</span>
+      <span style="font-size:10.5px;color:var(--t3);margin-top:3px;">${d.label}</span>
+      ${ativo?`<span style="font-size:9px;color:${d.cor};margin-top:2px;">✕ fechar</span>`:''}
+    </button>`;
+  }).join('');
+
+  const listaEl = $('atencao-lista');
+  const ativoDef = defs.find(d=>d.key===_atencaoFiltro);
+  if(!ativoDef || ativoDef.n===0){ listaEl.style.display='none'; listaEl.innerHTML=''; return; }
+  listaEl.style.display='';
+
+  if(_atencaoFiltro==='val'){
+    listaEl.innerHTML = validades.slice(0,8).map(x=>{
+      const col = x.d<0?'var(--red)':x.d<=15?'var(--orange)':'var(--yellow)';
+      return `<div class="alert-item exp" style="cursor:pointer;" onclick="kpiClick('validade','','')">
+        <div style="flex:1;min-width:0;"><div class="ai-name">${x.p.nome}</div><div style="font-size:10px;color:var(--t3);">${x.p.cod}</div></div>
+        <div class="ai-val" style="color:${col};">${x.d<0?'VENC.':x.d+'d'}</div>
+      </div>`;
+    }).join('') + (validades.length>8?`<div style="text-align:center;padding-top:6px;"><button class="nav-btn" style="font-size:10px;" onclick="kpiClick('validade','','')">Ver todas (${validades.length}) →</button></div>`:'');
+  } else {
+    const lista = _atencaoFiltro==='crit' ? criticos : alertas;
+    const cls = _atencaoFiltro==='crit' ? 'crit' : 'warn';
+    const st = _atencaoFiltro==='crit' ? 'Crítico' : 'Alerta';
+    listaEl.innerHTML = lista.slice(0,8).map(p=>`
+      <div class="alert-item ${cls}" style="cursor:pointer;" onclick="kpiClick('estoque','status','${st}')">
+        <div style="flex:1;min-width:0;"><div class="ai-name">${p.nome}</div><div style="font-size:10px;color:var(--t3);">${p.cod} · ${p.forn}</div></div>
+        <div class="ai-val" style="color:${cls==='crit'?'var(--red)':'var(--yellow)'};">${p.estoque} un</div>
+      </div>`).join('') + (lista.length>8?`<div style="text-align:center;padding-top:6px;"><button class="nav-btn" style="font-size:10px;" onclick="kpiClick('estoque','status','${st}')">Ver todos (${lista.length}) →</button></div>`:'');
+  }
+}
+
 // ── Filtro multi-select (checkbox dropdown) ────────────────────
 let _openFiltroDD = null;
 
@@ -2689,7 +2751,7 @@ function renderCharts(){
 }
 
 function renderAll(){
-  renderKPIs(); renderCatSummary(); renderCharts();
+  renderKPIs(); renderCatSummary(); renderCharts(); renderAtencao();
   if(currentPage==='compras')         renderCompras();
   else if(currentPage==='abc')        renderABC();
   else if(currentPage==='previsao')   renderPrevisao();

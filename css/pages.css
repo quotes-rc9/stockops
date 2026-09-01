@@ -95,13 +95,18 @@
 .ac-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
 /* Alert items dentro do dashboard */
-.alert-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--s2);border-radius:var(--r6);border-left:3px solid;margin-bottom:4px;}
+.alert-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--s2);border-radius:var(--r6);border-left:3px solid;margin-bottom:4px;transition:background .12s;}
 .alert-item:last-child{margin-bottom:0;}
+.alert-item:hover{background:var(--s3);}
 .alert-item.crit{border-color:var(--red);}
 .alert-item.warn{border-color:var(--yellow);}
 .alert-item.exp{border-color:var(--orange);}
 .ai-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
 .ai-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;flex-shrink:0;}
+
+/* Central de Atenção (Dashboard) — chips clicáveis, lista some até clicar */
+.atencao-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;border-radius:var(--r8);border:1px solid var(--b1);background:var(--s1);cursor:pointer;transition:all .12s;font-family:inherit;}
+.atencao-chip:hover{border-color:var(--b2);}
 
 /* Bottom charts (agora vivem dentro do .mid-row, ao lado do actions-panel) */
 .chart-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);padding:12px;box-shadow:inset 0 1px 0 var(--bezel-hi),0 1px 0 var(--bezel-lo);display:flex;flex-direction:column;}
