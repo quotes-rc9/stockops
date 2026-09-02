@@ -5672,8 +5672,8 @@ function exportarValidadesPDF() {
   const linhas = rows.map(r => [
     r.p.cod, r.p.nome, r.p.forn, r.p.estoque, r.v,
     r.d < 0 ? `Vencida ${Math.abs(r.d)}d` : r.d + 'd',
-    r.p.custo > 0 ? R(r.p.custo) : '—',
-    r.p.custo*r.p.estoque > 0 ? R(r.p.custo*r.p.estoque) : '—',
+    r.p.custo > 0 ? RV(r.p.custo) : '—',
+    r.p.custo*r.p.estoque > 0 ? RV(r.p.custo*r.p.estoque) : '—',
     r.d < 0 ? 'Vencida' : r.d <= 7 ? 'Urgente' : r.d <= 30 ? 'Próxima' : 'Atenção'
   ]);
   exportarPDF(`Controle de Validades (${dias} dias)`, colunas, linhas, {
@@ -5700,8 +5700,8 @@ function exportarMovPDF() {
   const colunas = ['Data/Hora','Produto','Cód.','Tipo','Qtd','Custo Un.','Total','Responsável','Obs'];
   const linhas = [...MOV].reverse().map(m => [
     m.data, m.nome, m.cod, m.tipo, m.qty,
-    m.custo ? R(m.custo) : '—',
-    m.custo ? R(m.custo*m.qty) : '—',
+    m.custo ? RV(m.custo) : '—',
+    m.custo ? RV(m.custo*m.qty) : '—',
     m.resp || '—', m.obs || '—'
   ]);
   exportarPDF('Movimentações de Estoque', colunas, linhas, {
@@ -6061,6 +6061,7 @@ function renderHistorico() {
 }
 
 function abrirPedidoDet(id) {
+  if (!temPermissao('ver_pedidos')) { if (typeof toast === 'function') toast('Você não tem permissão para ver pedidos.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
   _pedDetId = id;
@@ -6085,7 +6086,7 @@ function abrirPedidoDet(id) {
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div style="font-size:12px;font-weight:700;color:var(--blue);">${it.qty} un</div>
-        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${R(it.custo * it.qty)}</div>` : ''}
+        ${it.custo > 0 ? `<div style="font-size:10px;color:var(--green);">${RV(it.custo * it.qty)}</div>` : ''}
       </div>
       <div style="flex-shrink:0;">
         ${it.dataChegadaReal
@@ -6336,7 +6337,7 @@ function exportarHistoricoCSV() {
   csv += '\n\nDETALHAMENTO DE ITENS\nNº Pedido,Código,Produto,Fornecedor,Qtd,Custo Unit,Total\n';
   PEDIDOS.forEach(p => {
     p.itens.forEach(it => {
-      csv += `"${p.num}","${it.cod}","${it.nome}","${it.forn}",${it.qty},"${R(it.custo||0)}","${R((it.custo||0)*it.qty)}"\n`;
+      csv += `"${p.num}","${it.cod}","${it.nome}","${it.forn}",${it.qty},"${RV(it.custo||0)}","${RV((it.custo||0)*it.qty)}"\n`;
     });
   });
   downloadCSV('stockops_historico_pedidos.csv', '\uFEFF' + csv);

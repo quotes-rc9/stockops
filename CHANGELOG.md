@@ -1,5 +1,24 @@
 # 📝 Changelog — StockOps
 
+## [2.40.0] — 2026-09-02
+
+### 🐛 Correção de segurança — Detalhes de pedido acessíveis pelo Dashboard sem permissão
+
+Achado testando a conta da Veronica: o painel "Pedidos em Trânsito" do Dashboard (visível pra qualquer um com `ver_dashboard`) tinha um clique que chamava `abrirPedidoDet()` direto — a mesma função usada pela página de Compras — sem checar `ver_pedidos`. Isso deixava qualquer usuário sem acesso a Compras ver o modal completo de um pedido (fornecedor, itens, status, e o valor de cada item individual) só de ter algum pedido em trânsito.
+
+Achado junto: dentro desse mesmo modal, o valor de cada item usava `R()` (sempre visível) em vez de `RV()` — mesmo com o resumo do topo já escondendo o total corretamente. Auditei os outros lugares que exportam/mostram custo de pedidos, validades e movimentações e encontrei mais 3 pontos com o mesmo problema (não expostos hoje porque as páginas já são bloqueadas, mas corrigidos por consistência).
+
+**Correções:**
+1. `abrirPedidoDet()` agora bloqueia no início se faltar `ver_pedidos` — a mesma trava que já protege a página de Compras, agora também no atalho do Dashboard.
+2. `R()` → `RV()`: valor por item no modal de detalhes do pedido, export CSV do Histórico de Pedidos (detalhamento de itens), PDF de Validades, PDF de Movimentações.
+
+### 🔧 Alterações no JS
+
+| Item | Mudança |
+|---|---|
+| `abrirPedidoDet(id)` | Bloqueia no início se `!temPermissao('ver_pedidos')` |
+| 4 lugares | `R(...)` → `RV(...)` em custo de itens (modal de pedido, CSV de pedidos, PDF de Validades, PDF de Movimentações) |
+
 ## [2.39.0] — 2026-09-02
 
 ### ✨ Nova funcionalidade — Clique no gráfico "Consumo real" mostra as saídas, não o estoque
