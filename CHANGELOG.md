@@ -1,5 +1,20 @@
 # 📝 Changelog — StockOps
 
+## [2.38.0] — 2026-09-02
+
+### 🐛 Correção — Cache do Service Worker desalinhado (pode ter causado tela quebrada)
+
+O `sw.js` ainda pré-cacheava `pages.css?v=20260814`, mas o `index.html` já pede `pages.css?v=20260831c` desde a versão 2.31.0 — a URL antiga nunca era limpa, então alguns dispositivos podiam ficar servindo uma combinação de HTML novo com CSS antigo (ou uma resposta parcial cacheada), o que explica relatos de tela em branco/HTML aparecendo como texto cru. `APP_VERSION` foi incrementado (invalida todo cache antigo nos próximos acessos) e a lista pré-cacheada foi corrigida pra bater com a versão real do CSS.
+
+**Se a tela travar de novo:** feche e reabra o app (ou dê um refresh puxando pra baixo/F5). A troca de versão já força a limpeza do cache automaticamente no próximo carregamento.
+
+### 🔧 Alterações
+
+| Item | Mudança |
+|---|---|
+| `sw.js` `APP_VERSION` | `2.37.0` → `2.38.0` |
+| `sw.js` `APP_SHELL` | `pages.css?v=20260814` → `pages.css?v=20260831c` (bate com o `index.html`) |
+
 ## [2.37.0] — 2026-08-31
 
 ### 🐛 Correção de segurança — Bloqueio real de páginas + valores expostos sem permissão
