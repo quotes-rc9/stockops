@@ -1,5 +1,26 @@
 # 📝 Changelog — StockOps
 
+## [2.41.0] — 2026-09-02
+
+### 🐛 Correção de segurança — Varredura completa de valores no perfil restrito (Veronica)
+
+Depois da correção do modal de pedido (2.40.0), foi pedido pra suspender de vez qualquer coisa relacionada a valor no perfil da Veronica. Fiz uma varredura em todo `R(` (versão sempre-visível) do arquivo e revisei cada um contra as páginas/ações que ela alcança hoje. Achado e corrigido:
+
+1. **Rodapé da tabela de Estoque** — o "Total listado" (soma de estoque × custo dos itens filtrados) usava `R()` em vez de `RV()`, mesmo a página de Estoque sendo uma das que ela tem acesso.
+2. **Histórico de preços de um produto** (badge "💲 Histórico" na tabela de Estoque) — a função `abrirHistoricoProduto()` não tinha checagem própria de permissão, só contava com o botão já estar escondido. Mesmo padrão de brecha do modal de pedido (2.40.0); agora tem o guard direto na função.
+3. **Exportar backup** — `exportarBackup()` (gera um .json com todos os produtos, custos, movimentações e auditoria) também não tinha checagem própria, só o botão escondido. Agora exige `exportar_dados` também dentro da função.
+4. Mais 2 pontos de consistência (não expostos hoje, páginas já bloqueadas): cards da Análise ABC e legenda do donut ABC no Dashboard — trocados pra `RV()`.
+
+Confirmado: os pontos que sobraram com `R()` no arquivo (dica de custo ao registrar entrada/saída, carrinho de Novo Pedido, texto interno de auditoria) só são alcançáveis por quem já tem `registrar_mov`/`gerar_pedido`/`ver_auditoria` — permissões que a Veronica não tem — e as funções que os abrem (`openModal`, `registrarPedidoPendente`, etc.) já checam isso na entrada.
+
+### 🔧 Alterações no JS
+
+| Item | Mudança |
+|---|---|
+| `abrirHistoricoProduto(cod)` | Bloqueia no início se `!temPermissao('ver_valores')` |
+| `exportarBackup()` | Bloqueia no início se `!temPermissao('exportar_dados')` |
+| 3 lugares | `R(...)` → `RV(...)` (rodapé do Estoque, cards ABC, legenda do donut ABC) |
+
 ## [2.40.0] — 2026-09-02
 
 ### 🐛 Correção de segurança — Detalhes de pedido acessíveis pelo Dashboard sem permissão
