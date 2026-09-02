@@ -6063,7 +6063,9 @@ function renderHistorico() {
 }
 
 function abrirPedidoDet(id) {
-  if (!temPermissao('ver_pedidos')) { if (typeof toast === 'function') toast('Você não tem permissão para ver pedidos.', 'error'); return; }
+  // Ver detalhes (sem valor, ja escondido via RV) e liberado pra quem ve o Dashboard ou a pagina de Compras.
+  // Acoes de editar/cancelar/receber continuam exigindo podeEditar()/admin, checadas mais abaixo.
+  if (!temPermissao('ver_pedidos') && !temPermissao('ver_dashboard')) { if (typeof toast === 'function') toast('Você não tem permissão para ver pedidos.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
   _pedDetId = id;
@@ -6093,7 +6095,7 @@ function abrirPedidoDet(id) {
       <div style="flex-shrink:0;">
         ${it.dataChegadaReal
           ? `<span class="badge b-ok" style="font-size:9px;">✅ ${it.dataChegadaReal}</span>`
-          : (p.status === 'enviado'
+          : (p.status === 'enviado' && podeEditar()
               ? `<button class="btn-edit" style="color:var(--green);border-color:rgba(var(--green-rgb),.3);font-size:9px;" onclick="marcarItemChegou('${p.id}', ${i})">✅ Chegou</button>`
               : '')}
       </div>
@@ -6105,10 +6107,10 @@ function abrirPedidoDet(id) {
     $('pd-obs-wrap').style.display = 'none';
   }
   let actions = `<button class="mbtn mbtn-cancel" onclick="closePedidoDet()">Fechar</button>`;
-  if (p.status === 'enviado') {
+  if (podeEditar() && p.status === 'enviado') {
     actions += `<button class="mbtn mbtn-ok red" onclick="cancelarPedido('${p.id}')">❌ Cancelar pedido</button>`;
     actions += `<button class="mbtn mbtn-ok green" onclick="marcarRecebido('${p.id}')">✅ Marcar como Recebido</button>`;
-  } else if (p.status === 'recebido') {
+  } else if (podeEditar() && p.status === 'recebido') {
     actions += `<button class="mbtn mbtn-ok" style="background:var(--yellow);border-color:var(--yellow);color:#000;" onclick="reabrirPedido('${p.id}')">↩ Reabrir como Enviado</button>`;
   }
   if (CURRENT_USER?.role === 'admin') {
@@ -6125,6 +6127,7 @@ function closePedidoDet() {
 }
 
 function marcarItemChegou(pedidoId, itemIndex) {
+  if (!podeEditar()) { toast('Acesso negado.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === pedidoId);
   if (!p) return;
   const it = p.itens[itemIndex];
@@ -6169,6 +6172,7 @@ function marcarItemChegou(pedidoId, itemIndex) {
 }
 
 function marcarRecebido(id) {
+  if (!podeEditar()) { toast('Acesso negado.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
   if (!confirm(`Confirmar que o pedido ${p.num} foi RECEBIDO?\n\nIsso marca o pedido como concluído e soma no estoque os itens que ainda não foram marcados como chegados individualmente.`)) return;
@@ -6293,6 +6297,7 @@ function confirmarExcluirPedido(id) {
 }
 
 function cancelarPedido(id) {
+  if (!podeEditar()) { toast('Acesso negado.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
   if (!confirm(`Cancelar o pedido ${p.num}?\n\nO pedido ficará marcado como cancelado no histórico.`)) return;
@@ -6312,6 +6317,7 @@ function cancelarPedido(id) {
 }
 
 function reabrirPedido(id) {
+  if (!podeEditar()) { toast('Acesso negado.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === id);
   if (!p) return;
   if (!confirm(`Reabrir o pedido ${p.num} como Enviado?`)) return;

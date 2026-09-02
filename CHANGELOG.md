@@ -1,5 +1,21 @@
 # 📝 Changelog — StockOps
 
+## [2.42.0] — 2026-09-02
+
+### ✨ Ajuste de permissão — Veronica pode ver itens em trânsito (sem valores)
+
+A pedido: quem só tem `ver_dashboard` agora consegue abrir os detalhes de um pedido pelo painel "Pedidos em Trânsito" (produto, quantidade, fornecedor, data prevista) — antes disso exigia `ver_pedidos`, o que bloqueava até a visualização sem valor nenhum. Os valores continuam escondidos (`RV()`, já corrigido em 2.40.0/2.41.0).
+
+Como a visualização abriu mais, reforcei as ações dentro do modal para não abrirem junto: os botões "✅ Chegou", "❌ Cancelar pedido", "✅ Marcar como Recebido" e "↩ Reabrir como Enviado" agora só aparecem pra quem pode editar (Admin/Operador), e as funções por trás deles (`marcarItemChegou`, `marcarRecebido`, `cancelarPedido`, `reabrirPedido`) ganharam checagem própria — mesmo padrão de defesa usado nos outros pontos revisados hoje.
+
+### 🔧 Alterações no JS
+
+| Item | Mudança |
+|---|---|
+| `abrirPedidoDet(id)` | Permite com `ver_pedidos` OU `ver_dashboard` (valores continuam ocultos por `RV()`) |
+| Botões de ação no modal | Só renderizam se `podeEditar()` |
+| `marcarItemChegou`, `marcarRecebido`, `cancelarPedido`, `reabrirPedido` | Bloqueiam no início se `!podeEditar()` |
+
 ## [2.41.0] — 2026-09-02
 
 ### 🐛 Correção de segurança — Varredura completa de valores no perfil restrito (Veronica)
