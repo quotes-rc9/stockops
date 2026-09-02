@@ -449,6 +449,7 @@
           <span>💡 <b style="color:var(--red);">Saída</b> = produto foi usado ou retirado</span>
           <span>💡 <b style="color:var(--purple);">Solicitação</b> = pedido aguardando aprovação do admin</span>
         </div>
+        <div id="mov-filtro-ativo" style="padding:0 14px;flex-shrink:0;"></div>
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
@@ -2254,9 +2255,39 @@ function sortMovBy(campo) {
   else { _movSort.campo = campo; _movSort.dir = 'asc'; }
   renderMov();
 }
+const NOMES_MES_ABREV=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+// Filtro ativo em Movimentações (setado ao clicar numa barra do gráfico "Consumo real" do Dashboard)
+let _movFiltro = null; // {cat, ano, mes} | null
+function verSaidasCategoria(cat, ano, mes){
+  const sbItem = document.querySelector(`.sb-item[onclick*="'mov'"]`);
+  showPage('mov', sbItem || null);
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+  if (sbItem) sbItem.classList.add('active');
+  _movFiltro = { cat, ano, mes };
+  setTimeout(() => renderMov(), 100);
+}
+function limparMovFiltro(){
+  _movFiltro = null;
+  renderMov();
+}
 function renderMov(){
-  $('mov-count').textContent=MOV.length+' registro'+(MOV.length!==1?'s':'');
-  if(!MOV.length){
+  const listaBase = _movFiltro
+    ? MOV.filter(mv=>{
+        if(mv.tipo!=='SAÍDA') return false;
+        const prod=P.find(p=>p.cod===mv.cod);
+        if(!prod || prod.cat!==_movFiltro.cat) return false;
+        const dt=parseDate(mv.data.split(' ')[0]);
+        return dt.getFullYear()===_movFiltro.ano && dt.getMonth()===_movFiltro.mes;
+      })
+    : MOV;
+  const filtroEl = $('mov-filtro-ativo');
+  if(filtroEl){
+    filtroEl.innerHTML = _movFiltro
+      ? `<div style="display:inline-flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:6px 8px 6px 14px;font-size:12px;color:var(--t2);margin:10px 0;">Mostrando: <b>Saídas de ${_movFiltro.cat} — ${NOMES_MES_ABREV[_movFiltro.mes]}/${_movFiltro.ano}</b> (${listaBase.length})<button class="nav-btn" style="padding:4px 10px;font-size:10.5px;" onclick="limparMovFiltro()">✕ limpar filtro</button></div>`
+      : '';
+  }
+  $('mov-count').textContent=listaBase.length+' registro'+(listaBase.length!==1?'s':'')+(_movFiltro?' (filtrado)':'');
+  if(!listaBase.length){
     $('mov-tbody').innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
       <div style="font-size:24px;margin-bottom:8px;">📭</div>
       Nenhuma movimentação registrada ainda.<br>
@@ -2274,7 +2305,7 @@ function renderMov(){
     if (campo === 'resp') return m.resp || '';
     return 0;
   };
-  const lista = _movSort.campo ? _sortArr(MOV, _movSort, movSortVal) : [...MOV].reverse();
+  const lista = _movSort.campo ? _sortArr(listaBase, _movSort, movSortVal) : [...listaBase].reverse();
   _atualizarSetas('mov', ['data','nome','tipo','qty','custo','total','resp'], _movSort);
   $('mov-tbody').innerHTML=lista.map((m)=>{
     const i=MOV.indexOf(m);
@@ -2719,7 +2750,7 @@ function renderCharts(){
     bars+='<div class="bar-g">';
     cats.forEach(c=>{
       const v=dados[c][i];
-      bars+=`<div class="b-bar" style="height:${Math.round(v/max*100)}%;background:${cols[c]};" title="${b.label} ${c}: ${N(v)} un" onclick="kpiClick('estoque','cat','${c}')"></div>`;
+      bars+=`<div class="b-bar" style="height:${Math.round(v/max*100)}%;background:${cols[c]};cursor:pointer;" title="Ver saídas de ${c} em ${b.label}: ${N(v)} un" onclick="verSaidasCategoria('${c}', ${b.y}, ${b.m})"></div>`;
     });
     bars+='</div>';
     xlbls+=`<div class="bar-xl">${b.label}</div>`;

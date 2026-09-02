@@ -1,5 +1,21 @@
 # 📝 Changelog — StockOps
 
+## [2.39.0] — 2026-09-02
+
+### ✨ Nova funcionalidade — Clique no gráfico "Consumo real" mostra as saídas, não o estoque
+
+Antes, clicar numa barra do gráfico "Consumo real" (Dashboard) levava pro Estoque filtrado por categoria — mas o gráfico mostra *saídas do mês*, então isso não respondia "o que saiu". Agora o clique leva pra Movimentações já filtrado por categoria + mês/ano daquela barra específica, mostrando exatamente os registros de saída que formaram aquele número. A tela de Movimentações ganhou um filtro ativo (pill "Mostrando: Saídas de X — Mês/Ano" com botão de limpar), reaproveitando o mesmo padrão visual já usado na Previsão de Troca de Tinta.
+
+O clique na legenda (nome da categoria embaixo do gráfico) continua indo pro Estoque como antes — ali faz sentido, é uma visão de categoria sem recorte de mês.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `verSaidasCategoria(cat, ano, mes)` | Navega pra Movimentações e filtra por categoria + mês/ano — chamado pelas barras do gráfico |
+| `limparMovFiltro()` | Limpa o filtro ativo em Movimentações |
+| `_movFiltro` | Estado do filtro ativo (`{cat, ano, mes}` ou `null`) |
+
 ## [2.38.0] — 2026-09-02
 
 ### 🐛 Correção — Cache do Service Worker desalinhado (pode ter causado tela quebrada)
