@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.36.1] — 2026-08-31
+
+### 🧹 Remoção — KPIs "Itens críticos"/"Itens em alerta"/"Vencendo em 30 dias" duplicados
+
+Esses 3 KPIs ficaram redundantes com a Central de Atenção (2.35.0), que já mostra os mesmos números de um jeito clicável. Removidos do topo do Dashboard — sobraram os 3 que não duplicam nada: Unidades em estoque, Valor em estoque, Itens cadastrados.
+
 ## [2.36.0] — 2026-08-31
 
 ### ✨ Nova funcionalidade — Permissão por aba na Previsão de Troca de Tinta

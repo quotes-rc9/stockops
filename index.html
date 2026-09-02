@@ -193,30 +193,12 @@
         <div class="dash-scroll">
 
           <!-- KPIs -->
-          <div class="kpi-row" style="grid-template-columns:repeat(6,1fr);">
+          <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
             <div class="kpi blue" onclick="kpiClick('estoque','','')" title="Ver estoque completo">
               <div class="kpi-lbl">Unidades em estoque</div>
               <div class="kpi-val" id="k-total">—</div>
               <div class="kpi-sub" id="k-itens">— itens</div>
               <div class="kpi-click-hint">Clique para ver estoque →</div>
-            </div>
-            <div class="kpi red" onclick="kpiClick('estoque','status','Crítico')" title="Ver itens críticos">
-              <div class="kpi-lbl">Itens críticos</div>
-              <div class="kpi-val" id="k-crit">—</div>
-              <div class="kpi-sub">Reposição imediata</div>
-              <div class="kpi-click-hint">Clique para filtrar →</div>
-            </div>
-            <div class="kpi yellow" onclick="kpiClick('estoque','status','Alerta')" title="Ver itens em alerta">
-              <div class="kpi-lbl">Itens em alerta</div>
-              <div class="kpi-val" id="k-alert">—</div>
-              <div class="kpi-sub">Abaixo do ponto de reposição</div>
-              <div class="kpi-click-hint">Clique para filtrar →</div>
-            </div>
-            <div class="kpi orange" onclick="kpiClick('validade','','')" title="Ver validades próximas">
-              <div class="kpi-lbl">Vencendo em 30 dias</div>
-              <div class="kpi-val" id="k-exp">—</div>
-              <div class="kpi-sub">Unidades com validade próxima</div>
-              <div class="kpi-click-hint">Clique para ver validades →</div>
             </div>
             <div class="kpi green" onclick="kpiClick('estoque','','')" title="Ver estoque completo">
               <div class="kpi-lbl">💰 Valor em estoque</div>
@@ -1719,9 +1701,6 @@ function renderKPIs(){
   const k=calcKPIs();
   $('k-total').textContent=N(k.tot);
   $('k-itens').textContent=P.length+' itens cadastrados';
-  $('k-crit').textContent=k.crit;
-  $('k-alert').textContent=k.alrt;
-  $('k-exp').textContent=k.expUnits;
   $('k-valor').textContent=RV(k.valor);
   // Novo KPI de cadastrados
   if($('k-cadastrados')) $('k-cadastrados').textContent=P.length;
