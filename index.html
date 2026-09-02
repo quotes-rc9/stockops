@@ -242,8 +242,8 @@
                 <div class="ac-title">⚡ Ações rápidas</div>
                 <button class="ac-btn g" onclick="openModal('entrada')"><span class="ac-dot" style="background:var(--green);"></span>Registrar entrada</button>
                 <button class="ac-btn r" onclick="openModal('saida')"><span class="ac-dot" style="background:var(--red);"></span>Registrar saída</button>
-                <button class="ac-btn b" onclick="showPage('compras')"><span class="ac-dot" style="background:var(--blue);"></span>Gerar pedido de compra</button>
-                <button class="ac-btn y" onclick="showPage('previsao')"><span class="ac-dot" style="background:var(--yellow);"></span>Ver previsão de compra</button>
+                <button class="ac-btn b" id="ac-btn-compras" onclick="showPage('compras')"><span class="ac-dot" style="background:var(--blue);"></span>Gerar pedido de compra</button>
+                <button class="ac-btn y" id="ac-btn-previsao" onclick="showPage('previsao')"><span class="ac-dot" style="background:var(--yellow);"></span>Ver previsão de compra</button>
               </div>
               <div class="action-card" style="flex:1;">
                 <div class="ac-title">📋 Resumo por categoria</div>
@@ -2179,7 +2179,7 @@ function renderValidade(){
       <td style="text-align:center;font-weight:700;">${r.p.estoque}</td>
       <td style="font-family:'JetBrains Mono',monospace;">${r.v}</td>
       <td style="text-align:center;color:${col};font-weight:600;font-family:'JetBrains Mono',monospace;">${label}</td>
-      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?R(custo):'—'}</td>
+      <td style="text-align:right;color:var(--t3);font-family:'JetBrains Mono',monospace;font-size:11px;">${custo>0?RV(custo):'—'}</td>
       <td style="text-align:right;font-weight:700;color:${d<0?'var(--red)':'var(--green)'};font-family:'JetBrains Mono',monospace;font-size:11px;">${valorTot>0?RV(valorTot):'—'}</td>
       <td>${st}</td>
     </tr>`;
@@ -2353,8 +2353,8 @@ function renderABC(){
     <td style="font-weight:500;">${p.nome}</td>
     <td>${catBadge(p.cat)}</td>
     <td style="text-align:center;">${p.estoque}</td>
-    <td style="color:var(--t3);">${p.custo?R(p.custo):'—'}</td>
-    <td style="font-weight:600;">${p.vt?R(p.vt):'—'}</td>
+    <td style="color:var(--t3);">${p.custo?RV(p.custo):'—'}</td>
+    <td style="font-weight:600;">${p.vt?RV(p.vt):'—'}</td>
     <td>
       <div style="display:flex;align-items:center;gap:6px;">
         <div class="bar" style="width:80px;"><div class="bar-fill" style="width:${Math.min(100,p.pct*4)}%;background:var(--blue);"></div></div>
@@ -2626,7 +2626,31 @@ function kpiClick(pagina, filtroTipo, filtroValor) {
   event.currentTarget?.classList.add('kpi-clicked');
   setTimeout(() => event.currentTarget?.classList.remove('kpi-clicked'), 300);
 }
+// Mapa página → permissão necessária. Usado tanto pra esconder o item no menu
+// (aplicarPermissoes) quanto — o que faltava antes — pra bloquear de verdade
+// dentro do showPage(), já que um botão de ação rápida ou qualquer onclick
+// pode chamar showPage() direto, contornando o menu escondido.
+const PAGE_PERM_MAP = {
+  'dashboard':      'ver_dashboard',
+  'estoque':        'ver_estoque',
+  'validade':       'ver_validades',
+  'alertas':        'ver_alertas',
+  'mov':            'ver_mov',
+  'solicitacoes':   'ver_solicitacoes',
+  'compras':        'ver_pedidos',
+  'abc':            'ver_abc',
+  'previsao':       'ver_previsao',
+  'auditoria':      'ver_auditoria',
+  'usuarios':       'gerenciar_usuarios',
+  'maquinas':       'ver_maquinas',
+  'analise-min':    'ver_analise_min',
+  'previsao-tinta': 'ver_previsao_tinta',
+};
 function showPage(id, el){
+  if (PAGE_PERM_MAP[id] && typeof temPermissao === 'function' && !temPermissao(PAGE_PERM_MAP[id])) {
+    if (typeof toast === 'function') toast('Você não tem permissão para acessar essa página.', 'error');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
   const pg=document.getElementById('page-'+id);
@@ -3891,37 +3915,26 @@ function aplicarPermissoes() {
   const role=CURRENT_USER.role;
   const isAdmin=role==='admin';
 
-  // Esconde itens da sidebar baseado em permissões
-  const sidebarMap = {
-    'page-dashboard':    'ver_dashboard',
-    'page-estoque':      'ver_estoque',
-    'page-validade':     'ver_validades',
-    'page-alertas':      'ver_alertas',
-    'page-mov':          'ver_mov',
-    'page-solicitacoes': 'ver_solicitacoes',
-    'page-compras':      'ver_pedidos',
-    'page-abc':          'ver_abc',
-    'page-previsao':     'ver_previsao',
-    'page-auditoria':    'ver_auditoria',
-    'page-usuarios':     'gerenciar_usuarios',
-    'page-maquinas':     'ver_maquinas',
-    'page-analise-min':  'ver_analise_min',
-    'page-previsao-tinta': 'ver_previsao_tinta',
-  };
-
-  // Controla sidebar
+  // Controla sidebar — reusa PAGE_PERM_MAP (mesmo mapa que o showPage() usa
+  // pra bloquear de verdade, não só esconder o botão).
   document.querySelectorAll('.sb-item').forEach(btn => {
     const onclick = btn.getAttribute('onclick') || '';
-    for (const [page, perm] of Object.entries(sidebarMap)) {
+    for (const [page, perm] of Object.entries(PAGE_PERM_MAP)) {
       // match exato do id entre aspas (ex: showPage('previsao-tinta',...)) — usar
       // includes() sem aspas colidia "previsao" com "previsao-tinta" (prefixo em
       // comum), escondendo o item errado com a permissão errada.
-      if (onclick.includes(`'${page.replace('page-','')}'`)) {
+      if (onclick.includes(`'${page}'`)) {
         btn.style.display = temPermissao(perm) ? '' : 'none';
         break;
       }
     }
   });
+
+  // Ações rápidas do Dashboard que levam a páginas restritas (mesmas regras)
+  const acBtnCompras = document.getElementById('ac-btn-compras');
+  if (acBtnCompras) acBtnCompras.style.display = temPermissao('ver_pedidos') ? '' : 'none';
+  const acBtnPrevisao = document.getElementById('ac-btn-previsao');
+  if (acBtnPrevisao) acBtnPrevisao.style.display = temPermissao('ver_previsao') ? '' : 'none';
 
   // ── Reset botões de ação ──────────────────────────────────────
   document.querySelectorAll('.btn-edit,.btn-del,.btn-aprovar,.btn-rejeitar,.ac-btn.g,.ac-btn.r').forEach(b=>{
@@ -4837,7 +4850,7 @@ function _ptDetalheHtml(r){
       <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;margin-bottom:8px;">
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Estoque atual</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;color:${baixo?'var(--red)':'var(--t1)'};">${p.estoque} un</b></div>
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Mínimo</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${p.min!=null?p.min:'—'}</b></div>
-        <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Custo unitário</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${R(p.custo||0)}</b></div>
+        <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Custo unitário</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${RV(p.custo||0)}</b></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${valHtml}</div>`;
   }
@@ -5008,7 +5021,7 @@ function _renderPtResumo(rows){
     const nomeMes = new Date(proxY, proxM, 1).toLocaleDateString('pt-BR',{month:'long'});
     proxEl.innerHTML = `
       <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:32px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);">${doProxMes.length}</span><span style="font-size:11.5px;color:var(--t3);">tinta${doProxMes.length!==1?'s':''} prevista${doProxMes.length!==1?'s':''} — ${nomeMes}</span></div>
-      <div style="font-size:13px;color:var(--t2);margin-top:6px;">Total estimado: <b style="font-family:'JetBrains Mono',monospace;color:var(--green);">${R(total)}</b></div>`;
+      <div style="font-size:13px;color:var(--t2);margin-top:6px;">Total estimado: <b style="font-family:'JetBrains Mono',monospace;color:var(--green);">${RV(total)}</b></div>`;
   }
 }
 
@@ -5104,7 +5117,7 @@ function _renderPtCalendario(rows){
     const tag = idx===0?'MÊS ATUAL':idx===1?'PRÓXIMO MÊS':'';
     const vazio = g.itens.length===0;
     const nomeMesAbrev = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
-    const totalTxt = vazio ? '—' : R(g.total);
+    const totalTxt = vazio ? '—' : RV(g.total);
     return `<button type="button" onclick="selecionarPtMesCalendario(${idx})" style="display:flex;flex-direction:column;gap:4px;min-width:98px;padding:7px 11px;background:${idx===_ptCalSelIdx?'var(--green-a)':'var(--s1)'};border:1px solid ${idx===_ptCalSelIdx?'var(--green)':'var(--b1)'};box-shadow:${idx===_ptCalSelIdx?'0 0 0 1px var(--green) inset':'none'};border-radius:var(--r10);cursor:pointer;text-align:left;font-family:inherit;color:inherit;opacity:${vazio?'.5':'1'};">
       <div style="display:flex;align-items:center;gap:5px;"><span style="font-weight:700;font-size:11.5px;text-transform:capitalize;white-space:nowrap;">${nomeMesAbrev}/${String(g.y).slice(2)}</span>${tag?`<span title="${tag}" style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></span>`:''}</div>
       <span style="font-size:9.5px;color:var(--t3);">${g.itens.length} ${g.itens.length===1?'item':'itens'}</span>
@@ -5132,12 +5145,12 @@ function _renderPtCalendarioDetalhe(){
       <div style="display:flex;align-items:flex-start;gap:8px;">
         <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;flex-shrink:0;">${_ptBadgeMaquina(r.maquina)}</span>
         <span style="font-weight:600;flex:1;">${r.status.primerVencido?'⏰ ':''}${_ptNomeCompleto(r)}</span>
-        <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?R(custo):'—'}</span>
+        <span class="mono" style="font-weight:700;font-size:11px;color:var(--t2);flex-shrink:0;">${custo!=null?RV(custo):'—'}</span>
       </div>
       <div style="font-size:10px;color:var(--t4);padding-left:38px;">${r.maquina} — ${r.modelo} · ${dataTxt}</div>
     </div>`;
   }).join('') : `<div style="font-size:12px;color:var(--t4);padding:8px 0;">Nenhuma tinta prevista pra esse mês.</div>`;
-  const totalHtml = g.itens.length ? `<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;">${R(g.total)}</span>` : '';
+  const totalHtml = g.itens.length ? `<span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:14px;">${RV(g.total)}</span>` : '';
   const nomeMes = new Date(g.y,g.m,1).toLocaleDateString('pt-BR',{month:'long'});
   detail.innerHTML = `<div class="panel" style="padding:14px 16px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:10px;border-bottom:1px solid var(--b1);">
@@ -5574,8 +5587,8 @@ function exportarEstoquePDF() {
       p.cod, nomeCell, p.forn, p.estoque, p.min, p.abc,
       d >= 999 ? '—' : d + 'd',
       valTexto,
-      p.custo > 0 ? R(p.custo) : '—',
-      p.estoque*p.custo > 0 ? R(p.estoque*p.custo) : '—',
+      p.custo > 0 ? RV(p.custo) : '—',
+      p.estoque*p.custo > 0 ? RV(p.estoque*p.custo) : '—',
       status(p)
     ]);
   };
@@ -5609,7 +5622,7 @@ function exportarEstoquePDF() {
   if (ff.length) filtrosAtivos.push(`Fornecedor: ${ff.join(', ')}`);
   if (s) filtrosAtivos.push(`Busca: "${s}"`);
   const total = f.reduce((a,p)=>a+p.estoque*p.custo,0);
-  const resumoBase = `${f.length} produtos · ${f.reduce((a,p)=>a+p.estoque,0)} unidades · Valor total: ${R(total)}`;
+  const resumoBase = `${f.length} produtos · ${f.reduce((a,p)=>a+p.estoque,0)} unidades · Valor total: ${RV(total)}`;
   const resumo = filtrosAtivos.length ? `${resumoBase}  |  Filtros ativos: ${filtrosAtivos.join(' · ')}` : resumoBase;
 
   exportarPDF('Estoque Completo', colunas, linhas, {
@@ -5683,8 +5696,8 @@ function exportarHistoricoPDF() {
   const linhas = PEDIDOS.map(p => [
     p.num, p.data, p.solicitante, p.itens.length,
     p.fornecedores.join(', ') || '—',
-    p.frete > 0 ? R(p.frete) : '—',
-    (p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—',
+    p.frete > 0 ? RV(p.frete) : '—',
+    (p.total > 0 || p.frete > 0) ? RV((p.total||0) + (p.frete||0)) : '—',
     p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'
   ]);
   exportarPDF('Histórico de Pedidos de Compra', colunas, linhas, {
@@ -5701,12 +5714,12 @@ function exportarABCPDF() {
   const colunas = ['ABC','Código','Nome','Cat.','Estoque','Custo Un.','Valor Total','% Portfólio'];
   const linhas = sorted.map(p => [
     p.abc2, p.cod, p.nome, p.cat, p.estoque,
-    p.custo ? R(p.custo) : '—',
-    p.vt ? R(p.vt) : '—',
+    p.custo ? RV(p.custo) : '—',
+    p.vt ? RV(p.vt) : '—',
     p.pct.toFixed(1) + '%'
   ]);
   exportarPDF('Análise ABC do Estoque', colunas, linhas, {
-    resumo: `${sorted.length} produtos · Valor total: ${R(tv)}`
+    resumo: `${sorted.length} produtos · Valor total: ${RV(tv)}`
   });
 }
 
@@ -5929,7 +5942,7 @@ function renderPedidosTransito() {
     return `<div class="alert-item" style="border-color:var(--purple);cursor:pointer;" onclick="abrirPedidoDet('${p.id}')">
       <div style="flex:1;min-width:0;">
         <div class="ai-name">${p.num} <span style="font-weight:400;color:var(--t3);">— ${p.fornecedores.length ? p.fornecedores.join(', ') : 'Sem fornecedor'}</span></div>
-        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${R((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
+        <div style="font-size:10px;color:var(--t3);">${p.itens.length} ${p.itens.length === 1 ? 'item' : 'itens'} · ${RV((p.total||0) + (p.frete||0))}${proxChegada ? ` · 📅 Previsto: ${proxChegada}` : ''}</div>
       </div>
       <div class="ai-val" style="color:var(--purple);">${dias === 0 ? 'hoje' : dias + 'd'}</div>
     </div>`;
@@ -6002,8 +6015,8 @@ function renderHistorico() {
     <td style="text-align:center;font-weight:700;">${p.itens.length}</td>
     <td style="text-align:center;">${chegadaBadge(p)}</td>
     <td style="font-size:10px;color:var(--t3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.fornecedores.join(', ') || '—'}</td>
-    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? R(p.frete) : '—'}</td>
-    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? R((p.total||0) + (p.frete||0)) : '—'}</td>
+    <td style="text-align:right;font-size:10px;color:var(--t3);">${p.frete > 0 ? RV(p.frete) : '—'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${(p.total > 0 || p.frete > 0) ? RV((p.total||0) + (p.frete||0)) : '—'}</td>
     <td>${statusBadge(p.status)}</td>
     <td style="white-space:nowrap;">
       <button class="btn-edit" onclick="abrirPedidoDet('${p.id}')">👁 Ver</button>
@@ -6026,7 +6039,7 @@ function abrirPedidoDet(id) {
     <div><b>👤 Solicitante:</b> ${p.solicitante}</div>
     <div><b>🛒 Status:</b> ${p.status === 'enviado' ? '📤 Enviado' : p.status === 'recebido' ? '✅ Recebido' : '❌ Cancelado'}</div>
     ${p.direcao ? `<div><b>📦 Tipo:</b> ${p.direcao === 'saida' ? '📤 Saída de estoque' : '📥 Entrada de estoque'}</div>` : ''}
-    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${R(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${R(p.frete)} · <b>Total c/ frete:</b> ${R(p.total + p.frete)}` : ''}</div>
+    <div><b>📦 Total de itens:</b> ${p.itens.length} · <b>💰 Valor dos itens:</b> ${RV(p.total)}${p.frete > 0 ? ` · <b>🚚 Frete:</b> ${RV(p.frete)} · <b>Total c/ frete:</b> ${RV(p.total + p.frete)}` : ''}</div>
     ${p.fornecedores.length ? `<div><b>🏭 Fornecedores:</b> ${p.fornecedores.join(', ')}</div>` : ''}
     ${p.historicoStatus && p.historicoStatus.length > 1 ? `<div style="margin-top:4px;border-top:1px solid var(--b1);padding-top:4px;font-size:10px;color:var(--t4);">Histórico: ${p.historicoStatus.map(h => `${h.status} (${h.data})`).join(' → ')}</div>` : ''}`;
   $('pd-itens').innerHTML = p.itens.map((it, i) => `
@@ -6287,7 +6300,7 @@ function exportarHistoricoCSV() {
   if (!PEDIDOS.length) { toast('Nenhum pedido para exportar', 'error'); return; }
   let csv = 'Nº Pedido,Data,Solicitante,Itens,Fornecedores,Frete,Valor Total,Status,Criado Por\n';
   PEDIDOS.forEach(p => {
-    csv += `"${p.num}","${p.data}","${p.solicitante}",${p.itens.length},"${p.fornecedores.join('; ')}","${R(p.frete||0)}","${R((p.total||0)+(p.frete||0))}","${p.status}","${p.criadoPor}"\n`;
+    csv += `"${p.num}","${p.data}","${p.solicitante}",${p.itens.length},"${p.fornecedores.join('; ')}","${RV(p.frete||0)}","${RV((p.total||0)+(p.frete||0))}","${p.status}","${p.criadoPor}"\n`;
   });
   csv += '\n\nDETALHAMENTO DE ITENS\nNº Pedido,Código,Produto,Fornecedor,Qtd,Custo Unit,Total\n';
   PEDIDOS.forEach(p => {

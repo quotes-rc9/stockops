@@ -1,5 +1,25 @@
 # 📝 Changelog — StockOps
 
+## [2.37.0] — 2026-08-31
+
+### 🐛 Correção de segurança — Bloqueio real de páginas + valores expostos sem permissão
+
+Achado testando a conta da Veronica: o botão "Gerar pedido de compra" (Ações rápidas do Dashboard) chama `showPage('compras')` direto, e o `showPage()` nunca checava permissão nenhuma — só confiava no botão do menu lateral estar escondido. Isso deixava qualquer usuário acessar o Histórico de Pedidos (com valores em R$) mesmo sem a permissão `ver_pedidos`.
+
+**Duas correções:**
+1. `showPage()` agora bloqueia de verdade — checa a permissão da página (`PAGE_PERM_MAP`, o mesmo mapa que já escondia o menu) antes de ativar a página ou chamar a função de render, e mostra um aviso caso a página seja bloqueada. `aplicarPermissoes()` passou a reusar esse mesmo mapa, eliminando a duplicação que causou o bug de colisão corrigido em 2.35.1.
+2. Vários lugares mostravam custo/valor com `R()` (sempre visível) em vez de `RV()` (some se faltar `ver_valores`) — Histórico de Pedidos, PDF de Estoque Completo, PDF de Análise ABC, página de Validades, e o detalhe de "Custo unitário" na Previsão de Troca de Tinta (aba Por máquina, que a Veronica tem acesso). Todos migrados pra `RV()`.
+
+Também: os botões "Gerar pedido de compra" e "Ver previsão de compra" nas Ações rápidas agora somem se o usuário não tiver a permissão da página, em vez de ficar ali sem fazer nada.
+
+### 🔧 Alterações no JS
+
+| Item | Mudança |
+|---|---|
+| `PAGE_PERM_MAP` | Novo — mapa global página→permissão, usado por `showPage()` e `aplicarPermissoes()` |
+| `showPage(id, el)` | Bloqueia no início se a permissão da página não for atendida |
+| ~12 lugares | `R(...)` → `RV(...)` em custo/valor/frete/total fora de fluxos de edição |
+
 ## [2.36.1] — 2026-08-31
 
 ### 🧹 Remoção — KPIs "Itens críticos"/"Itens em alerta"/"Vencendo em 30 dias" duplicados
