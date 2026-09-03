@@ -3502,6 +3502,10 @@ function enviarSolicitacaoMaterial(){
   if (itensInvalidos > 0) toast(`${itensInvalidos} item(ns) com quantidade inválida foram ignorados.`, 'error');
   if (!novasSolics.length) { toast('Nenhum item válido para enviar.', 'error'); return; }
 
+  // desmarca ANTES de re-renderizar, senão a preservação de seleção do renderSmCatalogo()
+  // mantém os mesmos itens marcados e um segundo clique duplicaria a solicitação
+  marcados.forEach(chk => { chk.checked = false; });
+
   novasSolics.forEach(s => {
     s.id = _solicIdCounter++;
     SOLIC.push(s);

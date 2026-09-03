@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.44.1] — 2026-09-02
+
+### 🐛 Correção — checkboxes marcados continuavam marcados após enviar
+
+Depois de enviar o carrinho, os itens continuavam com o checkbox marcado (a função que redesenha a lista preserva a seleção de propósito, pra não perder marcação ao trocar de aba/buscar — mas isso também "sobrevivia" ao próprio envio). Um segundo clique em "Enviar solicitação" duplicava a solicitação. Agora os checkboxes são desmarcados antes de redesenhar a lista pós-envio.
+
 ## [2.44.0] — 2026-09-02
 
 ### ✨ Solicitar Material agora funciona como carrinho
