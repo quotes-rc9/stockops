@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.43.1] — 2026-09-02
+
+### 🐛 Correção — Botão "Enviar solicitação" desabilitado sem motivo
+
+O botão novo da tela Solicitar Material usava a classe `.nav-btn.success`, a mesma dos botões "Registrar Entrada/Saída" — e por isso caía na regra que desabilita esses botões pra quem não tem `registrar_mov`. Resultado: quem só tinha `criar_solic` via um botão cinza, sem conseguir clicar. Troquei pra um estilo próprio (mesma cor verde, sem a classe compartilhada).
+
 ## [2.43.0] — 2026-09-02
 
 ### ✨ Nova funcionalidade — Solicitar Material (tela simples pra quem só pede)
