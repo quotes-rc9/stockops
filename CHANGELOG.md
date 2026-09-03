@@ -1,5 +1,27 @@
 # 📝 Changelog — StockOps
 
+## [2.43.0] — 2026-09-02
+
+### ✨ Nova funcionalidade — Solicitar Material (tela simples pra quem só pede)
+
+Nova página "📝 Solicitar Material" pra usuários que só precisam pedir peça/insumo/consumível, sem aprovar nada — formulário direto na tela (sem modal): categoria, produto (com estoque atual visível), quantidade, observação. Embaixo, a lista "Minhas solicitações" mostra só os pedidos do próprio usuário, com status (Pendente/Aprovada/Rejeitada). Reaproveita o mesmo `SOLIC`/fluxo de aprovação que a tela de Solicitações do admin já usa — o admin aprova do jeito que sempre aprovou, só muda quem pede.
+
+Liberado pra **Veronica, Guilherme Neri, Pedro e Anderson** (permissão `criar_solic`). O item só aparece no menu de quem tem `criar_solic` mas não `ver_solicitacoes` — quem já aprova (admin) continua vendo a tela cheia de Solicitações, não essa versão simplificada.
+
+Corrigido também: `confirmarSolicitacao()` (usada pelo botão "Solicitar Entrada/Saída" das Ações Rápidas) checava o **cargo** (`podeEditar()`, só admin/operador) em vez da **permissão** `criar_solic` — na prática, um Visualizador com `criar_solic` liberado não conseguia mesmo assim enviar a solicitação. Corrigido pra checar a permissão certa.
+
+Já confirmado (v2.42.0): eles veem os itens em trânsito no Dashboard sem nenhum valor.
+
+### 🔧 Funções novas / alteradas no JS
+
+| Item | Descrição |
+|---|---|
+| `renderSolicitarMaterial()` | Popula o formulário e a lista "Minhas solicitações" (filtrada pelo usuário atual) |
+| `filtrarSmProdutos()` / `onSmProdSelect()` | Filtro por categoria e preview de estoque no formulário novo |
+| `enviarSolicitacaoMaterial()` | Cria a solicitação (mesmo `SOLIC.push`/audit da tela admin), checando `criar_solic` |
+| `confirmarSolicitacao()` | `podeEditar()` → `temPermissao('criar_solic')` |
+| `PAGE_PERM_MAP['solicitar-material']` | Nova entrada, exige `criar_solic` |
+
 ## [2.42.0] — 2026-09-02
 
 ### ✨ Ajuste de permissão — Veronica pode ver itens em trânsito (sem valores)

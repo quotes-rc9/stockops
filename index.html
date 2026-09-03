@@ -157,6 +157,7 @@
         <button class="sb-item" onclick="showPage('alertas',this)"><span class="sb-icon">🔔</span>Alertas<span class="sb-badge sbb-y" id="nb-alert">0</span></button>
         <button class="sb-item" onclick="showPage('mov',this)"><span class="sb-icon">↕</span>Movimentações</button>
         <button class="sb-item" onclick="showPage('solicitacoes',this)"><span class="sb-icon">📋</span>Solicitações<span class="sb-badge sbb-p" id="nb-solic" style="display:none;">0</span></button>
+        <button class="sb-item" id="sb-solicitar-material" style="display:none;" onclick="showPage('solicitar-material',this)"><span class="sb-icon">📝</span>Solicitar Material</button>
       </div>
       <div class="sb-section">
         <div class="sb-lbl">Compras</div>
@@ -543,6 +544,54 @@
                   <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('status')">Status <span id="solichist-arrow-status"></span></th>
                 </tr></thead>
                 <tbody id="solic-hist-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SOLICITAR MATERIAL (tela simples pra quem só pede, sem aprovar) ══ -->
+      <div class="page" id="page-solicitar-material">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">📝 Solicitar Material</span>
+          <span class="ph-sub">Peça peça, insumo ou consumível — a gente aprova e providencia a entrega</span>
+        </div>
+        <div style="padding:14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;">
+          <div class="panel" style="max-width:520px;width:100%;margin:0 auto;">
+            <div class="ph"><span class="ph-title">Nova solicitação</span></div>
+            <div style="padding:14px;">
+              <div class="fg">
+                <label class="fl">Categoria</label>
+                <select class="fi2" id="sm-cat" onchange="filtrarSmProdutos()">
+                  <option value="">Todas</option>
+                  <option value="Peça">Peça</option>
+                  <option value="Insumo">Insumo</option>
+                  <option value="Consumível">Consumível</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Produto</label>
+                <select class="fi2" id="sm-prod" onchange="onSmProdSelect()"></select>
+              </div>
+              <div id="sm-preview" style="display:none;gap:14px;padding:2px 0 8px;font-size:11px;color:var(--t3);"></div>
+              <div class="fg">
+                <label class="fl">Quantidade</label>
+                <input class="fi2" id="sm-qty" type="number" min="1" step="1" placeholder="0">
+              </div>
+              <div class="fg" style="margin-bottom:0;">
+                <label class="fl">Observação (opcional)</label>
+                <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
+              </div>
+              <button class="nav-btn success" style="width:100%;justify-content:center;margin-top:12px;padding:9px;font-size:12.5px;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="ph"><span class="ph-title">Minhas solicitações</span><span class="ph-sub" id="sm-count"></span></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Obs</th><th>Status</th></tr></thead>
+                <tbody id="sm-hist-tbody"></tbody>
               </table>
             </div>
           </div>
@@ -2668,6 +2717,7 @@ const PAGE_PERM_MAP = {
   'alertas':        'ver_alertas',
   'mov':            'ver_mov',
   'solicitacoes':   'ver_solicitacoes',
+  'solicitar-material': 'criar_solic',
   'compras':        'ver_pedidos',
   'abc':            'ver_abc',
   'previsao':       'ver_previsao',
@@ -2696,6 +2746,7 @@ function showPage(id, el){
   if(id==='mov')             renderMov();
   if(id==='estoque')         renderEstoque();
   if(id==='solicitacoes')    renderSolicitacoes();
+  if(id==='solicitar-material') renderSolicitarMaterial();
   if(id==='auditoria')       renderAuditoria();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
@@ -2794,6 +2845,7 @@ function renderAll(){
   else if(currentPage==='mov')        renderMov();
   else if(currentPage==='estoque')    renderEstoque();
   else if(currentPage==='solicitacoes') renderSolicitacoes();
+  else if(currentPage==='solicitar-material') renderSolicitarMaterial();
   else if(currentPage==='auditoria')  renderAuditoria();
   else if(currentPage==='analise-min') renderAnaliseMin();
   else if(currentPage==='previsao-tinta') renderPrevisaoTinta();
@@ -3214,7 +3266,7 @@ function closeSolicModal() {
 }
 
 function confirmarSolicitacao() {
-  if(!podeEditar()){ toast('Acesso negado: Visualizador não pode criar solicitações.','error'); return; }
+  if(!temPermissao('criar_solic')){ toast('Acesso negado: você não tem permissão para criar solicitações.','error'); return; }
   const qty  = parseInt(document.getElementById('solic-qty').value) || 0;
   const resp = document.getElementById('solic-resp').value.trim();
   const obs  = document.getElementById('solic-obs').value.trim();
@@ -3338,6 +3390,76 @@ function switchSolicTab(tab) {
     if (btn) btn.classList.toggle('active', t === tab);
     if (panel) panel.style.display = t === tab ? '' : 'none';
   });
+}
+
+// ── SOLICITAR MATERIAL: tela simplificada pra quem só pede (sem aprovar) ──
+// Reaproveita o mesmo array SOLIC e o mesmo fluxo de aprovação já existente,
+// só que com um formulário direto na página (sem modal) e histórico filtrado
+// pro próprio usuário.
+function filtrarSmProdutos(){
+  const cat = document.getElementById('sm-cat')?.value || '';
+  const prodSel = document.getElementById('sm-prod');
+  if (!prodSel) return;
+  const lista = cat ? P.filter(p => p.cat === cat) : P;
+  prodSel.innerHTML = '<option value="">Selecione o produto...</option>' +
+    lista.map(p => `<option value="${p.cod}">${p.cod} — ${p.nome} (estoque: ${p.estoque})</option>`).join('');
+  const prev = document.getElementById('sm-preview');
+  if (prev) prev.style.display = 'none';
+}
+function onSmProdSelect(){
+  const p = P.find(x => x.cod === document.getElementById('sm-prod')?.value);
+  const prev = document.getElementById('sm-preview');
+  if (!prev) return;
+  if (!p) { prev.style.display = 'none'; return; }
+  prev.style.display = 'flex';
+  prev.innerHTML = `<span>Estoque atual: <b>${p.estoque} un</b></span><span>Categoria: ${p.cat}</span>`;
+}
+function enviarSolicitacaoMaterial(){
+  if (!temPermissao('criar_solic')) { toast('Você não tem permissão para solicitar.', 'error'); return; }
+  const cod = document.getElementById('sm-prod')?.value || '';
+  const qty = parseInt(document.getElementById('sm-qty')?.value) || 0;
+  const obs = (document.getElementById('sm-obs')?.value || '').trim();
+  if (!cod) { toast('Selecione um produto', 'error'); return; }
+  if (qty <= 0) { toast('Informe uma quantidade válida', 'error'); return; }
+  const p = P.find(x => x.cod === cod);
+  if (!p) return;
+  const resp = CURRENT_USER ? CURRENT_USER.nome : '';
+  const agora = new Date();
+  SOLIC.push({
+    id: _solicIdCounter++,
+    cod, nome: p.nome, livre: false,
+    tipo: 'SAÍDA', qty, resp, obs,
+    data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+    status: 'pendente'
+  });
+  registrarAudit('solic', `Solicitação de saída: ${p.nome}`,
+    `Qtd: ${qty} | Solicitante: ${resp}${obs?' | '+obs:''}`, '📝');
+  if (typeof fbSalvarSolic === 'function') fbSalvarSolic(SOLIC[SOLIC.length-1]);
+  renderSolicBadge();
+  renderSolicitarMaterial();
+  const qtyEl = document.getElementById('sm-qty'); if (qtyEl) qtyEl.value = '';
+  const obsEl = document.getElementById('sm-obs'); if (obsEl) obsEl.value = '';
+  toast('Solicitação enviada! Aguardando aprovação.', 'success');
+}
+function renderSolicitarMaterial(){
+  filtrarSmProdutos();
+  const meu = CURRENT_USER ? CURRENT_USER.nome : '';
+  const minhas = SOLIC.filter(s => s.resp === meu).slice().sort((a,b) => b.id - a.id);
+  const countEl = document.getElementById('sm-count');
+  if (countEl) countEl.textContent = minhas.length + ' solicitaç' + (minhas.length !== 1 ? 'ões' : 'ão');
+  const tbody = document.getElementById('sm-hist-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = minhas.length ? minhas.map(s => {
+    const cor = s.status==='aprovado'?'b-ok':s.status==='rejeitado'?'b-crit':'b-warn';
+    const label = s.status==='aprovado'?'✓ Aprovado':s.status==='rejeitado'?'✕ Rejeitado':'⏳ Pendente';
+    return `<tr>
+      <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${s.data}</td>
+      <td>${s.nome}</td>
+      <td style="text-align:center;">${s.qty}</td>
+      <td style="color:var(--t3);font-size:11px;">${s.obs||'—'}</td>
+      <td><span class="badge ${cor}">${label}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma solicitação ainda.</td></tr>`;
 }
 
 let _solicSort = { campo: null, dir: 'asc' };
@@ -4019,6 +4141,11 @@ function aplicarPermissoes() {
   // ── Solicitações / Gerar Pedido (ações rápidas) ────────────────
   const btnSolic = document.getElementById('nav-solic-btn');
   if (btnSolic) btnSolic.style.display = temPermissao('ver_solicitacoes') ? '' : 'none';
+
+  // ── Solicitar Material: só pra quem pode criar solicitação mas não aprova
+  // (quem aprova já tem a tela completa de Solicitações, não precisa da simplificada) ──
+  const sbSolicMaterial = document.getElementById('sb-solicitar-material');
+  if (sbSolicMaterial) sbSolicMaterial.style.display = (temPermissao('criar_solic') && !temPermissao('ver_solicitacoes')) ? '' : 'none';
   const btnPedido = document.getElementById('nav-pedido-btn');
   if (btnPedido) btnPedido.style.display = temPermissao('ver_pedidos') ? '' : 'none';
 
@@ -6757,6 +6884,7 @@ _sbRealtime(COL_SOLIC, (rows) => {
   rows.forEach(s => SOLIC.push(s));
   renderSolicBadge();
   if (currentPage === 'solicitacoes') renderSolicitacoes();
+  if (currentPage === 'solicitar-material') renderSolicitarMaterial();
 });
 
 _sbRealtime(COL_PEDIDOS, (rows) => {
