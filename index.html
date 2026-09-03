@@ -3596,6 +3596,7 @@ function renderSolicitarMaterial(){
   renderSmCatalogo();
   renderSmCarrinho();
   renderSmItensLivres();
+  atualizarSmContagem();
   const meu = CURRENT_USER ? CURRENT_USER.nome : '';
   const minhas = SOLIC.filter(s => s.resp === meu).slice().sort((a,b) => b.id - a.id);
   const countEl = document.getElementById('sm-count');

@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.45.2] — 2026-09-02
+
+### 🐛 Correção — texto do botão ficava desatualizado após enviar
+
+Testado ao vivo o fix do carrinho (2.45.1): funcionou certo (2 itens marcados em buscas diferentes, os 2 foram enviados), mas o botão continuava mostrando "(2 itens)" depois do envio, mesmo com o carrinho já vazio. `renderSolicitarMaterial()` agora sempre atualiza a contagem do botão.
+
 ## [2.45.1] — 2026-09-02
 
 ### 🐛 Correção real — carrinho perdia item ao buscar outro
