@@ -1381,6 +1381,42 @@
   </div>
 </div>
 
+<!-- MODAL DE TROCA DE TINTA (registra direto: baixa Quotes, fecha ciclo antigo, abre o novo na máquina) -->
+<div class="overlay" id="overlay-troca-tinta" onclick="if(event.target===this)fecharTrocaTinta()">
+  <div class="modal" style="width:420px;">
+    <div class="m-head">
+      <div class="m-title">🔄 Registrar troca de tinta</div>
+      <button class="m-close" onclick="fecharTrocaTinta()">✕</button>
+    </div>
+    <div style="background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.2);border-radius:var(--r6);padding:8px 12px;font-size:11px;color:var(--blue);margin-bottom:12px;">
+      ℹ Isso vai tirar <b>1 unidade do Setor Quotes</b> de <b id="tt-produto-nome">—</b> e fechar o ciclo da tinta antiga na máquina escolhida.
+    </div>
+    <div class="fg" id="tt-slot-wrap" style="display:none;">
+      <label class="fl">Qual posição do Branco?</label>
+      <select class="fi2" id="tt-slot">
+        <option value="BRANCO-07">Branco 07</option>
+        <option value="BRANCO-08">Branco 08</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Em qual máquina você instalou?</label>
+      <select class="fi2" id="tt-maquina"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Número de série</label>
+      <input class="fi2" id="tt-serie" type="text" placeholder="Ex: 81812301">
+    </div>
+    <div class="fg" style="margin-bottom:0;">
+      <label class="fl">Validade</label>
+      <input class="fi2" id="tt-validade" type="date">
+    </div>
+    <div class="m-foot">
+      <button class="mbtn mbtn-cancel" onclick="fecharTrocaTinta()">Cancelar</button>
+      <button class="mbtn mbtn-ok green" onclick="confirmarTrocaTinta()">✅ Confirmar troca</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL DE EDIÇÃO DE PRODUTO -->
 <div class="overlay" id="overlay-edit" onclick="if(event.target===this)closeEditModal()">
   <div class="modal" style="width:520px;">
