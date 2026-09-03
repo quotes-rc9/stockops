@@ -1,5 +1,32 @@
 # 📝 Changelog — StockOps
 
+## [2.45.0] — 2026-09-02
+
+### ✨ Nova funcionalidade — Registrar Troca de Tinta direto na tela de Estoque de Tintas
+
+Quem tem a permissão `trocar_tinta` agora vê um botão **"🔄 Troquei"** ao lado de cada tinta com estoque no Setor Quotes (tela Estoque de Tintas). Ao clicar: escolhe em qual máquina instalou (a lista já vem filtrada pelo modelo certo — LH-100, LUS-120; pro Branco, escolhe também a posição 07/08; pro Primer, mostra as 6 máquinas), informa **número de série** e **validade** — mesmos campos que a planilha física do setor já usa.
+
+Ao confirmar, tudo acontece junto, automaticamente:
+1. Baixa **1 unidade do Setor Quotes** daquela tinta.
+2. **Fecha o ciclo da tinta antiga** na máquina escolhida (marca `fim` = hoje) — ela entra pro histórico da máquina sem precisar de nenhum passo manual separado.
+3. **Abre o novo ciclo** na máquina (início = hoje, série e validade informadas).
+4. Registra a movimentação de saída, o histórico da máquina e a auditoria.
+
+Liberado pra **Veronica, Guilherme Neri, Pedro e Anderson** (os mesmos 4 de Solicitar Material) — cada um registra a troca que ele mesmo fez fisicamente, sem precisar avisar por mensagem pra alguém digitar depois.
+
+### 🔧 Funções novas / alteradas no JS
+
+| Item | Descrição |
+|---|---|
+| `abrirTrocaTinta(modelo, corParam, produtoCod)` | Abre o modal já com a lista de máquinas certa (filtrada por modelo, ou as 6 pro Primer) |
+| `confirmarTrocaTinta()` | Fecha o ciclo antigo, abre o novo, baixa o Setor Quotes, registra movimentação/histórico/auditoria |
+| `_etLinhaHtml()` / `_etCardModelo()` / `_etCardPrimer()` | Passam a aceitar um contexto de troca — o botão só aparece na coluna Setor Quotes, com estoque > 0 e permissão `trocar_tinta` |
+| `TODAS_PERMISSOES` | Nova entrada `trocar_tinta` |
+
+### 🐛 Correção — 2 produtos com id do Supabase divergente do código
+
+Achado durante essa implementação: os 2 produtos cadastrados via script nesta sessão (Duct guide, Waste Ink Tank Absorber) ficaram com o `id` do Supabase diferente do `cod` — o app sempre salva produto usando `cod` como id, então uma edição futura pelo sistema criaria uma linha duplicada em vez de atualizar. Corrigido diretamente no banco (sem perda de dado).
+
 ## [2.44.1] — 2026-09-02
 
 ### 🐛 Correção — checkboxes marcados continuavam marcados após enviar

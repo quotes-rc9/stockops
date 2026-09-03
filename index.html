@@ -4323,6 +4323,7 @@ const TODAS_PERMISSOES = [
   { id:'ver_previsao',       icon:'🔮', label:'Ver Previsão de Compra',   desc:'Previsão e sugestões automáticas' },
   { id:'registrar_mov',      icon:'✏',  label:'Registrar Entrada/Saída',  desc:'Movimentar estoque diretamente' },
   { id:'criar_solic',        icon:'📝', label:'Criar Solicitações',       desc:'Solicitar entradas e saídas' },
+  { id:'trocar_tinta',       icon:'🔄', label:'Registrar Troca de Tinta', desc:'Baixar do Setor Quotes e trocar direto numa máquina' },
   { id:'aprovar_solic',      icon:'✅', label:'Aprovar Solicitações',     desc:'Aprovar ou rejeitar pedidos' },
   { id:'editar_produtos',    icon:'🔧', label:'Editar Produtos',          desc:'Criar e editar cadastro de produtos' },
   { id:'excluir_produtos',   icon:'🗑', label:'Excluir Produtos/Movs',    desc:'Remover produtos e movimentações' },
@@ -5513,31 +5514,44 @@ function _etLinhasModelo(modelo){
   return TINTA_MAPA.filter(e=>e.maqModelo===modelo).map(e=>{
     const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===e.produtoNome.trim().toLowerCase());
     const label = e.cores.length>1 ? 'Branca' : (_ET_NOME_COR[e.cores[0]]||e.cores[0]);
-    return { label, produtoNome:e.produtoNome, produto };
+    return { label, produtoNome:e.produtoNome, produto, cores:e.cores };
   });
 }
-function _etLinhaHtml(label, valor){
+// trocaCtx (opcional, só passado na coluna Setor Quotes): {modelo, corParam, produtoCod} — mostra o botão
+// de registrar troca quando o usuário tem permissão e há unidade em estoque pra essa tinta.
+function _etLinhaHtml(label, valor, trocaCtx){
   const semDado = valor==null;
   const zero = valor===0;
   const corTxt = semDado ? 'var(--t4)' : zero ? 'var(--red)' : 'var(--t1)';
   const txt = semDado ? '— (não contado ainda)' : valor+' un';
+  const podeTrocar = trocaCtx && !zero && !semDado && typeof temPermissao==='function' && temPermissao('trocar_tinta');
+  const btn = podeTrocar
+    ? `<button onclick="abrirTrocaTinta('${trocaCtx.modelo||''}','${trocaCtx.corParam}','${trocaCtx.produtoCod}')" title="Registrar troca dessa tinta numa máquina" style="flex:none;margin-left:8px;font-size:9.5px;padding:2px 7px;background:var(--blue-a);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.25);border-radius:var(--r4);cursor:pointer;font-family:'Inter',sans-serif;">🔄 Troquei</button>`
+    : '';
   return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border-top:1px solid var(--b1);font-size:12px;">
     <span style="${zero?'color:var(--red);font-weight:600;':''}">${_escMaq(label)}</span>
-    <b class="mono" style="color:${corTxt};font-size:12.5px;white-space:nowrap;">${txt}</b>
+    <span style="display:flex;align-items:center;flex:none;"><b class="mono" style="color:${corTxt};font-size:12.5px;white-space:nowrap;">${txt}</b>${btn}</span>
   </div>`;
 }
 function _etCardModelo(modelo, campo){
   const linhas = _etLinhasModelo(modelo);
+  const isQuotes = campo === 'estoqueQuotes';
   return `<div class="panel" style="overflow:hidden;margin-bottom:10px;">
     <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">${_escMaq(modelo)}</span></div>
-    <div>${linhas.map(l=>_etLinhaHtml(l.label, l.produto?l.produto[campo]:null)).join('')}</div>
+    <div>${linhas.map(l=>{
+      const corParam = l.cores.length>1 ? 'BRANCO' : l.cores[0];
+      const trocaCtx = isQuotes && l.produto ? { modelo, corParam, produtoCod:l.produto.cod } : null;
+      return _etLinhaHtml(l.label, l.produto?l.produto[campo]:null, trocaCtx);
+    }).join('')}</div>
   </div>`;
 }
 function _etCardPrimer(campo){
   const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===TINTA_PRIMER.produtoNome.trim().toLowerCase());
+  const isQuotes = campo === 'estoqueQuotes';
+  const trocaCtx = isQuotes && produto ? { modelo:'', corParam:'PRIMER', produtoCod:produto.cod } : null;
   return `<div class="panel" style="overflow:hidden;">
     <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">Primer <span style="font-weight:400;color:var(--t4);">(compartilhado entre as 6 máquinas)</span></span></div>
-    <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null)}</div>
+    <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null, trocaCtx)}</div>
   </div>`;
 }
 // LUS-175: produtos já cadastrados, mas a(s) máquina(s) ainda não foram registradas em MAQUINAS
@@ -5568,6 +5582,110 @@ function renderAnaliseMin(){
   const modelos = [...new Set(TINTA_MAPA.map(e=>e.maqModelo))];
   gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardLUS175('estoqueQuotes') + _etCardPrimer('estoqueQuotes');
   gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardLUS175('estoqueCompras') + _etCardPrimer('estoqueCompras');
+}
+
+// ── TROCA DE TINTA: registra de uma vez o consumo da unidade do Setor Quotes +
+// fecha o ciclo da tinta antiga na máquina + abre o novo ciclo (série, validade,
+// instalada hoje) — mesmo padrão de campos da planilha física do setor. ──
+let _ttModelo = null, _ttCor = null, _ttProdutoCod = null;
+function abrirTrocaTinta(modelo, corParam, produtoCod){
+  if (!temPermissao('trocar_tinta')) { toast('Você não tem permissão para registrar troca de tinta.', 'error'); return; }
+  const produto = P.find(p => p.cod === produtoCod);
+  if (!produto) { toast('Produto não encontrado.', 'error'); return; }
+  if ((produto.estoqueQuotes||0) <= 0) { toast('Não há unidade no Setor Quotes pra essa tinta.', 'error'); return; }
+  _ttModelo = modelo; _ttCor = corParam; _ttProdutoCod = produtoCod;
+  const nomeEl = document.getElementById('tt-produto-nome'); if (nomeEl) nomeEl.textContent = produto.nome;
+  const slotWrap = document.getElementById('tt-slot-wrap');
+  if (slotWrap) slotWrap.style.display = corParam === 'BRANCO' ? '' : 'none';
+  const maqs = modelo ? MAQUINAS.filter(m => m.modelo === modelo) : MAQUINAS.slice();
+  const maqSel = document.getElementById('tt-maquina');
+  if (maqSel) {
+    maqSel.innerHTML = maqs.length
+      ? maqs.map(m => `<option value="${m.id}">${m.nome} (${m.modelo||'—'})</option>`).join('')
+      : '<option value="">Nenhuma máquina cadastrada</option>';
+  }
+  const serieEl = document.getElementById('tt-serie'); if (serieEl) serieEl.value = '';
+  const valEl = document.getElementById('tt-validade'); if (valEl) valEl.value = '';
+  document.getElementById('overlay-troca-tinta')?.classList.add('open');
+}
+function fecharTrocaTinta(){
+  document.getElementById('overlay-troca-tinta')?.classList.remove('open');
+}
+function confirmarTrocaTinta(){
+  if (!temPermissao('trocar_tinta')) { toast('Você não tem permissão para registrar troca de tinta.', 'error'); return; }
+  const maqId = document.getElementById('tt-maquina')?.value || '';
+  const serie = (document.getElementById('tt-serie')?.value || '').trim();
+  const validadeInput = document.getElementById('tt-validade')?.value || '';
+  if (!maqId) { toast('Selecione a máquina.', 'error'); return; }
+  if (!serie) { toast('Informe o número de série.', 'error'); return; }
+  if (!validadeInput) { toast('Informe a validade.', 'error'); return; }
+
+  const corCode = _ttCor === 'BRANCO' ? (document.getElementById('tt-slot')?.value || 'BRANCO-07') : _ttCor;
+  const produto = P.find(p => p.cod === _ttProdutoCod);
+  if (!produto) { toast('Produto não encontrado.', 'error'); return; }
+  if ((produto.estoqueQuotes||0) <= 0) { toast('Não há mais unidade no Setor Quotes pra essa tinta.', 'error'); return; }
+  const m = MAQUINAS.find(x => x.id === maqId);
+  if (!m) { toast('Máquina não encontrada.', 'error'); return; }
+  if (!m.tintas) m.tintas = [];
+
+  const n = new Date();
+  const hojeISO = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  const dataHoraBR = n.toLocaleDateString('pt-BR') + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  // Fecha o ciclo ativo atual dessa cor nessa máquina, se existir
+  const atual = m.tintas.find(t => String(t.modelo||'').toUpperCase().trim() === corCode && !t.fim);
+  let infoAnterior = '';
+  if (atual) {
+    atual.fim = hojeISO;
+    infoAnterior = ` — cartucho anterior (série ${atual.serieOrigem||'—'}) finalizado`;
+  }
+
+  // Abre o novo ciclo — mesmos campos da planilha física: série, validade, data instalada
+  m.tintas.push({
+    tid: _novoTid(),
+    inicio: hojeISO,
+    modelo: corCode,
+    validade: validadeInput,
+    quemRetirou: CURRENT_USER ? CURRENT_USER.nome : '',
+    serieOrigem: serie,
+    fim: ''
+  });
+  _maqHistPush(m, `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode}`,
+    `Novo cartucho (série ${serie}, validade ${validadeInput}) instalado por ${CURRENT_USER?CURRENT_USER.nome:'—'}${infoAnterior}`, '🔄');
+  if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
+
+  // Baixa 1 unidade do Setor Quotes (e do total)
+  const antesQuotes = produto.estoqueQuotes || 0;
+  const antesTotal = produto.estoque || 0;
+  produto.estoqueQuotes = antesQuotes - 1;
+  produto.estoque = antesTotal - 1;
+  if (!produto.historico) produto.historico = [];
+  produto.historico.unshift({
+    ts: dataHoraBR,
+    diff: { estoque: {antes:antesTotal, depois:produto.estoque}, estoqueQuotes: {antes:antesQuotes, depois:produto.estoqueQuotes} },
+    tsMs: n.getTime(),
+    user: `${CURRENT_USER?CURRENT_USER.nome:'Sistema'} (troca de tinta — ${m.nome})`
+  });
+  if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
+
+  // Registra a movimentação de saída
+  const movEntry = {
+    cod: produto.cod, nome: produto.nome, tipo: 'SAÍDA', qty: 1, custo: produto.custo,
+    resp: CURRENT_USER ? CURRENT_USER.nome : '',
+    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode})`,
+    data: dataHoraBR
+  };
+  MOV.push(movEntry);
+  if (typeof fbSalvarMov === 'function') fbSalvarMov(movEntry);
+
+  registrarAudit('estoque', `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode} — ${m.nome}`,
+    `Série ${serie} | Validade ${validadeInput} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
+
+  fecharTrocaTinta();
+  renderAnaliseMin();
+  if (currentPage === 'maquinas') renderMaquinas();
+  renderKPIs();
+  toast('Troca registrada! Estoque do Quotes baixado e histórico da máquina atualizado.', 'success');
 }
 
   // ═══════════════════════════════════════════════════════════════
