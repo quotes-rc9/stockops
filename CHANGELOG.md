@@ -1,5 +1,21 @@
 # 📝 Changelog — StockOps
 
+## [2.44.0] — 2026-09-02
+
+### ✨ Solicitar Material agora funciona como carrinho
+
+A tela nova (2.43.0) pedia só 1 item por vez. Agora é um catálogo com checkbox: marca quantos itens quiser (Peça, Insumo, Consumível misturados, sem precisar repetir o processo), com abas de categoria e busca por nome/código pra achar rápido. Cada item marcado tem sua própria quantidade editável ali mesmo na lista. Também dá pra digitar um item que não está cadastrado (nome + quantidade), que entra junto no mesmo envio. Uma observação só, que vale pra tudo que foi marcado. O botão mostra quantos itens estão selecionados e manda tudo de uma vez — vira uma solicitação pendente por item (mesmo fluxo de aprovação de sempre, o admin aprova um por um se quiser).
+
+### 🔧 Funções novas / alteradas no JS
+
+| Item | Descrição |
+|---|---|
+| `renderSmCatalogo()` / `filtrarSmCatalogo()` | Lista com checkbox, filtro por categoria e busca; mantém marcação ao trocar de aba |
+| `adicionarSmItemLivre()` / `removerSmItemLivre()` | Itens digitados (fora do catálogo) entram numa lista à parte antes de enviar |
+| `atualizarSmContagem()` | Atualiza o texto do botão com a contagem de itens selecionados |
+| `enviarSolicitacaoMaterial()` | Reescrita: lê todos os checkboxes marcados + itens livres e cria uma solicitação por item numa tacada só |
+| `filtrarSmProdutos()` / `onSmProdSelect()` | Removidas (substituídas pelo catálogo) |
+
 ## [2.43.1] — 2026-09-02
 
 ### 🐛 Correção — Botão "Enviar solicitação" desabilitado sem motivo

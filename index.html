@@ -557,32 +557,35 @@
           <span class="ph-sub">Peça peça, insumo ou consumível — a gente aprova e providencia a entrega</span>
         </div>
         <div style="padding:14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;">
-          <div class="panel" style="max-width:520px;width:100%;margin:0 auto;">
-            <div class="ph"><span class="ph-title">Nova solicitação</span></div>
+          <div class="panel" style="max-width:600px;width:100%;margin:0 auto;">
+            <div class="ph"><span class="ph-title">Nova solicitação</span><span class="ph-sub">marque quantos itens precisar — vira um carrinho só</span></div>
             <div style="padding:14px;">
-              <div class="fg">
-                <label class="fl">Categoria</label>
-                <select class="fi2" id="sm-cat" onchange="filtrarSmProdutos()">
-                  <option value="">Todas</option>
-                  <option value="Peça">Peça</option>
-                  <option value="Insumo">Insumo</option>
-                  <option value="Consumível">Consumível</option>
-                </select>
+              <div class="ped-tabs" id="sm-cat-tabs" style="margin-bottom:8px;">
+                <button class="ped-tab active" onclick="filtrarSmCatalogo('', this)">Todas</button>
+                <button class="ped-tab" onclick="filtrarSmCatalogo('Peça', this)">Peça</button>
+                <button class="ped-tab" onclick="filtrarSmCatalogo('Insumo', this)">Insumo</button>
+                <button class="ped-tab" onclick="filtrarSmCatalogo('Consumível', this)">Consumível</button>
               </div>
               <div class="fg">
-                <label class="fl">Produto</label>
-                <select class="fi2" id="sm-prod" onchange="onSmProdSelect()"></select>
+                <input class="fi2" id="sm-busca" type="text" placeholder="🔍 Buscar item pelo nome ou código..." oninput="renderSmCatalogo()">
               </div>
-              <div id="sm-preview" style="display:none;gap:14px;padding:2px 0 8px;font-size:11px;color:var(--t3);"></div>
+              <div id="sm-catalogo" style="max-height:280px;overflow-y:auto;border:1px solid var(--b1);background:var(--s2);margin-bottom:14px;"></div>
+
               <div class="fg">
-                <label class="fl">Quantidade</label>
-                <input class="fi2" id="sm-qty" type="number" min="1" step="1" placeholder="0">
+                <label class="fl">Item não cadastrado (opcional)</label>
+                <div style="display:flex;gap:6px;">
+                  <input class="fi2" id="sm-livre-nome" type="text" placeholder="Nome do item..." style="flex:2;">
+                  <input class="fi2" id="sm-livre-qty" type="number" min="1" step="1" placeholder="Qtd" style="flex:1;min-width:0;">
+                  <button class="nav-btn" style="flex:none;font-size:11px;" onclick="adicionarSmItemLivre()">+ Add</button>
+                </div>
+                <div id="sm-livres-lista"></div>
               </div>
+
               <div class="fg" style="margin-bottom:0;">
-                <label class="fl">Observação (opcional)</label>
+                <label class="fl">Observação (opcional, vale pra tudo que for marcado)</label>
                 <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
               </div>
-              <button class="nav-btn" style="width:100%;justify-content:center;margin-top:12px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
+              <button id="sm-btn-enviar" style="width:100%;justify-content:center;margin-top:12px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);cursor:pointer;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
             </div>
           </div>
 
@@ -3396,53 +3399,127 @@ function switchSolicTab(tab) {
 // Reaproveita o mesmo array SOLIC e o mesmo fluxo de aprovação já existente,
 // só que com um formulário direto na página (sem modal) e histórico filtrado
 // pro próprio usuário.
-function filtrarSmProdutos(){
-  const cat = document.getElementById('sm-cat')?.value || '';
-  const prodSel = document.getElementById('sm-prod');
-  if (!prodSel) return;
-  const lista = cat ? P.filter(p => p.cat === cat) : P;
-  prodSel.innerHTML = '<option value="">Selecione o produto...</option>' +
-    lista.map(p => `<option value="${p.cod}">${p.cod} — ${p.nome} (estoque: ${p.estoque})</option>`).join('');
-  const prev = document.getElementById('sm-preview');
-  if (prev) prev.style.display = 'none';
+let _smCatFiltro = '';
+let _smItensLivres = [];
+
+function filtrarSmCatalogo(cat, btnEl){
+  if (cat !== undefined) {
+    _smCatFiltro = cat;
+    document.querySelectorAll('#sm-cat-tabs .ped-tab').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+  }
+  renderSmCatalogo();
 }
-function onSmProdSelect(){
-  const p = P.find(x => x.cod === document.getElementById('sm-prod')?.value);
-  const prev = document.getElementById('sm-preview');
-  if (!prev) return;
-  if (!p) { prev.style.display = 'none'; return; }
-  prev.style.display = 'flex';
-  prev.innerHTML = `<span>Estoque atual: <b>${p.estoque} un</b></span><span>Categoria: ${p.cat}</span>`;
+
+function renderSmCatalogo(){
+  const wrap = document.getElementById('sm-catalogo');
+  if (!wrap) return;
+  const busca = (document.getElementById('sm-busca')?.value || '').toLowerCase();
+  // preserva o que já estava marcado antes de redesenhar a lista (troca de aba/busca não perde seleção)
+  const selecaoAtual = {};
+  wrap.querySelectorAll('.sm-item-check').forEach(chk => {
+    if (chk.checked) {
+      const qtyInput = wrap.querySelector(`.sm-item-qty[data-cod="${CSS.escape(chk.dataset.cod)}"]`);
+      selecaoAtual[chk.dataset.cod] = qtyInput ? qtyInput.value : '1';
+    }
+  });
+  const lista = P.filter(p => {
+    if (_smCatFiltro && p.cat !== _smCatFiltro) return false;
+    if (busca && !p.nome.toLowerCase().includes(busca) && !p.cod.toLowerCase().includes(busca)) return false;
+    return true;
+  }).sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  wrap.innerHTML = lista.length ? lista.map((p,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b1);">
+      <input type="checkbox" class="sm-item-check" id="smchk-${i}" data-cod="${p.cod}" data-nome="${p.nome}" ${selecaoAtual[p.cod]!=null?'checked':''} onchange="atualizarSmContagem()" style="flex:none;">
+      <label for="smchk-${i}" style="flex:1;min-width:0;font-size:11.5px;cursor:pointer;color:var(--t1);">${p.nome} <span style="color:var(--t3);font-size:10px;">${p.cod} · estoque: ${p.estoque}</span></label>
+      <input type="number" class="fi2 sm-item-qty" data-cod="${p.cod}" min="1" step="1" value="${selecaoAtual[p.cod] || 1}" style="width:56px;padding:4px 6px;font-size:11px;flex:none;">
+    </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--t3);font-size:11px;">Nenhum item encontrado.</div>';
+  atualizarSmContagem();
 }
+
+function adicionarSmItemLivre(){
+  const nomeEl = document.getElementById('sm-livre-nome');
+  const qtyEl = document.getElementById('sm-livre-qty');
+  const nome = (nomeEl?.value || '').trim();
+  const qty = parseInt(qtyEl?.value) || 0;
+  if (!nome) { toast('Digite o nome do item.', 'error'); nomeEl?.focus(); return; }
+  if (qty <= 0) { toast('Informe uma quantidade válida.', 'error'); qtyEl?.focus(); return; }
+  _smItensLivres.push({ nome, qty });
+  if (nomeEl) nomeEl.value = '';
+  if (qtyEl) qtyEl.value = '';
+  renderSmItensLivres();
+  atualizarSmContagem();
+}
+function removerSmItemLivre(idx){
+  _smItensLivres.splice(idx, 1);
+  renderSmItensLivres();
+  atualizarSmContagem();
+}
+function renderSmItensLivres(){
+  const wrap = document.getElementById('sm-livres-lista');
+  if (!wrap) return;
+  wrap.innerHTML = _smItensLivres.map((it,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--orange-a);border:1px solid rgba(var(--orange-rgb),.25);margin-top:5px;font-size:11px;">
+      <span style="flex:1;">${it.nome} <b>x${it.qty}</b> <span style="color:var(--t3);">(item não cadastrado)</span></span>
+      <button class="btn-del" style="font-size:10px;" onclick="removerSmItemLivre(${i})">✕</button>
+    </div>`).join('');
+}
+
+function atualizarSmContagem(){
+  const wrap = document.getElementById('sm-catalogo');
+  const nCheck = wrap ? wrap.querySelectorAll('.sm-item-check:checked').length : 0;
+  const total = nCheck + _smItensLivres.length;
+  const btn = document.getElementById('sm-btn-enviar');
+  if (btn) btn.textContent = total > 0 ? `📤 Enviar solicitação (${total} ${total===1?'item':'itens'})` : '📤 Enviar solicitação';
+}
+
 function enviarSolicitacaoMaterial(){
   if (!temPermissao('criar_solic')) { toast('Você não tem permissão para solicitar.', 'error'); return; }
-  const cod = document.getElementById('sm-prod')?.value || '';
-  const qty = parseInt(document.getElementById('sm-qty')?.value) || 0;
+  const wrap = document.getElementById('sm-catalogo');
+  const marcados = wrap ? Array.from(wrap.querySelectorAll('.sm-item-check:checked')) : [];
+  if (!marcados.length && !_smItensLivres.length) { toast('Marque ou digite pelo menos um item.', 'error'); return; }
+
   const obs = (document.getElementById('sm-obs')?.value || '').trim();
-  if (!cod) { toast('Selecione um produto', 'error'); return; }
-  if (qty <= 0) { toast('Informe uma quantidade válida', 'error'); return; }
-  const p = P.find(x => x.cod === cod);
-  if (!p) return;
   const resp = CURRENT_USER ? CURRENT_USER.nome : '';
   const agora = new Date();
-  SOLIC.push({
-    id: _solicIdCounter++,
-    cod, nome: p.nome, livre: false,
-    tipo: 'SAÍDA', qty, resp, obs,
-    data: agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-    status: 'pendente'
+  const dataStr = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  let itensInvalidos = 0;
+  const novasSolics = [];
+  marcados.forEach(chk => {
+    const cod = chk.dataset.cod;
+    const qtyInput = wrap.querySelector(`.sm-item-qty[data-cod="${CSS.escape(cod)}"]`);
+    const qty = parseInt(qtyInput?.value) || 0;
+    if (qty <= 0) { itensInvalidos++; return; }
+    const p = P.find(x => x.cod === cod);
+    if (!p) return;
+    novasSolics.push({ cod, nome: p.nome, livre: false, tipo: 'SAÍDA', qty, resp, obs, data: dataStr, status: 'pendente' });
   });
-  registrarAudit('solic', `Solicitação de saída: ${p.nome}`,
-    `Qtd: ${qty} | Solicitante: ${resp}${obs?' | '+obs:''}`, '📝');
-  if (typeof fbSalvarSolic === 'function') fbSalvarSolic(SOLIC[SOLIC.length-1]);
-  renderSolicBadge();
-  renderSolicitarMaterial();
-  const qtyEl = document.getElementById('sm-qty'); if (qtyEl) qtyEl.value = '';
+  _smItensLivres.forEach(it => {
+    novasSolics.push({ cod: 'LIVRE', nome: it.nome, livre: true, tipo: 'SAÍDA', qty: it.qty, resp, obs, data: dataStr, status: 'pendente' });
+  });
+
+  if (itensInvalidos > 0) toast(`${itensInvalidos} item(ns) com quantidade inválida foram ignorados.`, 'error');
+  if (!novasSolics.length) { toast('Nenhum item válido para enviar.', 'error'); return; }
+
+  novasSolics.forEach(s => {
+    s.id = _solicIdCounter++;
+    SOLIC.push(s);
+    if (typeof fbSalvarSolic === 'function') fbSalvarSolic(s);
+  });
+  registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'}`,
+    `Solicitante: ${resp}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
+
+  _smItensLivres = [];
+  renderSmItensLivres();
   const obsEl = document.getElementById('sm-obs'); if (obsEl) obsEl.value = '';
-  toast('Solicitação enviada! Aguardando aprovação.', 'success');
+  renderSolicitarMaterial();
+  renderSolicBadge();
+  toast(`${novasSolics.length} ${novasSolics.length===1?'solicitação enviada':'solicitações enviadas'}! Aguardando aprovação.`, 'success');
 }
 function renderSolicitarMaterial(){
-  filtrarSmProdutos();
+  renderSmCatalogo();
+  renderSmItensLivres();
   const meu = CURRENT_USER ? CURRENT_USER.nome : '';
   const minhas = SOLIC.filter(s => s.resp === meu).slice().sort((a,b) => b.id - a.id);
   const countEl = document.getElementById('sm-count');
