@@ -1,5 +1,21 @@
 # 📝 Changelog — StockOps
 
+## [2.45.1] — 2026-09-02
+
+### 🐛 Correção real — carrinho perdia item ao buscar outro
+
+Achado o bug de verdade: a lista de itens marcados só "lembrava" da marcação enquanto o item continuava visível na busca/aba atual — pesquisar outro item filtrava o primeiro pra fora da tela e ele desaparecia do carrinho de vez (não tinha onde guardar aquilo). Agora o carrinho é um estado à parte (`_smCarrinho`), independente do que está filtrado, e aparece um resumo fixo **"🛒 No carrinho"** acima da lista, sempre visível, com cada item marcado e um jeito de remover — assim dá pra marcar um item, buscar outro bem diferente, marcar ele também, e os dois continuam lá até enviar.
+
+### 🔧 Funções novas / alteradas no JS
+
+| Item | Descrição |
+|---|---|
+| `_smCarrinho` | Novo estado `{cod: qty}`, sobrevive a troca de aba/busca |
+| `toggleSmCarrinho()` / `atualizarSmQtyCarrinho()` / `removerSmCarrinhoItem()` | Adicionam, ajustam quantidade e removem item do carrinho |
+| `renderSmCarrinho()` | Desenha o resumo fixo do carrinho |
+| `renderSmCatalogo()` | Não depende mais de ler checkboxes já renderizados — reflete o `_smCarrinho` |
+| `enviarSolicitacaoMaterial()` | Lê direto do `_smCarrinho` em vez de checkboxes marcados na tela |
+
 ## [2.45.0] — 2026-09-02
 
 ### ✨ Nova funcionalidade — Registrar Troca de Tinta direto na tela de Estoque de Tintas

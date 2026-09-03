@@ -560,6 +560,10 @@
           <div class="panel" style="max-width:600px;width:100%;margin:0 auto;">
             <div class="ph"><span class="ph-title">Nova solicitação</span><span class="ph-sub">marque quantos itens precisar — vira um carrinho só</span></div>
             <div style="padding:14px;">
+              <div id="sm-carrinho-wrap" style="display:none;margin-bottom:12px;">
+                <label class="fl">🛒 No carrinho (<span id="sm-carrinho-count">0</span>) <span style="font-weight:400;color:var(--t4);text-transform:none;">— fica aqui mesmo trocando de aba ou buscando outro item</span></label>
+                <div id="sm-carrinho-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
+              </div>
               <div class="ped-tabs" id="sm-cat-tabs" style="margin-bottom:8px;">
                 <button class="ped-tab active" onclick="filtrarSmCatalogo('', this)">Todas</button>
                 <button class="ped-tab" onclick="filtrarSmCatalogo('Peça', this)">Peça</button>
@@ -3437,6 +3441,10 @@ function switchSolicTab(tab) {
 // pro próprio usuário.
 let _smCatFiltro = '';
 let _smItensLivres = [];
+// Carrinho persistente — cod -> qty. Independente do que está filtrado/buscado na tela,
+// então marcar um item, trocar de aba ou buscar outro NÃO perde o que já foi marcado
+// (diferente de antes, que só "lembrava" da marcação enquanto o item continuava visível).
+let _smCarrinho = {};
 
 function filtrarSmCatalogo(cat, btnEl){
   if (cat !== undefined) {
@@ -3451,26 +3459,61 @@ function renderSmCatalogo(){
   const wrap = document.getElementById('sm-catalogo');
   if (!wrap) return;
   const busca = (document.getElementById('sm-busca')?.value || '').toLowerCase();
-  // preserva o que já estava marcado antes de redesenhar a lista (troca de aba/busca não perde seleção)
-  const selecaoAtual = {};
-  wrap.querySelectorAll('.sm-item-check').forEach(chk => {
-    if (chk.checked) {
-      const qtyInput = wrap.querySelector(`.sm-item-qty[data-cod="${CSS.escape(chk.dataset.cod)}"]`);
-      selecaoAtual[chk.dataset.cod] = qtyInput ? qtyInput.value : '1';
-    }
-  });
   const lista = P.filter(p => {
     if (_smCatFiltro && p.cat !== _smCatFiltro) return false;
     if (busca && !p.nome.toLowerCase().includes(busca) && !p.cod.toLowerCase().includes(busca)) return false;
     return true;
   }).sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  wrap.innerHTML = lista.length ? lista.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b1);">
-      <input type="checkbox" class="sm-item-check" id="smchk-${i}" data-cod="${p.cod}" data-nome="${p.nome}" ${selecaoAtual[p.cod]!=null?'checked':''} onchange="atualizarSmContagem()" style="flex:none;">
+  wrap.innerHTML = lista.length ? lista.map((p,i) => {
+    const noCarrinho = _smCarrinho.hasOwnProperty(p.cod);
+    const qty = noCarrinho ? _smCarrinho[p.cod] : 1;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b1);">
+      <input type="checkbox" class="sm-item-check" id="smchk-${i}" data-cod="${p.cod}" ${noCarrinho?'checked':''} onchange="toggleSmCarrinho('${p.cod}', this)" style="flex:none;">
       <label for="smchk-${i}" style="flex:1;min-width:0;font-size:11.5px;cursor:pointer;color:var(--t1);">${p.nome} <span style="color:var(--t3);font-size:10px;">${p.cod} · estoque: ${p.estoque}</span></label>
-      <input type="number" class="fi2 sm-item-qty" data-cod="${p.cod}" min="1" step="1" value="${selecaoAtual[p.cod] || 1}" style="width:56px;padding:4px 6px;font-size:11px;flex:none;">
-    </div>`).join('') : '<div style="padding:20px;text-align:center;color:var(--t3);font-size:11px;">Nenhum item encontrado.</div>';
+      <input type="number" class="fi2 sm-item-qty" data-cod="${p.cod}" min="1" step="1" value="${qty}" onchange="atualizarSmQtyCarrinho('${p.cod}', this)" style="width:56px;padding:4px 6px;font-size:11px;flex:none;">
+    </div>`;
+  }).join('') : '<div style="padding:20px;text-align:center;color:var(--t3);font-size:11px;">Nenhum item encontrado.</div>';
+}
+
+function toggleSmCarrinho(cod, chkEl){
+  if (chkEl.checked) {
+    const wrap = document.getElementById('sm-catalogo');
+    const qtyInput = wrap ? wrap.querySelector(`.sm-item-qty[data-cod="${CSS.escape(cod)}"]`) : null;
+    _smCarrinho[cod] = parseInt(qtyInput?.value) || 1;
+  } else {
+    delete _smCarrinho[cod];
+  }
+  renderSmCarrinho();
   atualizarSmContagem();
+}
+function atualizarSmQtyCarrinho(cod, inputEl){
+  if (!_smCarrinho.hasOwnProperty(cod)) return;
+  _smCarrinho[cod] = parseInt(inputEl.value) || 1;
+  renderSmCarrinho();
+}
+function removerSmCarrinhoItem(cod){
+  delete _smCarrinho[cod];
+  renderSmCatalogo();
+  renderSmCarrinho();
+  atualizarSmContagem();
+}
+function renderSmCarrinho(){
+  const wrap = document.getElementById('sm-carrinho-wrap');
+  const lista = document.getElementById('sm-carrinho-lista');
+  const countEl = document.getElementById('sm-carrinho-count');
+  if (!wrap || !lista) return;
+  const cods = Object.keys(_smCarrinho);
+  if (countEl) countEl.textContent = cods.length;
+  if (!cods.length) { wrap.style.display = 'none'; lista.innerHTML = ''; return; }
+  wrap.style.display = '';
+  lista.innerHTML = cods.map(cod => {
+    const p = P.find(x => x.cod === cod);
+    const nome = p ? p.nome : cod;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.25);font-size:11px;">
+      <span style="flex:1;">${nome} <b>x${_smCarrinho[cod]}</b></span>
+      <button class="btn-del" style="font-size:10px;" onclick="removerSmCarrinhoItem('${cod}')">✕</button>
+    </div>`;
+  }).join('');
 }
 
 function adicionarSmItemLivre(){
@@ -3502,18 +3545,15 @@ function renderSmItensLivres(){
 }
 
 function atualizarSmContagem(){
-  const wrap = document.getElementById('sm-catalogo');
-  const nCheck = wrap ? wrap.querySelectorAll('.sm-item-check:checked').length : 0;
-  const total = nCheck + _smItensLivres.length;
+  const total = Object.keys(_smCarrinho).length + _smItensLivres.length;
   const btn = document.getElementById('sm-btn-enviar');
   if (btn) btn.textContent = total > 0 ? `📤 Enviar solicitação (${total} ${total===1?'item':'itens'})` : '📤 Enviar solicitação';
 }
 
 function enviarSolicitacaoMaterial(){
   if (!temPermissao('criar_solic')) { toast('Você não tem permissão para solicitar.', 'error'); return; }
-  const wrap = document.getElementById('sm-catalogo');
-  const marcados = wrap ? Array.from(wrap.querySelectorAll('.sm-item-check:checked')) : [];
-  if (!marcados.length && !_smItensLivres.length) { toast('Marque ou digite pelo menos um item.', 'error'); return; }
+  const codsCarrinho = Object.keys(_smCarrinho);
+  if (!codsCarrinho.length && !_smItensLivres.length) { toast('Marque ou digite pelo menos um item.', 'error'); return; }
 
   const obs = (document.getElementById('sm-obs')?.value || '').trim();
   const resp = CURRENT_USER ? CURRENT_USER.nome : '';
@@ -3522,10 +3562,8 @@ function enviarSolicitacaoMaterial(){
 
   let itensInvalidos = 0;
   const novasSolics = [];
-  marcados.forEach(chk => {
-    const cod = chk.dataset.cod;
-    const qtyInput = wrap.querySelector(`.sm-item-qty[data-cod="${CSS.escape(cod)}"]`);
-    const qty = parseInt(qtyInput?.value) || 0;
+  codsCarrinho.forEach(cod => {
+    const qty = parseInt(_smCarrinho[cod]) || 0;
     if (qty <= 0) { itensInvalidos++; return; }
     const p = P.find(x => x.cod === cod);
     if (!p) return;
@@ -3538,10 +3576,6 @@ function enviarSolicitacaoMaterial(){
   if (itensInvalidos > 0) toast(`${itensInvalidos} item(ns) com quantidade inválida foram ignorados.`, 'error');
   if (!novasSolics.length) { toast('Nenhum item válido para enviar.', 'error'); return; }
 
-  // desmarca ANTES de re-renderizar, senão a preservação de seleção do renderSmCatalogo()
-  // mantém os mesmos itens marcados e um segundo clique duplicaria a solicitação
-  marcados.forEach(chk => { chk.checked = false; });
-
   novasSolics.forEach(s => {
     s.id = _solicIdCounter++;
     SOLIC.push(s);
@@ -3550,6 +3584,7 @@ function enviarSolicitacaoMaterial(){
   registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'}`,
     `Solicitante: ${resp}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
 
+  _smCarrinho = {};
   _smItensLivres = [];
   renderSmItensLivres();
   const obsEl = document.getElementById('sm-obs'); if (obsEl) obsEl.value = '';
@@ -3559,6 +3594,7 @@ function enviarSolicitacaoMaterial(){
 }
 function renderSolicitarMaterial(){
   renderSmCatalogo();
+  renderSmCarrinho();
   renderSmItensLivres();
   const meu = CURRENT_USER ? CURRENT_USER.nome : '';
   const minhas = SOLIC.filter(s => s.resp === meu).slice().sort((a,b) => b.id - a.id);
