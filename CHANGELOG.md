@@ -1,5 +1,15 @@
 # 📝 Changelog — StockOps
 
+## [2.50.0] — 2026-09-04
+
+### 🐛 Correção — carrinho cheio empurrava o botão de enviar pra fora da tela
+
+Reportado: ao marcar vários itens no carrinho de Solicitar Material, a lista crescia sem limite e empurrava "Enviar solicitação" e "Avisar por WhatsApp" pra baixo do que cabia na tela — só dava pra ver diminuindo o zoom do navegador. Corrigido: a lista de itens do carrinho agora tem um teto de altura com rolagem própria (mesmo tratamento que o catálogo já tinha), então o cabeçalho do carrinho e os botões de baixo (item avulso, observação, enviar, WhatsApp) ficam sempre visíveis, não importa quantos itens sejam marcados.
+
+### 🎨 Melhoria — tabela "Minhas solicitações" também ganhou rolagem própria
+
+Antes crescia junto com o histórico (hoje 7 registros, mas ia crescendo pra sempre), empurrando a página inteira pra baixo. Agora tem altura fixa com rolagem interna e cabeçalho fixo no topo — todos os registros continuam ali, só que sem esticar a tela.
+
 ## [2.49.0] — 2026-09-04
 
 ### ✨ Nova funcionalidade — Número de movimento nas solicitações

@@ -579,11 +579,11 @@
                   <span class="fl" style="margin:0;color:var(--green);">🛒 Seu carrinho</span>
                   <span class="badge" style="background:var(--s1);color:var(--green);"><span id="sm-carrinho-count">0</span></span>
                 </div>
-                <div style="padding:10px 12px;">
+                <div style="padding:10px 12px;max-height:220px;overflow-y:auto;">
                   <div id="sm-carrinho-wrap">
                     <div id="sm-carrinho-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
                   </div>
-                  <div id="sm-livres-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
+                  <div id="sm-livres-lista" style="display:flex;flex-direction:column;gap:4px;margin-top:4px;"></div>
                 </div>
                 <div style="padding:10px 12px;border-top:1px solid var(--b1);">
                   <label class="fl">+ Item não cadastrado</label>
@@ -607,9 +607,9 @@
             </div>
           </div>
 
-          <div class="panel">
+          <div class="panel" style="max-width:960px;width:100%;margin:0 auto;">
             <div class="ph"><span class="ph-title">Minhas solicitações</span><span class="ph-sub" id="sm-count"></span></div>
-            <div class="tbl-wrap">
+            <div class="tbl-wrap" style="max-height:340px;overflow-y:auto;">
               <table>
                 <thead><tr><th>Movimento</th><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Obs</th><th>Status</th></tr></thead>
                 <tbody id="sm-hist-tbody"></tbody>
