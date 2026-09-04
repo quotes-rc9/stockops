@@ -1,5 +1,22 @@
 # 📝 Changelog — StockOps
 
+## [2.49.0] — 2026-09-04
+
+### ✨ Nova funcionalidade — Número de movimento nas solicitações
+
+Cada lote enviado pelo carrinho (Solicitar Material) agora ganha um número sequencial, tipo **"Movimento Quotes 01"**, **"Movimento Quotes 02"**... — um protocolo pra referenciar a solicitação inteira, tanto por escrito quanto verbalmente. Aparece:
+
+- No topo da mensagem padronizada do WhatsApp.
+- Numa coluna nova em "Minhas solicitações" (tela do solicitante).
+- No card de pendentes da tela de Solicitações do admin.
+- No detalhe da auditoria.
+
+O contador é único e compartilhado entre Veronica, Guilherme Neri, Pedro e Anderson, guardado no Supabase (`config`, doc `contador_mov_quotes`) e sincronizado ao vivo, então continua de onde parou mesmo trocando de usuário ou de sessão.
+
+### 🐛 Correção — contador de ID das solicitações não sobrevivia a um reload
+
+Achado ao implementar o número de movimento: o contador interno de cada solicitação individual (`_solicIdCounter`) sempre reiniciava em 1 a cada carregamento da página, em vez de continuar do maior ID já salvo. Na prática isso arriscava duas solicitações de sessões diferentes caírem no mesmo ID e se sobrescreverem no banco. Agora, ao carregar os dados, o contador é recalculado a partir do maior ID já existente.
+
 ## [2.48.0] — 2026-09-04
 
 ### 🎨 Melhoria de layout — tela Solicitar Material

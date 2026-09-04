@@ -611,7 +611,7 @@
             <div class="ph"><span class="ph-title">Minhas solicitações</span><span class="ph-sub" id="sm-count"></span></div>
             <div class="tbl-wrap">
               <table>
-                <thead><tr><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Obs</th><th>Status</th></tr></thead>
+                <thead><tr><th>Movimento</th><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Obs</th><th>Status</th></tr></thead>
                 <tbody id="sm-hist-tbody"></tbody>
               </table>
             </div>
@@ -3601,17 +3601,23 @@ function enviarSolicitacaoMaterial(){
   if (itensInvalidos > 0) toast(`${itensInvalidos} item(ns) com quantidade inválida foram ignorados.`, 'error');
   if (!novasSolics.length) { toast('Nenhum item válido para enviar.', 'error'); return; }
 
+  // Número de movimento do lote (protocolo pra referenciar essa solicitação inteira)
+  CONTADOR_MOV_QUOTES++;
+  const movNum = 'Movimento Quotes ' + String(CONTADOR_MOV_QUOTES).padStart(2, '0');
+  if (typeof fbSalvarContadorMovQuotes === 'function') fbSalvarContadorMovQuotes(CONTADOR_MOV_QUOTES);
+
   novasSolics.forEach(s => {
     s.id = _solicIdCounter++;
+    s.movNum = movNum;
     SOLIC.push(s);
     if (typeof fbSalvarSolic === 'function') fbSalvarSolic(s);
   });
-  registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'}`,
+  registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'} (${movNum})`,
     `Solicitante: ${resp}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
 
   // Monta a mensagem padronizada pra quem quiser também avisar por WhatsApp
   const linhasItens = novasSolics.map(s => `• ${s.nome} — ${s.qty} un`).join('\n');
-  _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
+  _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n🔖 ${movNum}\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
   const ctaEl = document.getElementById('sm-whatsapp-cta');
   if (ctaEl) ctaEl.style.display = '';
 
@@ -3638,13 +3644,14 @@ function renderSolicitarMaterial(){
     const cor = s.status==='aprovado'?'b-ok':s.status==='rejeitado'?'b-crit':'b-warn';
     const label = s.status==='aprovado'?'✓ Aprovado':s.status==='rejeitado'?'✕ Rejeitado':'⏳ Pendente';
     return `<tr>
+      <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${s.movNum||'—'}</td>
       <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${s.data}</td>
       <td>${s.nome}</td>
       <td style="text-align:center;">${s.qty}</td>
       <td style="color:var(--t3);font-size:11px;">${s.obs||'—'}</td>
       <td><span class="badge ${cor}">${label}</span></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma solicitação ainda.</td></tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma solicitação ainda.</td></tr>`;
 }
 
 let _solicSort = { campo: null, dir: 'asc' };
@@ -3694,7 +3701,7 @@ function renderSolicitacoes() {
         return `<div class="solic-card">
           <div class="solic-info">
             <div class="solic-nome">${s.nome}${isLivre?' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>':''}</div>
-            <div class="solic-meta">#${s.id} · ${s.data} · <em>${s.resp}</em>${s.obs?' · '+s.obs:''}</div>
+            <div class="solic-meta">${s.movNum?s.movNum+' · ':''}#${s.id} · ${s.data} · <em>${s.resp}</em>${s.obs?' · '+s.obs:''}</div>
           </div>
           <div class="solic-qty ${isE?'solic-tipo-e':'solic-tipo-s'}">${isE?'+':'-'}${s.qty}</div>
           <span class="badge ${isE?'b-ok':'b-crit'}" style="flex-shrink:0;">${s.tipo}</span>
@@ -4582,6 +4589,8 @@ let MAQUINAS = [];
 // Fila de reposição do Setor Quotes: cada vez que uma tinta zera no Quotes (troca de tinta
 // registrada com o estoque já no último), entra aqui um pedido pro Thiago repor do Setor Compras.
 let REPO_QUOTES = [];
+// Contador sequencial das solicitações em carrinho (Solicitar Material) — vira "Movimento Quotes NN"
+let CONTADOR_MOV_QUOTES = 0;
 let _maqEditId = null;
 
 function _escMaq(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -7148,6 +7157,13 @@ window.fbSalvarRepoQuotes = async function(lista) {
   } catch(e) { console.error('Erro ao salvar reposições Quotes:', e); setSyncStatus('error'); }
 };
 
+// ── SALVAR contador de movimento do Setor Quotes ───────────────
+window.fbSalvarContadorMovQuotes = async function(valor) {
+  try {
+    const { error } = await sb.from(COL_CONFIG).upsert({ id: 'contador_mov_quotes', data: { valor, ts: Date.now() } }); if (error) throw error;
+  } catch(e) { console.error('Erro ao salvar contador de movimento Quotes:', e); }
+};
+
 // ── SALVAR máquina ────────────────────────────────────────────
 window.fbSalvarMaquina = async function(m) {
   try {
@@ -7197,6 +7213,8 @@ async function carregarDadosFirebase() {
     if (novasSolic.length) {
       SOLIC.length = 0;
       novasSolic.forEach(s => SOLIC.push(s));
+      const maxSolicId = SOLIC.reduce((m, s) => Math.max(m, typeof s.id === 'number' ? s.id : 0), 0);
+      if (maxSolicId >= _solicIdCounter) _solicIdCounter = maxSolicId + 1;
     }
 
    if (typeof _setBootMsg === 'function') _setBootMsg('Carregando pedidos...');
@@ -7243,6 +7261,10 @@ async function carregarDadosFirebase() {
     const listaRepo = repoRow && repoRow.data && repoRow.data.lista;
     REPO_QUOTES.length = 0;
     if (listaRepo && listaRepo.length) listaRepo.forEach(r => REPO_QUOTES.push(r));
+
+    // Contador de movimento do Setor Quotes
+    const { data: movRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'contador_mov_quotes').maybeSingle();
+    CONTADOR_MOV_QUOTES = (movRow && movRow.data && typeof movRow.data.valor === 'number') ? movRow.data.valor : 0;
 
     setSyncStatus('ok');
   } catch(e) {
@@ -7339,6 +7361,9 @@ _sbRealtime(COL_CONFIG, async () => {
   REPO_QUOTES.length = 0;
   if (listaRepo && listaRepo.length) listaRepo.forEach(r => REPO_QUOTES.push(r));
   if (currentPage === 'analise-min') renderRepoQuotesPainel();
+
+  const { data: movRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'contador_mov_quotes').maybeSingle();
+  if (movRow && movRow.data && typeof movRow.data.valor === 'number') CONTADOR_MOV_QUOTES = movRow.data.valor;
 });
 
 // ── Sobrescreve salvarUsuariosLS para usar Firebase também ────
