@@ -1,5 +1,17 @@
 # 📝 Changelog — StockOps
 
+## [2.48.0] — 2026-09-04
+
+### 🎨 Melhoria de layout — tela Solicitar Material
+
+Sem mudar nenhuma regra de negócio, só reorganizado o jeito de enxergar as informações, que o usuário reportou como confuso:
+
+- **Carrinho virou uma coluna fixa ao lado do catálogo** (antes ficava empilhado em cima, competindo visualmente com a lista de itens), com contador destacado no cabeçalho.
+- **Item marcado no catálogo agora fica com fundo verde na própria linha da lista**, então dá pra ver o que já foi escolhido sem precisar olhar pro carrinho toda hora.
+- **Carrinho nunca mais some da tela** — quando está vazio, mostra uma mensagem explicando o que fazer, em vez de desaparecer.
+- Painel mais largo (960px), aproveitando melhor o espaço da tela.
+- Campo de item avulso, observação e botão de enviar agora ficam dentro do próprio cartão do carrinho, junto com o resultado.
+
 ## [2.47.0] — 2026-09-04
 
 ### ✨ Nova funcionalidade — Avisar pedido por WhatsApp

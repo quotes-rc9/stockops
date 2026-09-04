@@ -557,43 +557,53 @@
           <span class="ph-sub">Peça peça, insumo ou consumível — a gente aprova e providencia a entrega</span>
         </div>
         <div style="padding:14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;">
-          <div class="panel" style="max-width:600px;width:100%;margin:0 auto;">
-            <div class="ph"><span class="ph-title">Nova solicitação</span><span class="ph-sub">marque quantos itens precisar — vira um carrinho só</span></div>
-            <div style="padding:14px;">
-              <div id="sm-carrinho-wrap" style="display:none;margin-bottom:12px;">
-                <label class="fl">🛒 No carrinho (<span id="sm-carrinho-count">0</span>) <span style="font-weight:400;color:var(--t4);text-transform:none;">— fica aqui mesmo trocando de aba ou buscando outro item</span></label>
-                <div id="sm-carrinho-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
-              </div>
-              <div class="ped-tabs" id="sm-cat-tabs" style="margin-bottom:8px;">
-                <button class="ped-tab active" onclick="filtrarSmCatalogo('', this)">Todas</button>
-                <button class="ped-tab" onclick="filtrarSmCatalogo('Peça', this)">Peça</button>
-                <button class="ped-tab" onclick="filtrarSmCatalogo('Insumo', this)">Insumo</button>
-                <button class="ped-tab" onclick="filtrarSmCatalogo('Consumível', this)">Consumível</button>
-              </div>
-              <div class="fg">
-                <input class="fi2" id="sm-busca" type="text" placeholder="🔍 Buscar item pelo nome ou código..." oninput="renderSmCatalogo()">
-              </div>
-              <div id="sm-catalogo" style="max-height:280px;overflow-y:auto;border:1px solid var(--b1);background:var(--s2);margin-bottom:14px;"></div>
+          <div class="panel" style="max-width:960px;width:100%;margin:0 auto;">
+            <div class="ph"><span class="ph-title">Nova solicitação</span><span class="ph-sub">marque no catálogo o que precisa — tudo fica guardado no carrinho ao lado</span></div>
+            <div style="padding:14px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
 
-              <div class="fg">
-                <label class="fl">Item não cadastrado (opcional)</label>
-                <div style="display:flex;gap:6px;">
-                  <input class="fi2" id="sm-livre-nome" type="text" placeholder="Nome do item..." style="flex:2;">
-                  <input class="fi2" id="sm-livre-qty" type="number" min="1" step="1" placeholder="Qtd" style="flex:1;min-width:0;">
-                  <button class="nav-btn" style="flex:none;font-size:11px;" onclick="adicionarSmItemLivre()">+ Add</button>
+              <div style="flex:1 1 360px;min-width:280px;">
+                <div class="ped-tabs" id="sm-cat-tabs" style="margin-bottom:8px;">
+                  <button class="ped-tab active" onclick="filtrarSmCatalogo('', this)">Todas</button>
+                  <button class="ped-tab" onclick="filtrarSmCatalogo('Peça', this)">Peça</button>
+                  <button class="ped-tab" onclick="filtrarSmCatalogo('Insumo', this)">Insumo</button>
+                  <button class="ped-tab" onclick="filtrarSmCatalogo('Consumível', this)">Consumível</button>
                 </div>
-                <div id="sm-livres-lista"></div>
+                <div class="fg">
+                  <input class="fi2" id="sm-busca" type="text" placeholder="🔍 Buscar item pelo nome ou código..." oninput="renderSmCatalogo()">
+                </div>
+                <div id="sm-catalogo" style="max-height:440px;overflow-y:auto;border:1px solid var(--b1);background:var(--s2);"></div>
               </div>
 
-              <div class="fg" style="margin-bottom:0;">
-                <label class="fl">Observação (opcional, vale pra tudo que for marcado)</label>
-                <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
+              <div style="flex:1 1 280px;min-width:260px;max-width:320px;border:1px solid rgba(var(--green-rgb),.3);border-radius:var(--r8);overflow:hidden;background:var(--s2);">
+                <div style="padding:9px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;background:var(--green-a);">
+                  <span class="fl" style="margin:0;color:var(--green);">🛒 Seu carrinho</span>
+                  <span class="badge" style="background:var(--s1);color:var(--green);"><span id="sm-carrinho-count">0</span></span>
+                </div>
+                <div style="padding:10px 12px;">
+                  <div id="sm-carrinho-wrap">
+                    <div id="sm-carrinho-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
+                  </div>
+                  <div id="sm-livres-lista" style="display:flex;flex-direction:column;gap:4px;"></div>
+                </div>
+                <div style="padding:10px 12px;border-top:1px solid var(--b1);">
+                  <label class="fl">+ Item não cadastrado</label>
+                  <div style="display:flex;gap:6px;">
+                    <input class="fi2" id="sm-livre-nome" type="text" placeholder="Nome do item..." style="flex:2;">
+                    <input class="fi2" id="sm-livre-qty" type="number" min="1" step="1" placeholder="Qtd" style="flex:1;min-width:0;">
+                    <button class="nav-btn" style="flex:none;font-size:11px;" onclick="adicionarSmItemLivre()">+</button>
+                  </div>
+                </div>
+                <div style="padding:10px 12px;border-top:1px solid var(--b1);">
+                  <label class="fl">Observação (opcional, vale pra tudo que for marcado)</label>
+                  <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
+                  <button id="sm-btn-enviar" style="width:100%;justify-content:center;margin-top:10px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);cursor:pointer;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
+                  <div id="sm-whatsapp-cta" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.25);font-size:11.5px;color:var(--t1);">
+                    ✅ Solicitação registrada no sistema!
+                    <button onclick="abrirWhatsappSolicitacao()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:8px;font-size:12px;font-weight:600;background:#25D366;color:#fff;border:none;border-radius:var(--r6);cursor:pointer;font-family:'Inter',sans-serif;">📱 Avisar por WhatsApp também</button>
+                  </div>
+                </div>
               </div>
-              <button id="sm-btn-enviar" style="width:100%;justify-content:center;margin-top:12px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);cursor:pointer;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
-              <div id="sm-whatsapp-cta" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.25);font-size:11.5px;color:var(--t1);">
-                ✅ Solicitação registrada no sistema!
-                <button onclick="abrirWhatsappSolicitacao()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:8px;font-size:12px;font-weight:600;background:#25D366;color:#fff;border:none;border-radius:var(--r6);cursor:pointer;font-family:'Inter',sans-serif;">📱 Avisar por WhatsApp também</button>
-              </div>
+
             </div>
           </div>
 
@@ -3478,10 +3488,10 @@ function renderSmCatalogo(){
   wrap.innerHTML = lista.length ? lista.map((p,i) => {
     const noCarrinho = _smCarrinho.hasOwnProperty(p.cod);
     const qty = noCarrinho ? _smCarrinho[p.cod] : 1;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b1);">
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b1);${noCarrinho?'background:var(--green-a);':''}">
       <input type="checkbox" class="sm-item-check" id="smchk-${i}" data-cod="${p.cod}" ${noCarrinho?'checked':''} onchange="toggleSmCarrinho('${p.cod}', this)" style="flex:none;">
       <label for="smchk-${i}" style="flex:1;min-width:0;font-size:11.5px;cursor:pointer;color:var(--t1);">${p.nome} <span style="color:var(--t3);font-size:10px;">${p.cod} · estoque: ${p.estoque}</span></label>
-      <input type="number" class="fi2 sm-item-qty" data-cod="${p.cod}" min="1" step="1" value="${qty}" onchange="atualizarSmQtyCarrinho('${p.cod}', this)" style="width:56px;padding:4px 6px;font-size:11px;flex:none;">
+      <input type="number" class="fi2 sm-item-qty" data-cod="${p.cod}" min="1" step="1" value="${qty}" onchange="atualizarSmQtyCarrinho('${p.cod}', this)" style="width:56px;padding:4px 6px;font-size:11px;flex:none;${noCarrinho?'':'opacity:.5;'}">
     </div>`;
   }).join('') : '<div style="padding:20px;text-align:center;color:var(--t3);font-size:11px;">Nenhum item encontrado.</div>';
 }
@@ -3511,12 +3521,12 @@ function removerSmCarrinhoItem(cod){
 function renderSmCarrinho(){
   const wrap = document.getElementById('sm-carrinho-wrap');
   const lista = document.getElementById('sm-carrinho-lista');
-  const countEl = document.getElementById('sm-carrinho-count');
   if (!wrap || !lista) return;
   const cods = Object.keys(_smCarrinho);
-  if (countEl) countEl.textContent = cods.length;
-  if (!cods.length) { wrap.style.display = 'none'; lista.innerHTML = ''; return; }
-  wrap.style.display = '';
+  if (!cods.length) {
+    lista.innerHTML = _smItensLivres.length ? '' : '<div style="padding:14px 4px;text-align:center;color:var(--t3);font-size:11px;">Carrinho vazio — marque itens no catálogo ao lado.</div>';
+    return;
+  }
   lista.innerHTML = cods.map(cod => {
     const p = P.find(x => x.cod === cod);
     const nome = p ? p.nome : cod;
@@ -3537,11 +3547,13 @@ function adicionarSmItemLivre(){
   _smItensLivres.push({ nome, qty });
   if (nomeEl) nomeEl.value = '';
   if (qtyEl) qtyEl.value = '';
+  renderSmCarrinho();
   renderSmItensLivres();
   atualizarSmContagem();
 }
 function removerSmItemLivre(idx){
   _smItensLivres.splice(idx, 1);
+  renderSmCarrinho();
   renderSmItensLivres();
   atualizarSmContagem();
 }
@@ -3559,6 +3571,8 @@ function atualizarSmContagem(){
   const total = Object.keys(_smCarrinho).length + _smItensLivres.length;
   const btn = document.getElementById('sm-btn-enviar');
   if (btn) btn.textContent = total > 0 ? `📤 Enviar solicitação (${total} ${total===1?'item':'itens'})` : '📤 Enviar solicitação';
+  const countEl = document.getElementById('sm-carrinho-count');
+  if (countEl) countEl.textContent = total;
 }
 
 function enviarSolicitacaoMaterial(){
