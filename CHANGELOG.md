@@ -1,5 +1,19 @@
 # 📝 Changelog — StockOps
 
+## [2.47.0] — 2026-09-04
+
+### ✨ Nova funcionalidade — Avisar pedido por WhatsApp
+
+Depois de enviar uma solicitação pelo carrinho (Solicitar Material), agora aparece um botão **"📱 Avisar por WhatsApp também"** além do registro no sistema. Ele monta uma mensagem padronizada (solicitante, data, lista de itens com quantidade, observação se houver) e abre o WhatsApp com o texto pronto — sem número fixo, quem estiver enviando escolhe o contato/grupo na hora.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `abrirWhatsappSolicitacao()` | Abre `https://wa.me/?text=...` com a última mensagem montada |
+| `_smUltimoTexto` | Estado global com o texto padronizado da última solicitação enviada |
+| `enviarSolicitacaoMaterial()` | Agora, após registrar a solicitação, monta a mensagem e revela o botão de WhatsApp |
+
 ## [2.46.0] — 2026-09-02
 
 ### ✨ Nova funcionalidade — Fila de reposição do Setor Quotes (transferência Compras → Quotes)

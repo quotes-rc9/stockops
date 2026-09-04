@@ -590,6 +590,10 @@
                 <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
               </div>
               <button id="sm-btn-enviar" style="width:100%;justify-content:center;margin-top:12px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);cursor:pointer;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
+              <div id="sm-whatsapp-cta" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.25);font-size:11.5px;color:var(--t1);">
+                ✅ Solicitação registrada no sistema!
+                <button onclick="abrirWhatsappSolicitacao()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:8px;font-size:12px;font-weight:600;background:#25D366;color:#fff;border:none;border-radius:var(--r6);cursor:pointer;font-family:'Inter',sans-serif;">📱 Avisar por WhatsApp também</button>
+              </div>
             </div>
           </div>
 
@@ -3446,6 +3450,12 @@ let _smItensLivres = [];
 // então marcar um item, trocar de aba ou buscar outro NÃO perde o que já foi marcado
 // (diferente de antes, que só "lembrava" da marcação enquanto o item continuava visível).
 let _smCarrinho = {};
+let _smUltimoTexto = ''; // mensagem padronizada da última solicitação enviada, pra reaproveitar no WhatsApp
+
+function abrirWhatsappSolicitacao(){
+  if (!_smUltimoTexto) return;
+  window.open('https://wa.me/?text=' + encodeURIComponent(_smUltimoTexto), '_blank');
+}
 
 function filtrarSmCatalogo(cat, btnEl){
   if (cat !== undefined) {
@@ -3584,6 +3594,12 @@ function enviarSolicitacaoMaterial(){
   });
   registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'}`,
     `Solicitante: ${resp}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
+
+  // Monta a mensagem padronizada pra quem quiser também avisar por WhatsApp
+  const linhasItens = novasSolics.map(s => `• ${s.nome} — ${s.qty} un`).join('\n');
+  _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
+  const ctaEl = document.getElementById('sm-whatsapp-cta');
+  if (ctaEl) ctaEl.style.display = '';
 
   _smCarrinho = {};
   _smItensLivres = [];
