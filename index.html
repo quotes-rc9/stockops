@@ -496,6 +496,9 @@
         <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
           <!-- Pendentes -->
           <div id="stab-panel-pend" style="flex:1;overflow-y:auto;padding:10px 14px;" >
+            <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+              <button class="btn-export" onclick="exportarSolicPendentesPDF()">🖨️ Lista de separação (PDF)</button>
+            </div>
             <div id="solic-pend-list"><div style="text-align:center;color:var(--t3);padding:32px;font-size:11px;">✓ Nenhuma solicitação pendente.</div></div>
           </div>
           <!-- Aprovadas -->
@@ -3700,7 +3703,7 @@ function renderSolicitacoes() {
         const isLivre = s.livre;
         return `<div class="solic-card">
           <div class="solic-info">
-            <div class="solic-nome">${s.nome}${isLivre?' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>':''}</div>
+            <div class="solic-nome">${!isLivre && s.cod ? `<span class="mono" style="color:var(--t3);font-size:10px;">${s.cod}</span> ` : ''}${s.nome}${isLivre?' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>':''}</div>
             <div class="solic-meta">${s.movNum?s.movNum+' · ':''}#${s.id} · ${s.data} · <em>${s.resp}</em>${s.obs?' · '+s.obs:''}</div>
           </div>
           <div class="solic-qty ${isE?'solic-tipo-e':'solic-tipo-s'}">${isE?'+':'-'}${s.qty}</div>
@@ -6254,6 +6257,27 @@ function exportarSolicPDF() {
   ]);
   exportarPDF('Solicitações de Movimentação', colunas, linhas, {
     resumo: `${SOLIC.length} solicitações no histórico`
+  });
+}
+
+// ── Exportar lista de separação (só pendentes) — código + descrição pra buscar no estoque ──
+function exportarSolicPendentesPDF() {
+  const pend = SOLIC.filter(s => s.status === 'pendente');
+  if (!pend.length) { toast('Nenhuma solicitação pendente para imprimir.', 'error'); return; }
+  const ordenada = [...pend].sort((a, b) =>
+    (a.movNum || '').localeCompare(b.movNum || '') || _parseDataBR(a.data) - _parseDataBR(b.data));
+  const colunas = ['Movimento', 'Código', 'Descrição', 'Qtd', 'Solicitante', 'Obs'];
+  const linhas = ordenada.map(s => [
+    s.movNum || '—',
+    s.livre ? '—' : s.cod,
+    s.nome + (s.livre ? ' (item avulso)' : ''),
+    s.qty,
+    s.resp,
+    s.obs || '—'
+  ]);
+  exportarPDF('Lista de Separação — Solicitações Pendentes', colunas, linhas, {
+    resumo: `${pend.length} ite${pend.length === 1 ? 'm' : 'ns'} pendente${pend.length === 1 ? '' : 's'} para separar no estoque`,
+    orientacao: 'portrait'
   });
 }
 

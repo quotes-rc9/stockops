@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.51.0] — 2026-09-04
+
+### ✨ Nova funcionalidade — Lista de separação em PDF (código + descrição)
+
+Na tela de Solicitações (admin), aba **Pendentes**, novo botão **"🖨️ Lista de separação (PDF)"**: gera um PDF em retrato com código, descrição, quantidade, solicitante e movimento de tudo que está pendente — pra imprimir e levar no estoque físico como guia, sem precisar decorar nem digitar nada de novo.
+
+Os cards de pendentes na tela também passaram a mostrar o **código do produto** ao lado do nome (itens avulsos continuam sem código, já que não são cadastrados).
+
 ## [2.50.0] — 2026-09-04
 
 ### 🐛 Correção — carrinho cheio empurrava o botão de enviar pra fora da tela
