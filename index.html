@@ -1002,6 +1002,7 @@
           </span>
         </div>
         <div style="flex:1;overflow-y:auto;padding:14px;">
+          <div id="rq-painel" style="display:none;margin-bottom:16px;"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
               <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:8px;">📍 Setor Quotes <span style="font-weight:400;color:var(--t4);text-transform:none;letter-spacing:normal;">(reserva em estoque, junto das máquinas — não é a tinta instalada)</span></div>
@@ -4548,6 +4549,9 @@ function excluirUsuario(id){
 // MÓDULO: MÁQUINAS — Cadastro de equipamentos Mimaki
 // ═══════════════════════════════════════════════════════════════
 let MAQUINAS = [];
+// Fila de reposição do Setor Quotes: cada vez que uma tinta zera no Quotes (troca de tinta
+// registrada com o estoque já no último), entra aqui um pedido pro Thiago repor do Setor Compras.
+let REPO_QUOTES = [];
 let _maqEditId = null;
 
 function _escMaq(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -5619,6 +5623,77 @@ function renderAnaliseMin(){
   const modelos = [...new Set(TINTA_MAPA.map(e=>e.maqModelo))];
   gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardLUS175('estoqueQuotes') + _etCardPrimer('estoqueQuotes');
   gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardLUS175('estoqueCompras') + _etCardPrimer('estoqueCompras');
+  renderRepoQuotesPainel();
+}
+
+// ── Fila de reposição do Setor Quotes: some assim que a tinta zera lá (ver
+// confirmarTrocaTinta) — o Thiago clica em Repor e o sistema move 1 unidade
+// do Setor Compras pro Setor Quotes automaticamente. ──
+function renderRepoQuotesPainel(){
+  const wrap = document.getElementById('rq-painel');
+  if (!wrap) return;
+  const pendentes = REPO_QUOTES.filter(r => r.status === 'pendente');
+  if (!pendentes.length || !(CURRENT_USER && CURRENT_USER.role === 'admin')) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.style.display = '';
+  wrap.innerHTML = `<div class="panel" style="overflow:hidden;border-color:rgba(var(--red-rgb),.3);">
+    <div class="ph" style="background:var(--red-a);"><span class="ph-title" style="color:var(--red);">🚩 Setor Quotes pedindo reposição (${pendentes.length})</span><span class="ph-note">clique em Repor pra tirar do seu estoque (Compras) e mandar pro Quotes</span></div>
+    <div>${pendentes.map(r => {
+      const p = P.find(x => x.cod === r.produtoCod);
+      const semCompras = !p || (p.estoqueCompras||0) <= 0;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--b1);font-size:12px;">
+        <div style="flex:1;">
+          <b>${_escMaq(r.produtoNome)}</b>
+          <div style="font-size:10.5px;color:var(--t3);">Zerou na troca da ${_escMaq(r.maquina)} · ${_escMaq(r.tecnico)} · ${r.data}${semCompras?' · <span style="color:var(--red);">seu estoque Compras também está zerado</span>':''}</div>
+        </div>
+        <button onclick="atenderRepoQuotes('${r.id}')" ${semCompras?'disabled title="Sem estoque no Compras pra repor"':''} style="flex:none;font-size:11px;padding:5px 10px;background:${semCompras?'var(--s3)':'var(--green-a)'};color:${semCompras?'var(--t4)':'var(--green)'};border:1px solid ${semCompras?'var(--b2)':'rgba(var(--green-rgb),.3)'};border-radius:var(--r4);cursor:${semCompras?'not-allowed':'pointer'};">✅ Repor</button>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+function atenderRepoQuotes(id){
+  if (!(CURRENT_USER && CURRENT_USER.role === 'admin')) { toast('Apenas administradores podem repor.', 'error'); return; }
+  const r = REPO_QUOTES.find(x => x.id === id);
+  if (!r || r.status !== 'pendente') return;
+  const p = P.find(x => x.cod === r.produtoCod);
+  if (!p) { toast('Produto não encontrado.', 'error'); return; }
+  if ((p.estoqueCompras||0) <= 0) { toast('Não há unidade no Setor Compras pra repor.', 'error'); return; }
+
+  const n = new Date();
+  const dataHoraBR = n.toLocaleDateString('pt-BR') + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const antesCompras = p.estoqueCompras || 0;
+  const antesQuotes = p.estoqueQuotes || 0;
+  p.estoqueCompras = antesCompras - 1;
+  p.estoqueQuotes = antesQuotes + 1;
+  // Estoque total (p.estoque) não muda — é só uma transferência entre os dois setores.
+  if (!p.historico) p.historico = [];
+  p.historico.unshift({
+    ts: dataHoraBR,
+    diff: { estoqueCompras: {antes:antesCompras, depois:p.estoqueCompras}, estoqueQuotes: {antes:antesQuotes, depois:p.estoqueQuotes} },
+    tsMs: n.getTime(),
+    user: `${CURRENT_USER.nome} (repôs o Setor Quotes a partir do Setor Compras)`
+  });
+  if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
+
+  r.status = 'atendido';
+  r.atendidoEm = dataHoraBR;
+  r.atendidoPor = CURRENT_USER.nome;
+  if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES);
+
+  registrarAudit('estoque', `Repôs Setor Quotes: ${p.nome}`,
+    `Setor Compras: ${antesCompras} → ${p.estoqueCompras} | Setor Quotes: ${antesQuotes} → ${p.estoqueQuotes}`, '✅');
+
+  renderAnaliseMin();
+
+  if (p.estoqueCompras <= 0) {
+    toast(`Reposto! Mas seu estoque (Compras) de ${p.nome} também zerou — hora de comprar mais.`, 'error');
+  } else {
+    toast(`Reposto! Setor Quotes de ${p.nome} atualizado.`, 'success');
+  }
 }
 
 // ── TROCA DE TINTA: registra de uma vez o consumo da unidade do Setor Quotes +
@@ -5718,11 +5793,32 @@ function confirmarTrocaTinta(){
   registrarAudit('estoque', `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode} — ${m.nome}`,
     `Série ${serie} | Validade ${validadeInput} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
 
+  // Zerou o Setor Quotes dessa tinta? Sinaliza pro Thiago repor do Setor Compras.
+  let zerouQuotes = false;
+  if (produto.estoqueQuotes <= 0) {
+    zerouQuotes = true;
+    REPO_QUOTES.push({
+      id: 'rq_' + Date.now(),
+      produtoCod: produto.cod,
+      produtoNome: produto.nome,
+      origem: 'troca',
+      maquina: m.nome,
+      tecnico: CURRENT_USER ? CURRENT_USER.nome : '',
+      data: dataHoraBR,
+      status: 'pendente'
+    });
+    if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES);
+    registrarAudit('estoque', `Setor Quotes zerou: ${produto.nome}`,
+      `Sinalizado pra reposição a partir do Setor Compras | Troca feita por ${CURRENT_USER?CURRENT_USER.nome:'—'} na ${m.nome}`, '🚩');
+  }
+
   fecharTrocaTinta();
   renderAnaliseMin();
   if (currentPage === 'maquinas') renderMaquinas();
   renderKPIs();
-  toast('Troca registrada! Estoque do Quotes baixado e histórico da máquina atualizado.', 'success');
+  toast(zerouQuotes
+    ? `Troca registrada! O Setor Quotes zerou de ${produto.nome} — sinalizado pra reposição.`
+    : 'Troca registrada! Estoque do Quotes baixado e histórico da máquina atualizado.', 'success');
 }
 
   // ═══════════════════════════════════════════════════════════════
@@ -7013,6 +7109,15 @@ window.fbSalvarUsuarios = async function(usuarios) {
   } catch(e) { console.error('Erro ao salvar usuários:', e); setSyncStatus('error'); }
 };
 
+// ── SALVAR reposições pendentes do Setor Quotes ────────────────
+window.fbSalvarRepoQuotes = async function(lista) {
+  try {
+    setSyncStatus('saving');
+    const { error } = await sb.from(COL_CONFIG).upsert({ id: 'repo_quotes', data: { lista, ts: Date.now() } }); if (error) throw error;
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao salvar reposições Quotes:', e); setSyncStatus('error'); }
+};
+
 // ── SALVAR máquina ────────────────────────────────────────────
 window.fbSalvarMaquina = async function(m) {
   try {
@@ -7103,6 +7208,12 @@ async function carregarDadosFirebase() {
     MAQUINAS.length = 0;
     novasMaq.forEach(m => MAQUINAS.push(m));
 
+    // Reposições pendentes do Setor Quotes
+    const { data: repoRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'repo_quotes').maybeSingle();
+    const listaRepo = repoRow && repoRow.data && repoRow.data.lista;
+    REPO_QUOTES.length = 0;
+    if (listaRepo && listaRepo.length) listaRepo.forEach(r => REPO_QUOTES.push(r));
+
     setSyncStatus('ok');
   } catch(e) {
     console.error('Erro ao carregar Supabase:', e);
@@ -7192,6 +7303,12 @@ _sbRealtime(COL_CONFIG, async () => {
     lista.forEach(u => USUARIOS.push(u));
   }
   if (currentPage === 'usuarios') renderUsuarios();
+
+  const { data: repoRow } = await sb.from(COL_CONFIG).select('data').eq('id', 'repo_quotes').maybeSingle();
+  const listaRepo = repoRow && repoRow.data && repoRow.data.lista;
+  REPO_QUOTES.length = 0;
+  if (listaRepo && listaRepo.length) listaRepo.forEach(r => REPO_QUOTES.push(r));
+  if (currentPage === 'analise-min') renderRepoQuotesPainel();
 });
 
 // ── Sobrescreve salvarUsuariosLS para usar Firebase também ────

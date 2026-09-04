@@ -1,5 +1,23 @@
 # 📝 Changelog — StockOps
 
+## [2.46.0] — 2026-09-02
+
+### ✨ Nova funcionalidade — Fila de reposição do Setor Quotes (transferência Compras → Quotes)
+
+Toda vez que uma **Troca de Tinta** (2.45.0) deixa o Setor Quotes daquela tinta em **0**, o sistema sinaliza automaticamente: entra um pedido na fila "🚩 Setor Quotes pedindo reposição", visível só pro admin, no topo da tela Estoque de Tintas.
+
+Pra cada pedido: um botão **"✅ Repor"** que, com 1 clique, transfere 1 unidade do **Setor Compras** pro **Setor Quotes** — desconta de um, soma no outro (o estoque total não muda, é só uma movimentação interna entre os dois setores), registra no histórico do produto e na auditoria. Se depois de repor o Setor Compras também zerar, aparece um aviso vermelho na hora: hora de comprar mais. Se o Setor Compras já estiver zerado quando o pedido chegar, o botão fica desabilitado avisando disso.
+
+### 🔧 Funções novas no JS
+
+| Função | Descrição |
+|---|---|
+| `renderRepoQuotesPainel()` | Desenha o painel de pedidos pendentes na tela Estoque de Tintas (só admin) |
+| `atenderRepoQuotes(id)` | Transfere 1 unidade Compras → Quotes, marca o pedido como atendido, avisa se o Compras zerou |
+| `REPO_QUOTES` | Novo estado global, persistido em `config` (doc `repo_quotes`, mesmo padrão de `usuarios`) |
+| `fbSalvarRepoQuotes()` | Salva a fila no Supabase |
+| `confirmarTrocaTinta()` | Agora, ao zerar o Setor Quotes, cria o pedido de reposição automaticamente |
+
 ## [2.45.2] — 2026-09-02
 
 ### 🐛 Correção — texto do botão ficava desatualizado após enviar
