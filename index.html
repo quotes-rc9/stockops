@@ -2016,6 +2016,22 @@ document.addEventListener('click', e => {
   }
 });
 
+// ── Edição rápida do Estoque Mínimo (permissão estreita, só esse campo) ──
+function editarEstoqueMinimoInline(cod, inputEl){
+  if(!temPermissao('editar_estoque_min')){ toast('Você não tem permissão para isso.','error'); return; }
+  const p = P.find(x=>x.cod===cod);
+  if(!p){ return; }
+  const novo = parseInt(inputEl.value, 10);
+  if(isNaN(novo) || novo < 0){ toast('Informe um número válido.','error'); inputEl.value = p.min; return; }
+  const antigo = p.min;
+  if(novo === antigo){ return; }
+  p.min = novo;
+  registrarAudit('estoque', `Estoque mínimo alterado: ${p.nome}`, `Cód: ${p.cod} | Mínimo: ${antigo} → ${novo}`, '✏');
+  if(typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
+  renderEstoque();
+  toast('Estoque mínimo atualizado.', 'success');
+}
+
 // ── ESTOQUE TABLE ─────────────────────────────────────────────
 function renderEstoque(){
   const s=(document.getElementById('f-search')?.value||'').toLowerCase();
@@ -2118,7 +2134,7 @@ function renderEstoque(){
         <div style="font-weight:700;color:${stColor};">${p.estoque}</div>
         ${p.caixa ? `<div style="font-size:8.5px;color:var(--t4);">cx: ${p.caixa}un</div>` : ''}
       </td>
-      <td style="text-align:center;color:var(--t3);">${p.min}</td>
+      <td style="text-align:center;color:var(--t3);">${temPermissao('editar_estoque_min') ? `<input type="number" class="fi2" min="0" step="1" value="${p.min}" style="width:56px;padding:3px 5px;font-size:11px;text-align:center;" onchange="editarEstoqueMinimoInline('${p.cod}', this)">` : p.min}</td>
       <td style="text-align:center;">${barRow(p)}</td>
       <td style="text-align:center;">${abcChip(p.abc)}</td>
       <td style="text-align:center;">${diasBadge(d,p.estoque)}</td>
@@ -4402,6 +4418,7 @@ const TODAS_PERMISSOES = [
   { id:'registrar_mov',      icon:'✏',  label:'Registrar Entrada/Saída',  desc:'Movimentar estoque diretamente' },
   { id:'criar_solic',        icon:'📝', label:'Criar Solicitações',       desc:'Solicitar entradas e saídas' },
   { id:'trocar_tinta',       icon:'🔄', label:'Registrar Troca de Tinta', desc:'Baixar do Setor Quotes e trocar direto numa máquina' },
+  { id:'editar_estoque_min', icon:'🔢', label:'Editar Estoque Mínimo',    desc:'Só o campo Mínimo, na tela Estoque completo — não mexe em custo, quantidade ou outros dados' },
   { id:'aprovar_solic',      icon:'✅', label:'Aprovar Solicitações',     desc:'Aprovar ou rejeitar pedidos' },
   { id:'editar_produtos',    icon:'🔧', label:'Editar Produtos',          desc:'Criar e editar cadastro de produtos' },
   { id:'excluir_produtos',   icon:'🗑', label:'Excluir Produtos/Movs',    desc:'Remover produtos e movimentações' },

@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.52.0] — 2026-09-08
+
+### ✨ Nova funcionalidade — Permissão estreita: editar só o Estoque Mínimo
+
+Nova permissão **"Editar Estoque Mínimo"**, separada da permissão geral de editar produtos. Quem tiver só essa liberada consegue alterar o campo Mínimo direto na tabela de Estoque completo (um campinho numérico na própria coluna) — sem acesso a custo, quantidade em estoque, nome ou qualquer outro dado do produto. Liberada para o Guilherme Neri.
+
 ## [2.51.0] — 2026-09-04
 
 ### ✨ Nova funcionalidade — Lista de separação em PDF (código + descrição)
