@@ -6444,6 +6444,7 @@ function registrarCompra(tipo) {
     const prod = P.find(x => x.cod === c.cod);
     if (!prod) return;
     prod.estoque += tipo === 'entrada' ? c.qty : -c.qty;
+    if (tipo === 'entrada') _aplicarChegadaSetorCompras(prod, c.qty);
     if (c.custo > 0) registrarMudancaPreco(prod, c.custo, 'Compra via carrinho');
     if (tipo === 'entrada' && c.validade) aplicarValidadeChegada(prod, c.validade);
     MOV.push({
@@ -6701,6 +6702,14 @@ function closePedidoDet() {
   _pedDetId = null;
 }
 
+// Tinta que chega via pedido entra no Setor Compras (pulmão do Thiago), nunca direto
+// no Setor Quotes — quem move de Compras pra Quotes é a Reposição (atenderRepoQuotes)
+// ou um pedido explícito do Thiago.
+function _aplicarChegadaSetorCompras(prod, qty){
+  if (typeof prod.estoqueCompras !== 'number' && typeof prod.estoqueQuotes !== 'number') return;
+  prod.estoqueCompras = (prod.estoqueCompras || 0) + qty;
+}
+
 function marcarItemChegou(pedidoId, itemIndex) {
   if (!podeEditar()) { toast('Acesso negado.', 'error'); return; }
   const p = PEDIDOS.find(x => x.id === pedidoId);
@@ -6714,6 +6723,7 @@ function marcarItemChegou(pedidoId, itemIndex) {
     const prod = P.find(x => x.cod === it.cod);
     if (prod) {
       prod.estoque += it.qty;
+      _aplicarChegadaSetorCompras(prod, it.qty);
       if (it.custo > 0) registrarMudancaPreco(prod, it.custo, 'Chegada de pedido');
       if (it.validade) aplicarValidadeChegada(prod, it.validade);
       MOV.push({
@@ -6761,6 +6771,7 @@ function marcarRecebido(id) {
       const prod = P.find(x => x.cod === it.cod);
       if (prod) {
         prod.estoque += it.qty;
+        _aplicarChegadaSetorCompras(prod, it.qty);
         if (it.custo > 0) registrarMudancaPreco(prod, it.custo, 'Chegada de pedido');
         if (it.validade) aplicarValidadeChegada(prod, it.validade);
         MOV.push({

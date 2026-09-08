@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.54.0] — 2026-09-08
+
+### 🐛 Correção — tinta chegando via pedido não entrava no Setor Compras
+
+Reportado: tintas de um pedido que já tinham chegado e sido marcadas como "Chegou" continuavam aparecendo zeradas no Setor Compras, na tela Estoque de Tintas. Causa: marcar a chegada de um pedido (`marcarItemChegou`/`marcarRecebido`) só somava no estoque total do produto — nunca no campo separado `estoqueCompras`, que é o que aquela tela mostra.
+
+Corrigido: toda chegada de tinta (via pedido ou via "Registrar Entrada" direta) agora soma automaticamente no Setor Compras também, confirmando a regra: tinta que chega vai pro pulmão do Thiago primeiro, nunca direto pro Setor Quotes — só sai de lá através de uma Reposição.
+
 ## [2.53.0] — 2026-09-08
 
 ### 🐛 Correção — precisava dar zoom-out (Ctrl -) pra ver tabelas grandes
