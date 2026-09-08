@@ -3465,7 +3465,7 @@ function switchSolicTab(tab) {
     const btn = document.getElementById('stab-'+t);
     const panel = document.getElementById('stab-panel-'+t);
     if (btn) btn.classList.toggle('active', t === tab);
-    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (panel) panel.style.display = t === tab ? 'flex' : 'none';
   });
 }
 
@@ -5156,7 +5156,7 @@ function switchPrevisaoTintaTab(tab){
     const btn = document.getElementById('ptt-'+t);
     const panel = document.getElementById('ptt-panel-'+t);
     if(btn) btn.classList.toggle('active', t===tab);
-    if(panel) panel.style.display = t===tab ? '' : 'none';
+    if(panel) panel.style.display = t===tab ? 'flex' : 'none';
   });
 }
 

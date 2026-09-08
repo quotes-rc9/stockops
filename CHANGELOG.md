@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.53.0] — 2026-09-08
+
+### 🐛 Correção — precisava dar zoom-out (Ctrl -) pra ver tabelas grandes
+
+Achada a causa raiz do "preciso diminuir a tela pra ver tudo": as abas **Aprovadas**, **Rejeitadas** e **Histórico completo** da tela Solicitações trocavam de painel usando um valor de CSS que quebrava a rolagem interna da tabela — em vez de rolar só a tabela, a página inteira crescia sem limite e empurrava o rodapé pra fora da tela, só dava pra ver tudo diminuindo o zoom do navegador.
+
+Corrigido: agora essas abas rolam internamente de verdade, sem precisar mexer no zoom. Vale pra todo mundo — Thiago e os 4 usuários do Setor Quotes (Veronica, Guilherme, Pedro, Anderson) — já que é uma correção no código, não uma permissão.
+
 ## [2.52.0] — 2026-09-08
 
 ### ✨ Nova funcionalidade — Permissão estreita: editar só o Estoque Mínimo
