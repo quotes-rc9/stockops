@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.57.0] — 2026-09-09
+
+### 🐛 Correção — layout quebrado no Calendário de Compra (e reforço nas outras abas)
+
+Reportado: os cartões de mês no Calendário de Compra apareceram gigantes e esticados, com um vão vazio enorme na tela. Causa: a correção de rolagem da v2.53 mudou a troca de aba pra usar `display:flex`, mas sem fixar a direção — o painel virou uma linha horizontal em vez de ficar empilhado verticalmente, esticando os cartões pra preencher a altura toda.
+
+Corrigido e aproveitado pra deixar melhor: o Calendário de Compra agora é um layout de duas colunas de verdade — mês à esquerda (fixo, com o aviso e o contador de cobertas), detalhe do mês à direita, cada lado rolando por conta própria. As outras abas com o mesmo tipo de troca (Resumo, Pedido Consolidado, Por Máquina, e as abas Aprovadas/Rejeitadas/Histórico de Solicitações) reforçadas contra o mesmo problema.
+
 ## [2.56.0] — 2026-09-09
 
 ### 🐛 Correção — previsão de compra ignorava o Setor Compras zerado
