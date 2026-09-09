@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.55.0] — 2026-09-09
+
+### 🎯 Melhoria — Calendário de Compra agora só mostra compra de verdade
+
+Reportado: o calendário somava no total do mês toda tinta com previsão de troca, mesmo quando já existia reserva válida esperando no estoque pra aquela troca — inflando o valor previsto com compras que na prática não iam acontecer (a garrafa reserva ia ser usada, não uma nova).
+
+Corrigido: agora só entra no calendário quem está no status 🟣 **Repor** (reserva não vai cobrir até a data) ou 🔴 **Comprar** (urgente). Tinta 🟢 Tranquilo ou 🟡 Programar — que já têm reserva válida garantida — não aparece mais ali, e um contador mostra quantas ficaram de fora por já estarem cobertas.
+
 ## [2.54.0] — 2026-09-08
 
 ### 🐛 Correção — tinta chegando via pedido não entrava no Setor Compras

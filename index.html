@@ -1090,7 +1090,11 @@
         </div>
 
         <div id="ptt-panel-calendario" style="display:none;flex:1;overflow-y:auto;padding:14px;">
-          <div id="pt-calendar-strip" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;"></div>
+          <div style="background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.2);border-radius:var(--r6);padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--blue);">
+            💡 Só entra aqui o que <b>realmente precisa de compra nova</b>. Tinta com reserva válida já esperando no estoque pra quando for trocar não conta — ela vai ser usada na hora, sem precisar comprar mais.
+          </div>
+          <div id="pt-calendar-strip" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px;"></div>
+          <div id="pt-calendar-cobertas" style="font-size:10.5px;color:var(--t4);margin-bottom:14px;"></div>
           <div id="pt-calendar-detail"></div>
         </div>
 
@@ -5455,10 +5459,17 @@ let _ptCalSelIdx = 0;
 function _renderPtCalendario(rows){
   const strip = document.getElementById('pt-calendar-strip'); if(!strip) return;
   const hoje = new Date();
-  // Itens com status "Comprar" (urgente — seja por consumo já vencido, seja pela regra de
-  // validade do Primer) sempre caem no mês atual, nunca no mês estatístico da previsão —
-  // por isso ficam fora do "futuros" aqui e são injetados à parte, sem duplicar.
-  const futuros = rows.filter(r=>(!r.status || r.status.key!=='comprar') && r.previsaoData && r.effRestante!=null && r.effRestante>0);
+  // O calendário é uma previsão de COMPRA, não de troca — só entra aqui quem realmente
+  // vai precisar de uma unidade nova. "Tranquilo" e "Programar" já têm reserva válida
+  // cobrindo a troca (a garrafa reserva vai ser usada na hora, sem comprar mais), então
+  // ficam de fora pra não inflar o total com compra que não vai acontecer. "Repor" é
+  // real (reserva não vai cobrir até lá) e "Comprar" (urgente) sempre cai no mês atual,
+  // nunca no mês estatístico da previsão — por isso fica fora do "futuros" e é injetado
+  // à parte, sem duplicar.
+  const futuros = rows.filter(r=>r.status && r.status.key==='repor' && r.previsaoData && r.effRestante!=null && r.effRestante>0);
+  const cobertas = rows.filter(r=>r.status && (r.status.key==='tranquilo' || r.status.key==='programar')).length;
+  const cobEl = document.getElementById('pt-calendar-cobertas');
+  if(cobEl) cobEl.textContent = cobertas ? `${cobertas} tinta${cobertas===1?'':'s'} com reserva já garantida não aparece${cobertas===1?'':'m'} aqui (${cobertas===1?'ela':'elas'} não representa${cobertas===1?'':'m'} uma compra nova).` : '';
   const porMes = {};
   futuros.forEach(r=>{
     const dt = _ptParseDataObj(r.previsaoData);
