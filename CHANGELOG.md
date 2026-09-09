@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.56.0] — 2026-09-09
+
+### 🐛 Correção — previsão de compra ignorava o Setor Compras zerado
+
+Reportado: o Setor Compras (o pulmão que fica com o Thiago) tava zerado pra várias tintas, mas o sistema não avisava que precisava comprar — o motor de decisão (🔴 Comprar / 🟣 Repor / 🟡 Programar / 🟢 Tranquilo) usava a validade e o estoque total do produto, sem olhar pro campo específico do Setor Compras. Resultado: uma tinta podia estar zerada no seu pulmão e mesmo assim aparecer como "Tranquilo", porque ainda tinha validade contada em alguma unidade — mesmo que essa unidade já estivesse reservada junto de uma máquina, no Setor Quotes.
+
+Corrigido: pra tinta com os dois setores rastreados, a reserva que conta pra decidir compra agora é limitada ao que existe de fato no **Setor Compras**. Achado ao investigar: 13 tintas que apareciam como "Tranquilo"/"Programar" tinham o Setor Compras zerado — todas reclassificadas corretamente, e agora aparecem no Resumo, no Pedido Consolidado e no Calendário de Compra.
+
 ## [2.55.0] — 2026-09-09
 
 ### 🎯 Melhoria — Calendário de Compra agora só mostra compra de verdade

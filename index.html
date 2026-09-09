@@ -5072,30 +5072,39 @@ function _ptAvaliar(cor, effRestante, previsaoDataStr, produto, validadeInstalad
   if(effRestante==null){
     return { ..._PT_ACAO.semhist, motivo:'Ainda não há ciclos suficientes registrados nessa máquina pra calcular uma média confiável.' };
   }
-  const estoqueAtual = produto ? produto.estoque : 0;
+  // A reserva que conta pra decidir COMPRA é o Setor Compras (o pulmão que fica com o
+  // Thiago) — não o estoque total, que pode incluir tinta já reservada junto da máquina
+  // no Setor Quotes e que, portanto, não ajuda a repor nada. Quando o produto já tem os
+  // dois setores rastreados, a reserva "conta" fica limitada ao que existe no Compras.
+  const temDoisSetores = produto && typeof produto.estoqueCompras === 'number';
+  const estoqueAtual = temDoisSetores ? (produto.estoqueCompras||0) : (produto ? produto.estoque : 0);
   const regraTxt = cor==='PRIMER' ? '(o Primer não pode ser usado após a validade)' : '(validade + 1 ano de uso)';
   const hoje = Date.now();
-  const reservaAgora = _ptReservaValidaNaData(produto, cor, hoje);
+  const reservaAgora = temDoisSetores
+    ? Math.min(_ptReservaValidaNaData(produto, cor, hoje), produto.estoqueCompras||0)
+    : _ptReservaValidaNaData(produto, cor, hoje);
 
   if(effRestante<=0){
     if(reservaAgora>=1){
-      return { ..._PT_ACAO.repor, motivo:`Já passou da média de troca (${effRestante}d) e há reserva válida no estoque — pode trocar assim que conferir o nível físico na máquina. Depois de trocar, reponha o estoque.` };
+      return { ..._PT_ACAO.repor, motivo:`Já passou da média de troca (${effRestante}d) e há reserva válida no ${temDoisSetores?'Setor Compras':'estoque'} — pode trocar assim que conferir o nível físico na máquina. Depois de trocar, reponha o estoque.` };
     }
     const motivoEstoque = estoqueAtual>0
-      ? `há ${estoqueAtual} unidade(s) em estoque, mas já passaram do prazo de uso ${regraTxt} — não contam mais como reserva`
-      : 'não há nenhuma unidade de reserva no estoque';
+      ? `há ${estoqueAtual} unidade(s) no ${temDoisSetores?'Setor Compras':'estoque'}, mas já passaram do prazo de uso ${regraTxt} — não contam mais como reserva`
+      : (temDoisSetores ? 'o Setor Compras está zerado' : 'não há nenhuma unidade de reserva no estoque');
     return { ..._PT_ACAO.comprar, motivo:`Já passou da média de troca (${effRestante}d) e ${motivoEstoque}.` };
   }
 
   const dataNecessidadeMs = hoje + effRestante*86400000;
-  const reservaNaData = _ptReservaValidaNaData(produto, cor, dataNecessidadeMs);
+  const reservaNaData = temDoisSetores
+    ? Math.min(_ptReservaValidaNaData(produto, cor, dataNecessidadeMs), produto.estoqueCompras||0)
+    : _ptReservaValidaNaData(produto, cor, dataNecessidadeMs);
   const dentroDoPrazo = effRestante<=PRAZO_REPOSICAO_DIAS;
 
   if(estoqueAtual===0 && dentroDoPrazo){
-    return { ..._PT_ACAO.comprar, motivo:`Faltam só ${effRestante}d pra essa tinta precisar de troca (previsto ${previsaoDataStr}) e não há reserva no estoque — sem folga pra esperar.` };
+    return { ..._PT_ACAO.comprar, motivo:`Faltam só ${effRestante}d pra essa tinta precisar de troca (previsto ${previsaoDataStr}) e ${temDoisSetores?'o Setor Compras está zerado':'não há reserva no estoque'} — sem folga pra esperar.` };
   }
   if(reservaNaData===0){
-    const razao = estoqueAtual===0 ? 'o estoque de reserva está zerado' : `a reserva atual vai passar do prazo de uso ${regraTxt} antes de ${previsaoDataStr}`;
+    const razao = estoqueAtual===0 ? `o ${temDoisSetores?'Setor Compras':'estoque de reserva'} está zerado` : `a reserva atual vai passar do prazo de uso ${regraTxt} antes de ${previsaoDataStr}`;
     return { ..._PT_ACAO.repor, motivo:`Ainda faltam ${effRestante}d pra essa tinta precisar trocar, mas ${razao} — vale comprar com calma antes que aperte.` };
   }
   if(dentroDoPrazo){
