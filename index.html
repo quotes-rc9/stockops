@@ -5150,6 +5150,17 @@ function calcularPrevisaoTinta(){
         effRestante = c.conferencia.diasRestantes - _diasDesde(c.conferencia.data);
         conferido = true;
       }
+      // Primer não tem a extensão de +1 ano das outras tintas — o prazo real de troca é
+      // sempre a validade impressa no cartucho instalado, não a média estatística de
+      // consumo. Quando a validade vence antes do que a média sugere, ela manda (sem isso,
+      // a previsão mostrava "faltam 200+ dias" pra um Primer que na verdade vence em 40).
+      if(c.cor==='PRIMER' && c.validadeInstalada){
+        const valMs = _parseData(c.validadeInstalada);
+        if(valMs){
+          const diasAteValidade = Math.floor((valMs.getTime() - Date.now())/86400000);
+          if(diasAteValidade>=0 && (effRestante==null || diasAteValidade<effRestante)) effRestante = diasAteValidade;
+        }
+      }
       const previsaoData = effRestante!=null ? _ptDataPrevisao(effRestante) : null;
       const status = _ptAvaliar(c.cor, effRestante, previsaoData, produto, c.validadeInstalada);
       rows.push({

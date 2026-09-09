@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.58.0] — 2026-09-09
+
+### 🐛 Correção — previsão do Primer ignorava a validade impressa até vencer
+
+Reportado: o Thiago sabia que 3 máquinas (Mimaki 01, 03 e 04) têm Primer instalado vencendo em 23/10/2026, mas a previsão mostrava "faltam 230 a 305 dias" pra essas cores — porque usava só a média estatística de consumo, e só considerava a validade impressa depois que ela já tivesse vencido (regra do Primer: sem a extensão de +1 ano das outras tintas).
+
+Corrigido: agora, pro Primer, a data que manda é a mais próxima entre a média estatística e a validade impressa no cartucho instalado — antes de vencer. As 3 máquinas passam a mostrar corretamente ~44 dias e previsão pra 23/10/2026, entrando no lugar certo do Calendário de Compra em vez de sumir lá pra 2027.
+
 ## [2.57.0] — 2026-09-09
 
 ### 🐛 Correção — layout quebrado no Calendário de Compra (e reforço nas outras abas)
