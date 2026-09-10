@@ -9,7 +9,7 @@
 //
 // ═══════════════════════════════════════════════════════════════
 
-const APP_VERSION = 'stockops-v2.58.0';
+const APP_VERSION = 'stockops-v2.59.0';
 const APP_SHELL = [
   './',
   './index.html',

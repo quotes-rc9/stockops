@@ -1,5 +1,17 @@
 # 📝 Changelog — StockOps
 
+## [2.59.0] — 2026-09-10
+
+### ✨ Nova funcionalidade — Solicitação diz pra qual máquina a peça vai
+
+Toda solicitação de material agora **exige** marcar onde a peça/insumo vai ser usado — uma lista de checkbox com as 6 Mimaki + "Estoque geral". Dá pra marcar mais de uma máquina.
+
+O destino aparece:
+- Na tabela "Minhas solicitações" (coluna Destino) e no card de pendentes do admin (tag azul 🖨️).
+- Na mensagem padronizada do WhatsApp.
+- Na auditoria.
+- **No histórico da própria máquina**: quando o admin aprova, entra uma linha 🔧 no histórico de cada máquina marcada ("Peça/insumo: X — N un, solicitado por Fulano"). É o começo do histórico de peças e manutenção por máquina que o Thiago pediu.
+
 ## [2.58.0] — 2026-09-09
 
 ### 🐛 Correção — previsão do Primer ignorava a validade impressa até vencer

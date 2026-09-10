@@ -543,6 +543,7 @@
                   <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('tipo')">Tipo <span id="solichist-arrow-tipo"></span></th>
                   <th style="text-align:center;cursor:pointer;user-select:none;" onclick="sortSolicBy('qty')">Qtd <span id="solichist-arrow-qty"></span></th>
                   <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('resp')">Solicitante <span id="solichist-arrow-resp"></span></th>
+                  <th>Destino</th>
                   <th>Obs</th>
                   <th style="cursor:pointer;user-select:none;" onclick="sortSolicBy('status')">Status <span id="solichist-arrow-status"></span></th>
                 </tr></thead>
@@ -597,8 +598,12 @@
                   </div>
                 </div>
                 <div style="padding:10px 12px;border-top:1px solid var(--b1);">
+                  <label class="fl">🖨️ Onde vai ser usado? <span style="color:var(--red);">*</span> <span style="font-weight:400;color:var(--t4);text-transform:none;">— marque uma ou mais</span></label>
+                  <div id="sm-maquinas-lista" style="display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:2px;"></div>
+                </div>
+                <div style="padding:10px 12px;border-top:1px solid var(--b1);">
                   <label class="fl">Observação (opcional, vale pra tudo que for marcado)</label>
-                  <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, pra Mimaki 03...">
+                  <input class="fi2" id="sm-obs" type="text" placeholder="Ex: urgente, troca preventiva...">
                   <button id="sm-btn-enviar" style="width:100%;justify-content:center;margin-top:10px;padding:9px;font-size:12.5px;background:var(--green-a);border-color:rgba(var(--green-rgb),0.3);color:var(--green);border:1px solid rgba(var(--green-rgb),0.3);cursor:pointer;" onclick="enviarSolicitacaoMaterial()">📤 Enviar solicitação</button>
                   <div id="sm-whatsapp-cta" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-a);border:1px solid rgba(var(--green-rgb),.25);font-size:11.5px;color:var(--t1);">
                     ✅ Solicitação registrada no sistema!
@@ -614,7 +619,7 @@
             <div class="ph"><span class="ph-title">Minhas solicitações</span><span class="ph-sub" id="sm-count"></span></div>
             <div class="tbl-wrap" style="max-height:340px;overflow-y:auto;">
               <table>
-                <thead><tr><th>Movimento</th><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Obs</th><th>Status</th></tr></thead>
+                <thead><tr><th>Movimento</th><th>Data</th><th>Produto</th><th style="text-align:center;">Qtd</th><th>Destino</th><th>Obs</th><th>Status</th></tr></thead>
                 <tbody id="sm-hist-tbody"></tbody>
               </table>
             </div>
@@ -3416,7 +3421,19 @@ function aprovarSolic(id) {
   if (typeof fbSalvarProduto === 'function') fbSalvarProduto(p);
   if (typeof fbSalvarMov === 'function') fbSalvarMov(MOV[MOV.length-1]);
   registrarAudit('solic', `Solicitação #${id} aprovada`,
-    `${s.tipo} de ${s.qty} un de "${s.nome}" | Sol: ${s.resp} | Est.: ${p.estoque}`, '✅');
+    `${s.tipo} de ${s.qty} un de "${s.nome}" | Sol: ${s.resp} | Est.: ${p.estoque}${(s.maquinasDestino&&s.maquinasDestino.length)?' | Destino: '+s.maquinasDestino.join(', '):''}`, '✅');
+
+  // Registra no histórico de cada máquina de destino — cria o histórico de peças/manutenção por máquina
+  if (s.maquinasDestino && s.maquinasDestino.length) {
+    s.maquinasDestino.filter(nome => nome !== 'Estoque geral').forEach(nome => {
+      const m = MAQUINAS.find(x => x.nome === nome);
+      if (m && typeof _maqHistPush === 'function') {
+        _maqHistPush(m, `Peça/insumo: ${s.nome}`,
+          `${s.qty} un — solicitado por ${s.resp}, aprovado${s.obs?` (${s.obs})`:''}`, '🔧');
+        if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
+      }
+    });
+  }
   renderAll();
   renderSolicBadge();
   renderSolicitacoes();
@@ -3488,6 +3505,24 @@ let _smItensLivres = [];
 // (diferente de antes, que só "lembrava" da marcação enquanto o item continuava visível).
 let _smCarrinho = {};
 let _smUltimoTexto = ''; // mensagem padronizada da última solicitação enviada, pra reaproveitar no WhatsApp
+let _smMaquinas = []; // máquinas de destino marcadas pro lote atual (controle de pra onde a peça/insumo vai)
+
+function renderSmMaquinas(){
+  const wrap = document.getElementById('sm-maquinas-lista');
+  if (!wrap) return;
+  const opts = (MAQUINAS || []).map(m => m.nome).filter(Boolean).concat(['Estoque geral']);
+  wrap.innerHTML = opts.map(nome => {
+    const nEsc = nome.replace(/'/g, "\\'");
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:10.5px;cursor:pointer;white-space:nowrap;color:var(--t1);">
+      <input type="checkbox" value="${nome}" ${_smMaquinas.includes(nome)?'checked':''} onchange="toggleSmMaquina('${nEsc}', this)" style="flex:none;">
+      ${nome}
+    </label>`;
+  }).join('');
+}
+function toggleSmMaquina(nome, el){
+  if (el.checked) { if (!_smMaquinas.includes(nome)) _smMaquinas.push(nome); }
+  else { _smMaquinas = _smMaquinas.filter(x => x !== nome); }
+}
 
 function abrirWhatsappSolicitacao(){
   if (!_smUltimoTexto) return;
@@ -3606,8 +3641,10 @@ function enviarSolicitacaoMaterial(){
   if (!temPermissao('criar_solic')) { toast('Você não tem permissão para solicitar.', 'error'); return; }
   const codsCarrinho = Object.keys(_smCarrinho);
   if (!codsCarrinho.length && !_smItensLivres.length) { toast('Marque ou digite pelo menos um item.', 'error'); return; }
+  if (!_smMaquinas.length) { toast('Marque onde vai ser usado (uma máquina ou "Estoque geral").', 'error'); return; }
 
   const obs = (document.getElementById('sm-obs')?.value || '').trim();
+  const maquinasDestino = [..._smMaquinas];
   const resp = CURRENT_USER ? CURRENT_USER.nome : '';
   const agora = new Date();
   const dataStr = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -3619,10 +3656,10 @@ function enviarSolicitacaoMaterial(){
     if (qty <= 0) { itensInvalidos++; return; }
     const p = P.find(x => x.cod === cod);
     if (!p) return;
-    novasSolics.push({ cod, nome: p.nome, livre: false, tipo: 'SAÍDA', qty, resp, obs, data: dataStr, status: 'pendente' });
+    novasSolics.push({ cod, nome: p.nome, livre: false, tipo: 'SAÍDA', qty, resp, obs, maquinasDestino, data: dataStr, status: 'pendente' });
   });
   _smItensLivres.forEach(it => {
-    novasSolics.push({ cod: 'LIVRE', nome: it.nome, livre: true, tipo: 'SAÍDA', qty: it.qty, resp, obs, data: dataStr, status: 'pendente' });
+    novasSolics.push({ cod: 'LIVRE', nome: it.nome, livre: true, tipo: 'SAÍDA', qty: it.qty, resp, obs, maquinasDestino, data: dataStr, status: 'pendente' });
   });
 
   if (itensInvalidos > 0) toast(`${itensInvalidos} item(ns) com quantidade inválida foram ignorados.`, 'error');
@@ -3639,17 +3676,19 @@ function enviarSolicitacaoMaterial(){
     SOLIC.push(s);
     if (typeof fbSalvarSolic === 'function') fbSalvarSolic(s);
   });
+  const destinoTxt = maquinasDestino.join(', ');
   registrarAudit('solic', `Solicitação em lote: ${novasSolics.length} ${novasSolics.length===1?'item':'itens'} (${movNum})`,
-    `Solicitante: ${resp}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
+    `Solicitante: ${resp} | Destino: ${destinoTxt}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
 
   // Monta a mensagem padronizada pra quem quiser também avisar por WhatsApp
   const linhasItens = novasSolics.map(s => `• ${s.nome} — ${s.qty} un`).join('\n');
-  _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n🔖 ${movNum}\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
+  _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n🔖 ${movNum}\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n🖨️ Destino: ${destinoTxt}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
   const ctaEl = document.getElementById('sm-whatsapp-cta');
   if (ctaEl) ctaEl.style.display = '';
 
   _smCarrinho = {};
   _smItensLivres = [];
+  _smMaquinas = [];
   renderSmItensLivres();
   const obsEl = document.getElementById('sm-obs'); if (obsEl) obsEl.value = '';
   renderSolicitarMaterial();
@@ -3660,6 +3699,7 @@ function renderSolicitarMaterial(){
   renderSmCatalogo();
   renderSmCarrinho();
   renderSmItensLivres();
+  renderSmMaquinas();
   atualizarSmContagem();
   const meu = CURRENT_USER ? CURRENT_USER.nome : '';
   const minhas = SOLIC.filter(s => s.resp === meu).slice().sort((a,b) => b.id - a.id);
@@ -3670,15 +3710,17 @@ function renderSolicitarMaterial(){
   tbody.innerHTML = minhas.length ? minhas.map(s => {
     const cor = s.status==='aprovado'?'b-ok':s.status==='rejeitado'?'b-crit':'b-warn';
     const label = s.status==='aprovado'?'✓ Aprovado':s.status==='rejeitado'?'✕ Rejeitado':'⏳ Pendente';
+    const destino = (s.maquinasDestino && s.maquinasDestino.length) ? s.maquinasDestino.join(', ') : '—';
     return `<tr>
       <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${s.movNum||'—'}</td>
       <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${s.data}</td>
       <td>${s.nome}</td>
       <td style="text-align:center;">${s.qty}</td>
+      <td style="font-size:10.5px;color:var(--t2);">${destino}</td>
       <td style="color:var(--t3);font-size:11px;">${s.obs||'—'}</td>
       <td><span class="badge ${cor}">${label}</span></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma solicitação ainda.</td></tr>`;
+  }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:24px;">Nenhuma solicitação ainda.</td></tr>`;
 }
 
 let _solicSort = { campo: null, dir: 'asc' };
@@ -3725,9 +3767,11 @@ function renderSolicitacoes() {
       pendEl.innerHTML = pend.map(s => {
         const isE = s.tipo === 'ENTRADA';
         const isLivre = s.livre;
+        const destinoTag = (s.maquinasDestino && s.maquinasDestino.length)
+          ? `<span style="display:inline-block;font-size:9px;font-weight:700;background:var(--blue-a);color:var(--blue);padding:1px 6px;border-radius:4px;margin-left:6px;">🖨️ ${s.maquinasDestino.join(', ')}</span>` : '';
         return `<div class="solic-card">
           <div class="solic-info">
-            <div class="solic-nome">${!isLivre && s.cod ? `<span class="mono" style="color:var(--t3);font-size:10px;">${s.cod}</span> ` : ''}${s.nome}${isLivre?' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>':''}</div>
+            <div class="solic-nome">${!isLivre && s.cod ? `<span class="mono" style="color:var(--t3);font-size:10px;">${s.cod}</span> ` : ''}${s.nome}${isLivre?' <span style="font-size:9px;background:var(--orange-a);color:var(--orange);padding:1px 5px;border-radius:3px;">livre</span>':''}${destinoTag}</div>
             <div class="solic-meta">${s.movNum?s.movNum+' · ':''}#${s.id} · ${s.data} · <em>${s.resp}</em>${s.obs?' · '+s.obs:''}</div>
           </div>
           <div class="solic-qty ${isE?'solic-tipo-e':'solic-tipo-s'}">${isE?'+':'-'}${s.qty}</div>
@@ -3761,17 +3805,19 @@ function renderSolicitacoes() {
     ? arr.map(s => {
         const cor = s.status==='aprovado'?'b-ok':s.status==='rejeitado'?'b-crit':'b-warn';
         const label = s.status==='aprovado'?'✓ Aprovado':s.status==='rejeitado'?'✕ Rejeitado':'⏳ Pendente';
+        const destino = (s.maquinasDestino && s.maquinasDestino.length) ? s.maquinasDestino.join(', ') : '—';
         return `<tr>
           <td class="mono" style="font-size:10px;color:var(--t3);">${s.data}</td>
           <td style="font-weight:500;">${s.nome}</td>
           <td><span class="badge ${s.tipo==='ENTRADA'?'b-ok':'b-crit'}">${s.tipo}</span></td>
           <td style="text-align:center;font-weight:700;">${s.qty}</td>
           <td style="color:var(--t3);">${s.resp}</td>
+          <td style="font-size:10.5px;color:var(--t2);">${destino}</td>
           <td style="color:var(--t3);font-size:11px;">${s.obs||'—'}</td>
           <td><span class="badge ${cor}">${label}</span></td>
         </tr>`;
       }).join('')
-    : `<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:16px;">Nenhum registro.</td></tr>`;
+    : `<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:16px;">Nenhum registro.</td></tr>`;
 
   if ($('solic-aprov-tbody'))  $('solic-aprov-tbody').innerHTML  = rowsSolic(aprov);
   if ($('solic-rejeit-tbody')) $('solic-rejeit-tbody').innerHTML = rowsSolic(rejeit);
