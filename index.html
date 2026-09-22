@@ -7205,8 +7205,11 @@ window.fbSalvarProduto = async function(p) {
 window.fbSalvarMov = async function(mov) {
   try {
     setSyncStatus('saving');
-    const id = 'mov_' + Date.now();
-    const { error } = await sb.from(COL_MOV).upsert({ id, data: mov }); if (error) throw error;
+    // Precisa de um id estável: sem isso, salvar o MESMO registro de novo (ex: corrigindo um
+    // custo depois) cria uma linha duplicada em vez de atualizar a existente — o id só era
+    // gerado aqui, nunca guardado no objeto, então cada chamada virava um novo Date.now().
+    if (!mov.id) mov.id = 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const { error } = await sb.from(COL_MOV).upsert({ id: mov.id, data: mov }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar mov:', e); setSyncStatus('error'); }
 };

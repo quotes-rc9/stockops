@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.60.0] — 2026-09-22
+
+### 🐛 Correção — corrigir o custo de uma movimentação duplicava a linha
+
+Achado ao corrigir manualmente o custo de uma saída (valor em dólar convertido pra real): salvar a MESMA movimentação de novo criava uma linha nova no banco em vez de atualizar a existente. Causa: `fbSalvarMov` gerava um id novo (`Date.now()`) toda vez que era chamada, nunca guardava esse id no registro — então não tinha como saber que já existia.
+
+Corrigido: a movimentação agora guarda o próprio id assim que é salva pela primeira vez, e reaproveita esse id em qualquer correção futura.
+
 ## [2.59.0] — 2026-09-10
 
 ### ✨ Nova funcionalidade — Solicitação diz pra qual máquina a peça vai
