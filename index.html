@@ -3681,7 +3681,7 @@ function enviarSolicitacaoMaterial(){
     `Solicitante: ${resp} | Destino: ${destinoTxt}${obs?' | '+obs:''} | ${novasSolics.map(s=>s.nome+' x'+s.qty).join(', ')}`, '📝');
 
   // Monta a mensagem padronizada pra quem quiser também avisar por WhatsApp
-  const linhasItens = novasSolics.map(s => `• ${s.nome} — ${s.qty} un`).join('\n');
+  const linhasItens = novasSolics.map(s => `• ${!s.livre && s.cod ? s.cod+' — ' : ''}${s.nome} — ${s.qty} un`).join('\n');
   _smUltimoTexto = `📋 *Solicitação de Material — StockOps*\n🔖 ${movNum}\n👤 Solicitante: ${resp}\n📅 ${dataStr}\n🖨️ Destino: ${destinoTxt}\n\nItens:\n${linhasItens}` + (obs ? `\n\n📝 Obs: ${obs}` : '');
   const ctaEl = document.getElementById('sm-whatsapp-cta');
   if (ctaEl) ctaEl.style.display = '';

@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.61.0] — 2026-09-22
+
+### 🎨 Melhoria — mensagem de WhatsApp mostra código + descrição do item
+
+A mensagem padronizada de "Avisar por WhatsApp" (Solicitar Material) agora lista cada item como `código — descrição — qtd un`, em vez de só a descrição. Item avulso (sem cadastro) continua sem código, só a descrição.
+
 ## [2.60.0] — 2026-09-22
 
 ### 🐛 Correção — corrigir o custo de uma movimentação duplicava a linha
