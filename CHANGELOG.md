@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.63.0] — 2026-09-24
+
+### 🐛 Correção — UCJV300-160 tem 2 bandejas de Branco, não 1
+
+A leitura do RasterLink da UCJV300-160 mostrou 2 bandejas de tinta Branca (Branco 07 e Branco 08), mas a planilha física só rastreava uma. Corrigido: a Branca dessa máquina agora segue o mesmo padrão `BRANCO-07`/`BRANCO-08` das outras 6 (2 slots independentes). A bandeja 08 passa a ser rastreada a partir de hoje (23/09/2026) — não tem histórico anterior porque a planilha nunca separou as duas.
+
 ## [2.62.0] — 2026-09-24
 
 ### ✨ Nova funcionalidade — Mimaki UCJV300-160 entra no rastreio de tinta

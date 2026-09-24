@@ -5052,7 +5052,7 @@ const TINTA_MAPA = [
   { maqModelo:'LUS-175', cores:['MAGENTA'],                 produtoNome:'Tinta Magenta LUS175', slotsPorMaquina:1 },
   { maqModelo:'LUS-175', cores:['LMAGENTA'],                produtoNome:'Magenta Claro LUS175', slotsPorMaquina:1 },
   { maqModelo:'LUS-175', cores:['YELLOW'],                  produtoNome:'Tinta Amarela LUS175', slotsPorMaquina:1 },
-  { maqModelo:'LUS-175', cores:['WHITE'],                   produtoNome:'Tinta Branca LUS175',  slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['BRANCO-07','BRANCO-08'],  produtoNome:'Tinta Branca LUS175',  slotsPorMaquina:2 },
 ];
 // Primer: produto único, compartilhado pelas 6 máquinas (não separa por modelo de máquina)
 const TINTA_PRIMER = { cores:['PRIMER'], produtoNome:'Tinta Neutra PR 200' };
@@ -5061,8 +5061,8 @@ const PRAZO_REPOSICAO_DIAS = 30; // dias estimados entre pedir e receber uma rem
 // ── Diagnóstico por máquina: compara o pote atual (sem fim) com a média
 // HISTÓRICA daquela máquina especificamente pra aquela cor (não a média agregada
 // por modelo) — é isso que revela uma máquina rodando fora do padrão dela mesma.
-const AMIN_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Clear', PRIMER:'Primer', 'BRANCO-07':'Branco-07', 'BRANCO-08':'Branco-08', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro', WHITE:'Branca' };
-const AMIN_ORDEM_COR = ['BLACK','CYAN','MAGENTA','YELLOW','CLEAR','PRIMER','BRANCO-07','BRANCO-08','LCYAN','LMAGENTA','WHITE'];
+const AMIN_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Clear', PRIMER:'Primer', 'BRANCO-07':'Branco-07', 'BRANCO-08':'Branco-08', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro' };
+const AMIN_ORDEM_COR = ['BLACK','CYAN','MAGENTA','YELLOW','CLEAR','PRIMER','BRANCO-07','BRANCO-08','LCYAN','LMAGENTA'];
 function calcularConsumoPorMaquina(){
   return [...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(m=>{
     const cores = AMIN_ORDEM_COR.map(cor=>{
@@ -5697,7 +5697,7 @@ function _renderPtPorMaquina(rows){
 // ── Estoque de Tintas: 2 setores rastreados separadamente ──
 // Setor Quotes (reserva em estoque junto das máquinas, NÃO é a tinta instalada) x Setor Compras (com o Thiago, pulmão).
 // A Previsão de Troca de Tinta usa só estoqueQuotes como reserva disponível pra trocar.
-const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro', WHITE:'Branca' };
+const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro' };
 function _etLinhasModelo(modelo){
   return TINTA_MAPA.filter(e=>e.maqModelo===modelo).map(e=>{
     const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===e.produtoNome.trim().toLowerCase());
