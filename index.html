@@ -5046,6 +5046,13 @@ const TINTA_MAPA = [
   { maqModelo:'LUS-120', cores:['YELLOW'],                  produtoNome:'Tinta Amarela LUS120', slotsPorMaquina:1 },
   { maqModelo:'LUS-120', cores:['CLEAR'],                   produtoNome:'Verniz Clear LUS120',  slotsPorMaquina:1 },
   { maqModelo:'LUS-120', cores:['BRANCO-07','BRANCO-08'],  produtoNome:'Tinta Branca LUS120',  slotsPorMaquina:2 },
+  { maqModelo:'LUS-175', cores:['BLACK'],                   produtoNome:'Tinta Preta LUS175',   slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['CYAN'],                    produtoNome:'Tinta Ciano LUS175',   slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['LCYAN'],                   produtoNome:'Ciano Claro LUS175',   slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['MAGENTA'],                 produtoNome:'Tinta Magenta LUS175', slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['LMAGENTA'],                produtoNome:'Magenta Claro LUS175', slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['YELLOW'],                  produtoNome:'Tinta Amarela LUS175', slotsPorMaquina:1 },
+  { maqModelo:'LUS-175', cores:['WHITE'],                   produtoNome:'Tinta Branca LUS175',  slotsPorMaquina:1 },
 ];
 // Primer: produto único, compartilhado pelas 6 máquinas (não separa por modelo de máquina)
 const TINTA_PRIMER = { cores:['PRIMER'], produtoNome:'Tinta Neutra PR 200' };
@@ -5054,8 +5061,8 @@ const PRAZO_REPOSICAO_DIAS = 30; // dias estimados entre pedir e receber uma rem
 // ── Diagnóstico por máquina: compara o pote atual (sem fim) com a média
 // HISTÓRICA daquela máquina especificamente pra aquela cor (não a média agregada
 // por modelo) — é isso que revela uma máquina rodando fora do padrão dela mesma.
-const AMIN_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Clear', PRIMER:'Primer', 'BRANCO-07':'Branco-07', 'BRANCO-08':'Branco-08' };
-const AMIN_ORDEM_COR = ['BLACK','CYAN','MAGENTA','YELLOW','CLEAR','PRIMER','BRANCO-07','BRANCO-08'];
+const AMIN_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Clear', PRIMER:'Primer', 'BRANCO-07':'Branco-07', 'BRANCO-08':'Branco-08', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro', WHITE:'Branca' };
+const AMIN_ORDEM_COR = ['BLACK','CYAN','MAGENTA','YELLOW','CLEAR','PRIMER','BRANCO-07','BRANCO-08','LCYAN','LMAGENTA','WHITE'];
 function calcularConsumoPorMaquina(){
   return [...MAQUINAS].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(m=>{
     const cores = AMIN_ORDEM_COR.map(cor=>{
@@ -5690,7 +5697,7 @@ function _renderPtPorMaquina(rows){
 // ── Estoque de Tintas: 2 setores rastreados separadamente ──
 // Setor Quotes (reserva em estoque junto das máquinas, NÃO é a tinta instalada) x Setor Compras (com o Thiago, pulmão).
 // A Previsão de Troca de Tinta usa só estoqueQuotes como reserva disponível pra trocar.
-const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear' };
+const _ET_NOME_COR = { BLACK:'Preta', CYAN:'Ciano', MAGENTA:'Magenta', YELLOW:'Amarela', CLEAR:'Verniz Clear', LCYAN:'Ciano Claro', LMAGENTA:'Magenta Claro', WHITE:'Branca' };
 function _etLinhasModelo(modelo){
   return TINTA_MAPA.filter(e=>e.maqModelo===modelo).map(e=>{
     const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===e.produtoNome.trim().toLowerCase());
@@ -5735,34 +5742,12 @@ function _etCardPrimer(campo){
     <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null, trocaCtx)}</div>
   </div>`;
 }
-// LUS-175: produtos já cadastrados, mas a(s) máquina(s) ainda não foram registradas em MAQUINAS
-// (o Thiago vai passar a relação de máquina/tintas separadamente) — por isso não entra em
-// TINTA_MAPA ainda, e essa lista fica hardcoded até a máquina existir de verdade no sistema.
-const _ET_LUS175_PRODUTOS = [
-  { label:'Preta',         nome:'Tinta Preta LUS175' },
-  { label:'Ciano',         nome:'Tinta Ciano LUS175' },
-  { label:'Ciano Claro',   nome:'Ciano Claro LUS175' },
-  { label:'Magenta',       nome:'Tinta Magenta LUS175' },
-  { label:'Magenta Claro', nome:'Magenta Claro LUS175' },
-  { label:'Amarela',       nome:'Tinta Amarela LUS175' },
-  { label:'Branca',        nome:'Tinta Branca LUS175' },
-];
-function _etCardLUS175(campo){
-  const linhas = _ET_LUS175_PRODUTOS.map(x=>{
-    const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===x.nome.trim().toLowerCase());
-    return _etLinhaHtml(x.label, produto?produto[campo]:null);
-  }).join('');
-  return `<div class="panel" style="overflow:hidden;margin-bottom:10px;">
-    <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">LUS-175 <span style="font-weight:400;color:var(--t4);">(máquina ainda não cadastrada)</span></span></div>
-    <div>${linhas}</div>
-  </div>`;
-}
 function renderAnaliseMin(){
   const gQ = document.getElementById('et-quotes-grid'); if(!gQ) return;
   const gC = document.getElementById('et-compras-grid'); if(!gC) return;
   const modelos = [...new Set(TINTA_MAPA.map(e=>e.maqModelo))];
-  gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardLUS175('estoqueQuotes') + _etCardPrimer('estoqueQuotes');
-  gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardLUS175('estoqueCompras') + _etCardPrimer('estoqueCompras');
+  gQ.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueQuotes')).join('') + _etCardPrimer('estoqueQuotes');
+  gC.innerHTML = modelos.map(m=>_etCardModelo(m,'estoqueCompras')).join('') + _etCardPrimer('estoqueCompras');
   renderRepoQuotesPainel();
 }
 

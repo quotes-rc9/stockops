@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.62.0] — 2026-09-24
+
+### ✨ Nova funcionalidade — Mimaki UCJV300-160 entra no rastreio de tinta
+
+A UCJV300-160 (tinta LUS-175) ganha o mesmo nível de rastreio das outras 6 Mimaki: histórico de 77 trocas de tinta importado do controle físico do setor (jun/2024 a set/2026, 7 cores ativas hoje), botão "🔄 Troquei" na tela de Estoque Mínimo, e entra na Previsão de Troca de Tinta/diagnóstico por máquina. Antes disso, os produtos LUS-175 já existiam no estoque mas apareciam numa seção separada e fixa, sem vínculo com a máquina.
+
 ## [2.61.0] — 2026-09-22
 
 ### 🎨 Melhoria — mensagem de WhatsApp mostra código + descrição do item
