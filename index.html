@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="css/theme.css?v=20260814">
 <link rel="stylesheet" href="css/components.css?v=20260814">
 <link rel="stylesheet" href="css/pages.css?v=20260831c">
+<link rel="stylesheet" href="css/pecas6042.css?v=20260925">
 </head>
 <body>
 
@@ -168,6 +169,7 @@
       <div class="sb-section">
         <div class="sb-lbl">Equipamentos</div>
         <button class="sb-item" onclick="showPage('maquinas',this)"><span class="sb-icon">🖨</span>Máquinas<span class="sb-badge sbb-p" id="nb-maq" style="display:none;">0</span></button>
+        <button class="sb-item" style="padding-left:34px;font-size:12px;" onclick="showPage('pecas-6042',this)"><span class="sb-icon" style="font-size:11px;">↳</span>Peças por Categoria</button>
         <button class="sb-item" onclick="showPage('analise-min',this)"><span class="sb-icon">🏭</span>Estoque Tintas</button>
         <button class="sb-item" onclick="showPage('previsao-tinta',this)"><span class="sb-icon">🗓</span>Previsão de Troca de Tinta</button>
       </div>
@@ -1011,6 +1013,14 @@
           </div>
           <div id="maq-grid" style="display:flex;flex-direction:column;gap:20px;"></div>
         </div>
+      </div>
+
+      <div class="page" id="page-pecas-6042">
+        <div class="ph" style="flex-shrink:0;padding:10px 14px;">
+          <span class="ph-title">🖨 Peças por Categoria — UJF-6042MkII</span>
+          <span class="ph-sub">Catálogo verificado · 96 peças · clique num ponto da foto ou numa categoria</span>
+        </div>
+        <div style="padding:14px;flex:1;overflow-y:auto;" id="pc6042-root"></div>
       </div>
 
       <!-- ══ ESTOQUE MÍNIMO DE TINTAS ═══════════════════════════ -->
@@ -2814,6 +2824,7 @@ const PAGE_PERM_MAP = {
   'auditoria':      'ver_auditoria',
   'usuarios':       'gerenciar_usuarios',
   'maquinas':       'ver_maquinas',
+  'pecas-6042':     'ver_maquinas',
   'analise-min':    'ver_analise_min',
   'previsao-tinta': 'ver_previsao_tinta',
 };
@@ -2840,6 +2851,7 @@ function showPage(id, el){
   if(id==='auditoria')       renderAuditoria();
   if(id==='usuarios')        renderUsuarios();
   if(id==='maquinas')        renderMaquinas();
+  if(id==='pecas-6042')      renderPecas6042();
   if(id==='analise-min')     renderAnaliseMin();
   if(id==='previsao-tinta')  renderPrevisaoTinta();
   // Reaplica permissões após qualquer render de página
@@ -4777,6 +4789,264 @@ function _duracaoDias(inicio,fim){ const di=_parseData(inicio), df=_parseData(fi
 
 let _tidSeq=0;
 function _novoTid(){ return 't'+Date.now().toString(36)+(_tidSeq++).toString(36); }
+
+// ═══ Peças por Categoria — UJF-6042MkII (namespace pc6042/PC6042_) ═══
+
+const PC6042_PECAS_ESTATICAS = [{"cod":"M018821","nome":"CE4 Head Assembly 6042MkII","categoria":"Cabeça","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":85},{"cod":"M021937","nome":"Sub Tank Assy CE (antigo M018240)","categoria":"Sistema de tinta","zona":"tinta","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":70},{"cod":"M018701","nome":"Tank Assy","categoria":"Sistema de tinta","zona":"tinta","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M021402","nome":"Cap Assy CE (antigo M026703)","categoria":"Capping","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPA-0282","nome":"Cap C Assy","categoria":"Capping","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPA-0319","nome":"Cap Bv2 Assy","categoria":"Capping","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPA-0349","nome":"Nozzle Packing Assy","categoria":"Cabeça / Vedação","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPA-0271","nome":"Wiper Kit 300 (10 pcs)","categoria":"Wiper","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0830","nome":"W Absorber Set (4 pcs)","categoria":"Wiper / Absorção","zona":"estacao","gravidade":"media","status":"confirmado","verificado":true,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0578","nome":"Wiper sponge set (10 pcs)","categoria":"Wiper","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"M802790","nome":"Station Absorption Pad","categoria":"Estação de manutenção","zona":"estacao","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M802050","nome":"P Soak Pad","categoria":"Estação de manutenção","zona":"estacao","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M802639","nome":"Cap Spring","categoria":"Capping","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPA-0173","nome":"Waste Ink Tank 1.6L","categoria":"Resíduos","zona":"estacao","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"M022219","nome":"Filter Assy Black (antigo M018307)","categoria":"Filtro de tinta","zona":"tinta","gravidade":"media","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":109},{"cod":"M015864","nome":"TS Cartridge Valve Assy","categoria":"Válvula / Tinta","zona":"tinta","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":109},{"cod":"E301282","nome":"Solenoid Valve","categoria":"Válvula / Tinta","zona":"tinta","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M014070","nome":"Tube Pump 3 Assy 2","categoria":"Bomba","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M014071","nome":"Tube Pump 4 Assy 2","categoria":"Bomba","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108680","nome":"Pump Motor Assy","categoria":"Bomba","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":175},{"cod":"E301330","nome":"Diaphragm Pump","categoria":"Bomba","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M018988","nome":"Selective Path Pump Assy UV","categoria":"Bomba UV","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E106684","nome":"Pressure Control Pump Assy","categoria":"Pressão","zona":"bombas","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":200},{"cod":"M018909","nome":"Tube ML-Af3.0 Black (10 m)","categoria":"Tubulação","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E300777","nome":"P125-20-250MM","categoria":"Tubulação","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M603013","nome":"Fitting F2","categoria":"Conexão","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M603012","nome":"Fitting F3","categoria":"Conexão","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M602452","nome":"Suck Nozzle 2.5","categoria":"Sucção","zona":"estacao","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M606428","nome":"Suck Nozzle Attachment","categoria":"Sucção","zona":"estacao","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"JNMU6","nome":"Throttle Valve","categoria":"Válvula","zona":"bombas","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E302019","nome":"Float Switch FS-08587A1","categoria":"Sensor","zona":"eletronica","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M026864","nome":"UV LED Unit 3L Assy. 2","categoria":"UV LED","zona":"uv","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPA-0290","nome":"LED Glass / A105750","categoria":"UV","zona":"uv","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPA-0352","nome":"LED Glass II","categoria":"UV","zona":"uv","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"E108651","nome":"UVLED Drive14 PCB Assy","categoria":"Eletrônica UV","zona":"uv","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M018621","nome":"Hot Water Heater Assy","categoria":"Térmico","zona":"tinta","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"LCF59400","nome":"Vent Filter","categoria":"Ventilação","zona":"filtros","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E109144","nome":"Vacuum FAN Cable Assy","categoria":"Ventilação / Elétrica","zona":"filtros","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108669","nome":"Head Power Supply PCB","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108310","nome":"Station 4 PCB","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":148},{"cod":"E108793","nome":"Slider T PCB Assy","categoria":"Eletrônica / Movimento","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M019387","nome":"EPL3 Main PCB B COMFW Assy","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M025273","nome":"Maintenance EPL5 Main PCB Assy","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E105719","nome":"ID Point of Contact PCB CN032 Assy","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108988","nome":"Color LCD SL PCB Assy","categoria":"Interface","zona":"eletronica","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E109116","nome":"Emergency Switch","categoria":"Segurança","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E301338","nome":"FFC P1.0-20-650mm","categoria":"Cabeamento","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":214},{"cod":"E112227","nome":"MN-SL Connection ENC Cable Assy","categoria":"Cabeamento","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E109262","nome":"Cover Connection Extension Cable Assy","categoria":"Cabeamento","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E103852","nome":"JF 150LPI Encoder Board Assy","categoria":"Encoder","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":136},{"cod":"E301262","nome":"Linear Encoder Scale 150dpi-1280","categoria":"Encoder","zona":"cabeca","gravidade":"alta","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":174},{"cod":"M020209","nome":"Y Drive Motor All Assy 2","categoria":"Movimento","zona":"movimento","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"LOM-082481(ASG-TC2G100)","nome":"Gas Spring","categoria":"Mecânica","zona":"mesa","gravidade":"media","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":329},{"cod":"M210460","nome":"Table Support Shaft 50","categoria":"Mesa / Mecânica","zona":"mesa","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M604927","nome":"Sub-tank Holder","categoria":"Mecânica / Tinta","zona":"mesa","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M700734","nome":"F Seal Rubber 300","categoria":"Vedação","zona":"tinta","gravidade":"baixa","status":"confirmado","verificado":true,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M006679","nome":"O-ring (10 pack)","categoria":"Vedação","zona":"tinta","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"RWS600B-48/R","nome":"Switching Power Supply 48V/600W","categoria":"Elétrica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M606063","nome":"Ink IC Slot","categoria":"Identificação de tinta","zona":"tinta","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"MP-SCN-2702","nome":"ID Connect Assy","categoria":"Identificação / Comunicação","zona":"tinta","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E301317","nome":"Mirror MP45 for Laser Sensor","categoria":"Sensor / Laser","zona":"eletronica","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPC-0819","nome":"Mist Filter Set","categoria":"Filtragem","zona":"filtros","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0820","nome":"Filter Set for Bottle Wiping","categoria":"Manutenção","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0822","nome":"Cap Absorber / A105751","categoria":"Capping / Absorção","zona":"estacao","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"C-ML016-Z-B2-1","nome":"Maintenance Liquid 16 — 200 ml","categoria":"Manutenção","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"ML015-Z-K1","nome":"Maintenance Liquid 15 Kit","categoria":"Manutenção","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"C-ML013-Z-B2-1","nome":"PR-200 Maintenance Liquid","categoria":"Manutenção","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"C-ML013-Z-K2-1","nome":"PR-200 Maintenance Liquid Kit","categoria":"Manutenção","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"C-ML015-Z-K1-1","nome":"Mimaki F-200 Cleaning Kit","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPC-0527","nome":"Stick Set for Head Cleaning (50 pcs)","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0386","nome":"Cleaning Swabs with Polyester Top","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0421","nome":"JF Nozzle Swab (100 pcs)","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPC-0499","nome":"Kim Towel (50 sheets)","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"TX1009","nome":"Texwipe AlphaWipe 9x9","categoria":"Limpeza","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPA-0232","nome":"Bottle Tightening Jig","categoria":"Ferramenta","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"THK AFB-LF","nome":"Grease 70 g","categoria":"Lubrificação","zona":"estacao","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108334","nome":"Optical Conversion PCB","categoria":"Eletrônica / Óptica","zona":"eletronica","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M026406","nome":"HDC PCB Assy","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M026239","nome":"Slider Relay PCB Assy","categoria":"Eletrônica / Movimento","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"E108525","nome":"EPL2 Main PCB (COMFW) Assy","categoria":"Eletrônica","zona":"eletronica","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SPA-0187","nome":"W Filter Kit","categoria":"Filtragem","zona":"filtros","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"SPA-0285","nome":"3L Ink Tank Supply Assy","categoria":"Sistema de tinta","zona":"tinta","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"consumivel","duracaoMediaDias":null},{"cod":"FRT-G2-450G2","nome":"Rotary Damper","categoria":"Mecânica","zona":"mesa","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"U-3.2(170)-5-WM4","nome":"SET Maintenance Tube Set","categoria":"Tubulação / Manutenção","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"M603776","nome":"Ball Transfer Holder M","categoria":"Mesa / Mecânica","zona":"mesa","gravidade":"media","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"FTLL230-2","nome":"Panel Mount (Black)","categoria":"Estrutura / Elétrica","zona":"mesa","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"MTLL230-2","nome":"Male Straight (Black)","categoria":"Conexão","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SJ-MMK 3x5","nome":"Single line tube 3x5","categoria":"Tubulação","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"SJ-MMK3x5-BK-8R_20M","nome":"Black tube 3x5","categoria":"Tubulação","zona":"bombas","gravidade":"baixa","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"PDS Mimaki","nome":"UJF Table","categoria":"Mesa / Estrutura","zona":"mesa","gravidade":"alta","status":"confirmado","verificado":false,"motivo":null,"tipo":"peca","duracaoMediaDias":null},{"cod":"MM-001621","nome":"MM-001621","categoria":"Componente","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Sem função pública identificada no documento original.","tipo":"peca","duracaoMediaDias":null},{"cod":"OPT-J0415","nome":"Ionizer Unit 60","categoria":"Acessório / Opcional","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Só entra se a máquina tiver esse upgrade instalado.","tipo":"peca","duracaoMediaDias":null},{"cod":"OPT-J0424","nome":"Ventilating Fan Unit","categoria":"Acessório / Opcional","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Só entra se a máquina tiver esse upgrade instalado.","tipo":"peca","duracaoMediaDias":null},{"cod":"OPT-J0433","nome":"Kebab-L MkII System","categoria":"Acessório / Opcional","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Só entra se comprado (impressão cilíndrica).","tipo":"peca","duracaoMediaDias":null},{"cod":"OPT-J0515","nome":"Optional Air Filter","categoria":"Acessório / Filtragem","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Só entra se a máquina tiver esse upgrade instalado.","tipo":"peca","duracaoMediaDias":null},{"cod":"OPT-J0521","nome":"MDL Gateway","categoria":"Acessório / Comunicação","zona":"acessorios","gravidade":"baixa","status":"incerto","verificado":false,"motivo":"Só entra se instalado.","tipo":"peca","duracaoMediaDias":null}];
+// junta o catalogo estatico (código/categoria/gravidade/etc, nao muda) com o estoque AO VIVO
+// (vem de P, igual toda outra peça do sistema — sem isso o cadastro ficaria desatualizado)
+function pc6042MontarPecas(){
+  return PC6042_PECAS_ESTATICAS.map(p => {
+    const prod = (typeof P !== 'undefined' ? P : []).find(x => x.cod === p.cod);
+    return Object.assign({}, p, {
+      estoque: prod ? prod.estoque : null,
+      estoqueFonte: prod ? { produtoCod: prod.cod, produtoNome: prod.nome } : null,
+    });
+  });
+}
+let PC6042_PECAS = [];
+const PC6042_ZONAS = {
+  cabeca:     { nome: 'Cabeça de Impressão', local: 'No carro (carriage), sobre a mesa', ic:'🖨️' },
+  tinta:      { nome: 'Sistema de Tinta',    local: 'Topo da máquina (frascos + abastecimento)', ic:'💧' },
+  estacao:    { nome: 'Estação de Manutenção', local: 'Lateral esquerda (capping/wiper) + bandeja de resíduos', ic:'🧽' },
+  bombas:     { nome: 'Bombas e Válvulas',   local: 'Dentro do sistema de limpeza/manutenção', ic:'⚙️' },
+  uv:         { nome: 'Unidade UV LED',      local: 'No carro, ao lado da cabeça', ic:'💡' },
+  eletronica: { nome: 'Eletrônica / PCBs',   local: 'Lateral direita', ic:'🔌' },
+  movimento:  { nome: 'Movimento (Eixos)',   local: 'No carro do cabeçote / trilhos', ic:'↔️' },
+  mesa:       { nome: 'Mesa e Estrutura',    local: 'Centro da máquina', ic:'▭' },
+  filtros:    { nome: 'Filtros e Ventilação', local: 'Aproximado — dentro do sistema de limpeza/manutenção', ic:'🌬️' },
+  acessorios: { nome: 'Acessórios Externos', local: 'Fora do gabinete principal (opcional)', ic:'🔧' },
+};
+// ordem de exibicao da grade de categorias
+const PC6042_ZONA_ORDEM = ['cabeca','tinta','estacao','bombas','uv','eletronica','movimento','mesa','filtros','acessorios'];
+
+// posicao (%) dos 16 numeros na imagem enviada + quais categorias cada ponto fisicamente contem
+// (um ponto pode conter mais de uma categoria — ex: o carro do cabeçote leva cabeça+UV+eixo junto)
+const PC6042_HOTSPOTS = [
+  { n:1,  x:11.5, y:15.2, zonas:['tinta'], label:'Frascos de tinta' },
+  { n:2,  x:10.3, y:22.8, zonas:['tinta'], label:'Unidade de abastecimento de tinta' },
+  { n:3,  x:68.9, y:17.0, zonas:[], label:'Torre sinalizadora' },
+  { n:4,  x:71.2, y:26.5, zonas:[], label:'Tampa superior' },
+  { n:5,  x:2.1,  y:34.6, zonas:[], label:'Tampa lateral esquerda' },
+  { n:6,  x:74.6, y:37.8, zonas:[], label:'Tampa lateral direita' },
+  { n:7,  x:48.2, y:38.7, zonas:['cabeca','uv','movimento'], label:'Carro do cabeçote' },
+  { n:8,  x:63.0, y:50.5, zonas:['mesa'], label:'Mesa de impressão' },
+  { n:9,  x:57.4, y:62.4, zonas:['mesa'], label:'Proteção da mesa' },
+  { n:10, x:43.8, y:72.2, zonas:[], label:'Painel de controle' },
+  { n:11, x:26.2, y:73.7, zonas:[], label:'Botão de emergência' },
+  { n:12, x:56.0, y:77.9, zonas:[], label:'Base / gabinete inferior' },
+  { n:13, x:7.4,  y:58.5, zonas:['estacao','bombas','filtros'], label:'Sistema de limpeza / manutenção' },
+  { n:14, x:73.2, y:61.7, zonas:['eletronica'], label:'Painel elétrico / eletrônica' },
+  { n:15, x:70.8, y:77.1, zonas:['estacao'], label:'Bandeja de resíduos' },
+  { n:16, x:55.6, y:91.9, zonas:[], label:'Estrutura / suporte' },
+];
+
+function pc6042CorGravidadeCss(g){
+  if (g==='alta') return 'var(--red)';
+  if (g==='media') return 'var(--yellow)';
+  if (g==='baixa') return 'var(--green)';
+  return 'var(--t4)';
+}
+function pc6042ItensDaZona(key){ return PC6042_PECAS.filter(p=>p.zona===key); }
+function pc6042PiorGravidadeZona(key){
+  const itens = pc6042ItensDaZona(key);
+  if (itens.some(p=>p.gravidade==='alta')) return 'alta';
+  if (itens.some(p=>p.gravidade==='media')) return 'media';
+  return itens.length ? 'baixa' : null;
+}
+
+let _zonasAtivas = [];   // categorias ativas no momento (pode ser mais de uma, quando vem de um hotspot composto)
+let _buscaTexto = '';
+let _pecaSel = null;
+let _zoomN = null;
+
+function pc6042EstoqueDaZona(key){
+  const itens = pc6042ItensDaZona(key);
+  const comContagem = itens.filter(p=>p.estoque!=null);
+  const total = comContagem.reduce((s,p)=>s+p.estoque, 0);
+  return { comContagem: comContagem.length, total, deItens: itens.length };
+}
+function pc6042RenderZonaGrid(){
+  document.getElementById('zonaGrid').innerHTML = PC6042_ZONA_ORDEM.map(key => {
+    const z = PC6042_ZONAS[key];
+    const n = pc6042ItensDaZona(key).length;
+    const ativo = _zonasAtivas.length===1 && _zonasAtivas[0]===key ? ' active' : '';
+    const est = pc6042EstoqueDaZona(key);
+    const estHtml = est.comContagem
+      ? `<div class="est tem-estoque">📦 ${est.total} un em estoque</div><div class="est-sub">${est.comContagem} de ${est.deItens} peças já contadas</div>`
+      : `<div class="est sem-estoque">Nenhuma peça contada ainda</div>`;
+    return `<div class="zona-chip${ativo}" onclick="pc6042SelecionarZonas(['${key}'])">
+      <div class="ic">${z.ic}</div>
+      <div class="lbl">${z.nome}</div>
+      <div class="n">${n} peça${n!==1?'s':''}</div>
+      ${estHtml}
+    </div>`;
+  }).join('');
+}
+
+function pc6042RenderHotspots(){
+  const wrap = document.getElementById('imgWrap');
+  PC6042_HOTSPOTS.forEach(h => {
+    const btn = document.createElement('button');
+    const temDado = h.zonas.length > 0;
+    const grav = temDado ? h.zonas.map(pc6042PiorGravidadeZona).sort((a,b)=>{
+      const ordem={alta:3,media:2,baixa:1,null:0}; return (ordem[b]||0)-(ordem[a]||0);
+    })[0] : null;
+    btn.className = 'hotspot' + (temDado ? ' hasData' : '');
+    btn.style.left = h.x + '%';
+    btn.style.top = h.y + '%';
+    btn.title = h.label + (temDado ? ' — ' + h.zonas.map(z=>PC6042_ZONAS[z].nome).join(', ') : '');
+    btn.onclick = () => pc6042SelecionarHotspot(h);
+    btn.innerHTML = `<span class="ring"></span>` + (grav ? `<span class="led" style="background:${pc6042CorGravidadeCss(grav)};"></span>` : '');
+    btn.dataset.n = h.n;
+    wrap.appendChild(btn);
+  });
+}
+function pc6042SelecionarHotspot(h){
+  if (_zoomN === h.n) { pc6042ResetZoom(); pc6042AplicarZonas([]); return; }
+  pc6042ZoomToHotspot(h);
+  pc6042AplicarZonas(h.zonas);
+}
+function pc6042ZoomToHotspot(h){
+  _zoomN = h.n;
+  const wrap = document.getElementById('imgWrap');
+  wrap.style.transformOrigin = h.x + '% ' + h.y + '%';
+  wrap.style.transform = 'scale(2.6)';
+  const label = document.getElementById('zoomLabel');
+  label.textContent = '#' + h.n + ' · ' + h.label;
+  label.classList.add('show');
+}
+function pc6042ResetZoom(){
+  _zoomN = null;
+  const wrap = document.getElementById('imgWrap');
+  wrap.style.transform = 'scale(1)';
+  document.getElementById('zoomLabel').classList.remove('show');
+}
+function pc6042RefreshHotspotActive(){
+  document.querySelectorAll('.hotspot').forEach(btn => {
+    const h = PC6042_HOTSPOTS.find(x=>String(x.n)===btn.dataset.n);
+    const bate = h.zonas.length>0 && h.zonas.some(z=>_zonasAtivas.includes(z));
+    btn.classList.toggle('active', bate);
+  });
+}
+
+function pc6042RenderBlocoTag(){
+  const el = document.getElementById('blocoAtivaTag');
+  if (!_zonasAtivas.length) { el.classList.remove('show'); el.innerHTML=''; return; }
+  const nomes = _zonasAtivas.map(k=>PC6042_ZONAS[k].ic+' '+PC6042_ZONAS[k].nome).join(' + ');
+  el.classList.add('show');
+  el.innerHTML = `📍 Filtrando por: <b>${nomes}</b><span class="x" onclick="pc6042SelecionarZonas([])">✕ limpar</span>`;
+}
+
+function pc6042RenderLista(){
+  let filtradas = _zonasAtivas.length ? PC6042_PECAS.filter(p=>_zonasAtivas.includes(p.zona)) : PC6042_PECAS;
+  if (_buscaTexto) {
+    const q = _buscaTexto.toLowerCase();
+    filtradas = filtradas.filter(p => p.cod.toLowerCase().includes(q) || p.nome.toLowerCase().includes(q));
+  }
+  document.getElementById('listaCount').textContent = filtradas.length + ' de ' + PC6042_PECAS.length;
+  if (!filtradas.length) {
+    document.getElementById('listaBody').innerHTML = `<div class="detalhe-empty" style="padding:24px 14px;">Nenhuma peça encontrada.</div>`;
+    return;
+  }
+  document.getElementById('listaBody').innerHTML = filtradas.map(p => {
+    const idx = PC6042_PECAS.indexOf(p);
+    const ativo = _pecaSel === idx ? ' active' : '';
+    const estoqueTxt = p.estoque!=null ? `${p.estoque} un` : '—';
+    const estoqueCls = p.estoque!=null ? (p.estoque===0?'estoque-zero':'estoque-real') : '';
+    return `<div class="peca-row${ativo}" onclick="pc6042SelecionarPeca(${idx})">
+      <span class="dot ${p.gravidade}"></span>
+      <div class="info">
+        <div class="cod">${p.cod}</div>
+        <div class="nome">${p.nome}</div>
+      </div>
+      <span class="estoque-mini ${estoqueCls}">${estoqueTxt}</span>
+    </div>`;
+  }).join('');
+}
+
+function pc6042RenderDetalhe(){
+  const wrap = document.getElementById('detalheWrap');
+  if (_pecaSel == null) { wrap.innerHTML = `<div class="detalhe"><div class="detalhe-empty">Clique numa categoria, num ponto numerado na imagem, ou numa peça na lista</div></div>`; return; }
+  const p = PC6042_PECAS[_pecaSel];
+  const z = PC6042_ZONAS[p.zona];
+  const estoqueTxt = p.estoque!=null ? `${p.estoque} un` : '— (não contado ainda)';
+  const duracaoTxt = p.duracaoMediaDias ? `~${p.duracaoMediaDias} dias` : 'Sem histórico de duração ainda';
+  const estoqueFonteHtml = p.estoqueFonte
+    ? `<div class="verificado-tag">📦 Estoque puxado do cadastro real <span class="mono">${p.estoqueFonte.produtoCod}</span> — "${p.estoqueFonte.produtoNome}"</div>`
+    : '';
+  wrap.innerHTML = `<div class="detalhe">
+    <span class="cod">${p.cod}</span>
+    <div class="nome">${p.nome}</div>
+    <div class="detalhe-grid">
+      <div><div class="dl">Categoria</div><div class="dv">${z.ic} ${z.nome}</div></div>
+      <div><div class="dl">Tipo</div><span class="tipo-pill ${p.tipo}">${p.tipo==='consumivel'?'Consumível':'Peça'}</span></div>
+      <div><div class="dl">Gravidade se quebrar</div><span class="grav-pill ${p.gravidade}">${p.gravidade}</span></div>
+      <div><div class="dl">Status</div><span class="status-pill ${p.status}">${p.status==='confirmado'?'Confirmado':'Incerto'}</span></div>
+      <div><div class="dl">Estoque atual</div><div class="dv ${p.estoque==null?'dv-muted':''}">${estoqueTxt}</div></div>
+      <div><div class="dl">Duração média</div><div class="dv ${!p.duracaoMediaDias?'dv-muted':''}">${duracaoTxt}</div></div>
+      <div class="full"><div class="dl">Local na máquina</div><div class="dv">${z.local}</div></div>
+    </div>
+    ${estoqueFonteHtml}
+    ${p.duracaoMediaDias?'<div class="verificado-tag">📊 Duração calculada a partir do histórico real dessa mesma peça em outras Mimaki da frota</div>':''}
+    ${p.verificado?'<div class="verificado-tag">★ Cruzado direto com a planilha real de manutenção ou manual Mimaki</div>':''}
+    ${p.motivo?`<div class="motivo">${p.motivo}</div>`:''}
+  </div>`;
+}
+
+function pc6042RenderTudo(){
+  pc6042RenderZonaGrid();
+  pc6042RenderBlocoTag();
+  pc6042RenderLista();
+  pc6042RenderDetalhe();
+  pc6042RefreshHotspotActive();
+}
+// so mexe no estado de zonas/lista/detalhe — NAO decide zoom (quem chama decide isso)
+function pc6042AplicarZonas(zonas){
+  _zonasAtivas = zonas;
+  _pecaSel = null;
+  pc6042RenderTudo();
+}
+// ponto de entrada da grade de categorias: alterna a zona e escolhe um hotspot representante pra zoom
+function pc6042SelecionarZonas(zonas){
+  const mesma = zonas.length===_zonasAtivas.length && zonas.every(z=>_zonasAtivas.includes(z));
+  const novas = mesma ? [] : zonas;
+  if (!novas.length) { pc6042ResetZoom(); pc6042AplicarZonas([]); return; }
+  const h = PC6042_HOTSPOTS.find(x => x.zonas.length && x.zonas.some(z=>novas.includes(z)));
+  if (h) pc6042ZoomToHotspot(h);
+  pc6042AplicarZonas(novas);
+}
+function pc6042SelecionarPeca(idx){
+  const p = PC6042_PECAS[idx];
+  const h = PC6042_HOTSPOTS.find(x => x.zonas.includes(p.zona));
+  if (h) pc6042ZoomToHotspot(h);
+  _zonasAtivas = [p.zona];
+  _pecaSel = idx;
+  pc6042RenderTudo();
+}
+function pc6042BuscarTexto(v){
+  _buscaTexto = v.trim();
+  pc6042RenderLista();
+}
+
+
+
+// ponto de entrada chamado pelo showPage('pecas-6042') — monta o HTML uma vez e (re)desenha os dados
+let _pc6042Montado = false;
+function renderPecas6042(){
+  const root = document.getElementById('pc6042-root');
+  if (!root) return;
+  if (!_pc6042Montado) {
+    root.innerHTML = "<div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Catálogo verificado contra manuais Mimaki e a planilha real de manutenção da frota.</b> Estoque puxado ao vivo do cadastro — 68 peças novas cadastradas, 28 já existiam (compartilhadas com outras Mimaki). Duas peças (Wiper Kit e MM-001621) ainda pendentes de decisão final; 5 acessórios opcionais só entram se instalados.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · UJF-6042MkII</div>\n  <h1>Peças por Categoria — UJF-6042MkII</h1>\n  <p>Clique numa categoria na lista (ex: \"Sistema de Tinta\") ou direto num círculo numerado da imagem — os dois caminhos levam ao mesmo lugar: a lista de peças daquele grupo, com zoom automático na área correspondente da foto.</p>\n</div>\n\n<div class=\"layout\">\n  <div class=\"img-panel\">\n    <div class=\"img-head\">\n      <div class=\"t\">🖨️ UJF-6042MkII — Vista Explodida (imagem enviada por você)</div>\n      <div class=\"s\">Clique nos números 1-16 pra ver as peças de cada grupo</div>\n    </div>\n    <div class=\"img-viewport\" id=\"imgViewport\">\n      <div class=\"img-wrap\" id=\"imgWrap\">\n        <img src=\"img/6042_exploded.webp\" alt=\"Vista explodida UJF-6042MkII\">\n      </div>\n      <div class=\"zoom-label\" id=\"zoomLabel\"></div>\n      <div class=\"zoom-controls\">\n        <button class=\"zoom-btn\" onclick=\"pc6042ResetZoom()\">↺ Ver tudo</button>\n      </div>\n    </div>\n    <div class=\"img-caption\">Numeração e imagem exatamente como você enviou — clique num ponto pra dar zoom nele. Os pontos clicáveis foram posicionados por cima dos números originais.</div>\n  </div>\n\n  <div class=\"lista-panel\">\n    <div class=\"lista-head\">\n      <div class=\"t\">Categorias e peças</div>\n      <div class=\"n\" id=\"listaCount\"></div>\n    </div>\n    <div class=\"zona-grid\" id=\"zonaGrid\"></div>\n    <div class=\"bloco-ativa-tag\" id=\"blocoAtivaTag\"></div>\n    <div class=\"busca-row\">\n      <span class=\"busca-ic\">🔍</span>\n      <input class=\"busca-input\" id=\"buscaInput\" type=\"text\" placeholder=\"Buscar por código ou nome...\" oninput=\"pc6042BuscarTexto(this.value)\">\n    </div>\n    <div class=\"lista-scroll\" id=\"listaBody\"></div>\n    <div class=\"detalhe-wrap\" id=\"detalheWrap\"></div>\n  </div>\n</div>\n\n<div class=\"footnote\">\n  <b>Como usar:</b> cada categoria acima corresponde a um ou mais pontos numerados da imagem — clique na categoria OU no ponto da imagem, dá no mesmo. Pontos cinza na imagem (torre, tampas, painel de controle, botão de emergência, base, estrutura) ainda não têm peça catalogada.\n</div>";
+    pc6042RenderHotspots();
+    _pc6042Montado = true;
+  }
+  PC6042_PECAS = pc6042MontarPecas();
+  pc6042RenderTudo();
+}
+
+// ═══ fim Peças por Categoria ═══
+
 let _maqHistAtual=null;
 
 // Registra um evento no histórico DA PRÓPRIA máquina (viaja junto, nunca é cortado)

@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.64.0] — 2026-09-25
+
+### ✨ Nova funcionalidade — Peças por Categoria (UJF-6042MkII)
+
+Nova página em Máquinas → "↳ Peças por Categoria": catálogo das 96 peças/consumíveis da UJF-6042MkII sobre a vista explodida real da máquina — clique num ponto numerado da imagem ou numa categoria (Cabeça, Sistema de Tinta, Estação de Manutenção, Bombas, UV, Eletrônica, Movimento, Mesa, Filtros, Acessórios) pra ver as peças daquele grupo, com zoom automático na área correspondente da foto. Cada peça mostra código, gravidade se quebrar, se é peça ou consumível, local na máquina, estoque atual (puxado ao vivo do cadastro) e duração média (quando existe histórico real de outras Mimaki da frota que compartilham a mesma peça).
+
+Catálogo verificado contra os manuais Mimaki e a planilha real de manutenção da frota antes de cadastrar: 68 peças novas registradas no estoque, 28 já existiam (compartilhadas com outras Mimaki da frota). Duas peças (Wiper Kit e um componente sem função identificada) e 5 acessórios opcionais ficam marcados como pendentes/condicionais em vez de cadastrados como certos.
+
 ## [2.63.0] — 2026-09-24
 
 ### 🐛 Correção — UCJV300-160 tem 2 bandejas de Branco, não 1
