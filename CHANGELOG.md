@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.69.0] — 2026-09-28
+
+### 🎨 Reorganização — menu Equipamentos reduzido a 3 itens
+
+A página "Máquinas" (o grid com os 7 cards, tintas em uso e os botões Editar/Histórico/Excluir/+ Nova máquina) saiu do menu lateral e virou uma 4ª aba — "💧 Tintas na Máquina" — dentro de Previsão de Troca de Tinta, junto de Resumo, Calendário de compra e Por máquina. O menu "Equipamentos" agora tem só 3 itens: Peças por Categoria, Estoque Tintas e Previsão de Troca de Tinta. Nada de funcionalidade mudou — cadastrar, editar e excluir máquina, registrar "Acabou" e ver o histórico continuam exatamente iguais, só mudou de endereço.
+
 ## [2.68.0] — 2026-09-28
 
 ### 🗑 Remoção — página "Alertas" do menu lateral
