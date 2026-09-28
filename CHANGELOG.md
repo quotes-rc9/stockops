@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.66.0] — 2026-09-28
+
+### ✨ Nova funcionalidade — Cabeças, Componentes e Histórico completo na aba Peças em Uso
+
+A aba "Peças em Uso — Frota Real" ganha o layout completo da tela de teste aprovada: grade de máquinas clicável (com indicador de status das 4 cabeças e contagem de componentes OK) e, ao selecionar uma, o detalhe completo em 4 abas — Peças em uso, Cabeças (histórico de ciclos por H1-H4), Componentes (17 itens de inspeção com peça/código vinculado quando existe) e Histórico completo (timeline de todos os eventos de manutenção).
+
+Migrei pro cadastro de cada máquina no Supabase o histórico real de cabeças (`pecasCabecas`) e a última conferência dos 17 componentes de inspeção (`pecasComponentes`/`pecasComponentesData`), extraídos do mesmo controle físico "LOG DE RELATÓRIO" já usado pro histórico de troca de peças.
+
 ## [2.65.0] — 2026-09-28
 
 ### ✨ Nova funcionalidade — Peças em Uso, calculada ao vivo pra frota real

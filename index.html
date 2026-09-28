@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/components.css?v=20260814">
 <link rel="stylesheet" href="css/pages.css?v=20260831c">
 <link rel="stylesheet" href="css/pecas6042.css?v=20260925">
+<link rel="stylesheet" href="css/historico_pecas.css?v=20260928">
 </head>
 <body>
 
@@ -5037,7 +5038,7 @@ function renderPecas6042(){
   const root = document.getElementById('pc6042-root');
   if (!root) return;
   if (!_pc6042Montado) {
-    root.innerHTML = "<div class=\"ped-tabs\" style=\"padding:0 24px;\"><button class=\"ped-tab active\" id=\"pc6042-tab-foto\" onclick=\"pc6042SwitchTab('foto')\">🖼️ Foto — UJF-6042MkII</button><button class=\"ped-tab\" id=\"pc6042-tab-uso\" onclick=\"pc6042SwitchTab('uso')\">🔧 Peças em Uso — Frota Real</button></div><div id=\"pc6042-pane-foto\"><div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Catálogo verificado contra manuais Mimaki e a planilha real de manutenção da frota.</b> Estoque puxado ao vivo do cadastro — 68 peças novas cadastradas, 28 já existiam (compartilhadas com outras Mimaki). Uma peça (MM-001621) segue sem função identificada; 5 acessórios opcionais só entram se instalados.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · UJF-6042MkII</div>\n  <h1>Peças por Categoria — UJF-6042MkII</h1>\n  <p>Clique numa categoria na lista (ex: \"Sistema de Tinta\") ou direto num círculo numerado da imagem — os dois caminhos levam ao mesmo lugar: a lista de peças daquele grupo, com zoom automático na área correspondente da foto.</p>\n</div>\n\n<div class=\"layout\">\n  <div class=\"img-panel\">\n    <div class=\"img-head\">\n      <div class=\"t\">🖨️ UJF-6042MkII — Vista Explodida (imagem enviada por você)</div>\n      <div class=\"s\">Clique nos números 1-16 pra ver as peças de cada grupo</div>\n    </div>\n    <div class=\"img-viewport\" id=\"imgViewport\">\n      <div class=\"img-wrap\" id=\"imgWrap\">\n        <img src=\"img/6042_exploded.webp\" alt=\"Vista explodida UJF-6042MkII\">\n      </div>\n      <div class=\"zoom-label\" id=\"zoomLabel\"></div>\n      <div class=\"zoom-controls\">\n        <button class=\"zoom-btn\" onclick=\"pc6042ResetZoom()\">↺ Ver tudo</button>\n      </div>\n    </div>\n    <div class=\"img-caption\">Numeração e imagem exatamente como você enviou — clique num ponto pra dar zoom nele. Os pontos clicáveis foram posicionados por cima dos números originais.</div>\n  </div>\n\n  <div class=\"lista-panel\">\n    <div class=\"lista-head\">\n      <div class=\"t\">Categorias e peças</div>\n      <div class=\"n\" id=\"listaCount\"></div>\n    </div>\n    <div class=\"zona-grid\" id=\"zonaGrid\"></div>\n    <div class=\"bloco-ativa-tag\" id=\"blocoAtivaTag\"></div>\n    <div class=\"busca-row\">\n      <span class=\"busca-ic\">🔍</span>\n      <input class=\"busca-input\" id=\"buscaInput\" type=\"text\" placeholder=\"Buscar por código ou nome...\" oninput=\"pc6042BuscarTexto(this.value)\">\n    </div>\n    <div class=\"lista-scroll\" id=\"listaBody\"></div>\n    <div class=\"detalhe-wrap\" id=\"detalheWrap\"></div>\n  </div>\n</div>\n\n<div class=\"footnote\">\n  <b>Como usar:</b> cada categoria acima corresponde a um ou mais pontos numerados da imagem — clique na categoria OU no ponto da imagem, dá no mesmo. Pontos cinza na imagem (torre, tampas, painel de controle, botão de emergência, base, estrutura) ainda não têm peça catalogada.\n</div></div><div id=\"pc6042-pane-uso\" hidden><div class=\"head\"><div class=\"eyebrow\">Equipamentos · Máquinas · Frota real (7 máquinas)</div><h1>Peças em Uso — por máquina</h1><p>Pra cada máquina, a peça mais recente instalada de cada código, calculada ao vivo a partir do histórico real de manutenção importado da planilha. Sem dado inventado: se um código só apareceu uma vez, mostro \"primeira vez registrada\" em vez de chutar uma duração.</p></div><div style=\"padding:4px 24px 40px;display:grid;gap:22px;\" id=\"pc6042UsoGrid\"></div><div class=\"footnote\"><b>Como calculo \"em uso há\" e \"durou na troca anterior\":</b> pra cada peça, olho todas as vezes que o código dela aparece no histórico da mesma máquina, ordenado por data. A mais recente vira \"em uso há\" (hoje menos essa data); a diferença entre as duas últimas datas vira \"durou na troca anterior\". Selo vermelho = já passou do tempo que durou da última vez; amarelo = passou de 75% desse tempo.</div></div>";
+    root.innerHTML = "<div class=\"ped-tabs\" style=\"padding:0 24px;\"><button class=\"ped-tab active\" id=\"pc6042-tab-foto\" onclick=\"pc6042SwitchTab('foto')\">🖼️ Foto — UJF-6042MkII</button><button class=\"ped-tab\" id=\"pc6042-tab-uso\" onclick=\"pc6042SwitchTab('uso')\">🔧 Peças em Uso — Frota Real</button></div><div id=\"pc6042-pane-foto\"><div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Catálogo verificado contra manuais Mimaki e a planilha real de manutenção da frota.</b> Estoque puxado ao vivo do cadastro — 68 peças novas cadastradas, 28 já existiam (compartilhadas com outras Mimaki). Uma peça (MM-001621) segue sem função identificada; 5 acessórios opcionais só entram se instalados.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · UJF-6042MkII</div>\n  <h1>Peças por Categoria — UJF-6042MkII</h1>\n  <p>Clique numa categoria na lista (ex: \"Sistema de Tinta\") ou direto num círculo numerado da imagem — os dois caminhos levam ao mesmo lugar: a lista de peças daquele grupo, com zoom automático na área correspondente da foto.</p>\n</div>\n\n<div class=\"layout\">\n  <div class=\"img-panel\">\n    <div class=\"img-head\">\n      <div class=\"t\">🖨️ UJF-6042MkII — Vista Explodida (imagem enviada por você)</div>\n      <div class=\"s\">Clique nos números 1-16 pra ver as peças de cada grupo</div>\n    </div>\n    <div class=\"img-viewport\" id=\"imgViewport\">\n      <div class=\"img-wrap\" id=\"imgWrap\">\n        <img src=\"img/6042_exploded.webp\" alt=\"Vista explodida UJF-6042MkII\">\n      </div>\n      <div class=\"zoom-label\" id=\"zoomLabel\"></div>\n      <div class=\"zoom-controls\">\n        <button class=\"zoom-btn\" onclick=\"pc6042ResetZoom()\">↺ Ver tudo</button>\n      </div>\n    </div>\n    <div class=\"img-caption\">Numeração e imagem exatamente como você enviou — clique num ponto pra dar zoom nele. Os pontos clicáveis foram posicionados por cima dos números originais.</div>\n  </div>\n\n  <div class=\"lista-panel\">\n    <div class=\"lista-head\">\n      <div class=\"t\">Categorias e peças</div>\n      <div class=\"n\" id=\"listaCount\"></div>\n    </div>\n    <div class=\"zona-grid\" id=\"zonaGrid\"></div>\n    <div class=\"bloco-ativa-tag\" id=\"blocoAtivaTag\"></div>\n    <div class=\"busca-row\">\n      <span class=\"busca-ic\">🔍</span>\n      <input class=\"busca-input\" id=\"buscaInput\" type=\"text\" placeholder=\"Buscar por código ou nome...\" oninput=\"pc6042BuscarTexto(this.value)\">\n    </div>\n    <div class=\"lista-scroll\" id=\"listaBody\"></div>\n    <div class=\"detalhe-wrap\" id=\"detalheWrap\"></div>\n  </div>\n</div>\n\n<div class=\"footnote\">\n  <b>Como usar:</b> cada categoria acima corresponde a um ou mais pontos numerados da imagem — clique na categoria OU no ponto da imagem, dá no mesmo. Pontos cinza na imagem (torre, tampas, painel de controle, botão de emergência, base, estrutura) ainda não têm peça catalogada.\n</div></div><div id=\"pc6042-pane-uso\" hidden><div id=\"hp-root\"></div></div>";
     pc6042RenderHotspots();
     _pc6042Montado = true;
   }
@@ -5052,14 +5053,15 @@ function pc6042SwitchTab(tab){
   if(bUso) bUso.classList.toggle('active', tab==='uso');
   if(pFoto) pFoto.hidden = tab!=='foto';
   if(pUso) pUso.hidden = tab!=='uso';
-  if(tab==='uso') pc6042RenderPecasEmUso();
+  if(tab==='uso') renderHistoricoPecas();
 }
 
-// pra cada código de peça no histórico real da máquina (pecasEventos), olha a instalação mais
-// recente ("em uso há") e a diferença pras duas últimas datas ("durou na troca anterior") —
-// mesma lógica usada pro histórico de tinta, só que peça a peça em vez de cor a cor
-function pc6042CalcularPecasEmUso(maquina){
-  const eventos=(maquina.pecasEventos||[]).filter(e=>e.cod);
+// ═══ fim Peças por Categoria ═══
+
+// ═══ Histórico de Peças por Máquina (namespace hp/HP_) ═══
+
+function hpCalcularEmUso(m){
+  const eventos=(m.pecasEventos||[]).filter(e=>e.cod);
   const porCod={};
   eventos.forEach(e=>{ (porCod[e.cod]=porCod[e.cod]||[]).push(e); });
   return Object.entries(porCod).map(([cod,evs])=>{
@@ -5072,68 +5074,262 @@ function pc6042CalcularPecasEmUso(maquina){
       if(diasUso>=duracaoAnterior) nivel='crit';
       else if(diasUso>=duracaoAnterior*0.75) nivel='warn';
     }
-    return { cod, nome:atual.nome, instalada:atual.data, diasUso, duracaoAnterior, nivel };
+    return {
+      cod, nome:atual.nome, instalada:_fmtData(atual.data), diasUso, duracaoAnterior,
+      anteriorInstalada: anterior?_fmtData(anterior.data):null,
+      anteriorRemovida: anterior?_fmtData(atual.data):null,
+      nivel,
+    };
   }).sort((a,b)=>{
     const ordem={crit:0,warn:1,ok:2};
     if(ordem[a.nivel]!==ordem[b.nivel]) return ordem[a.nivel]-ordem[b.nivel];
     return b.diasUso-a.diasUso;
   });
 }
+function hpMontarMaquinas(){
+  return (typeof MAQUINAS!=='undefined'?MAQUINAS:[]).map(m => ({
+    nome: m.nome,
+    modelo: m.modelo,
+    cabecas: m.pecasCabecas || [],
+    componentes: m.pecasComponentes || [],
+    componentesData: m.pecasComponentesData || null,
+    eventos: (m.pecasEventos||[]).map(e => ({ ...e, data: _fmtData(e.data) })),
+    emUso: hpCalcularEmUso(m),
+  }));
+}
+let HP_MAQUINAS = [];
 
-function pc6042RenderMaquinaPecasCard(m){
-  const itens=pc6042CalcularPecasEmUso(m);
-  const cores={ ok:['var(--green-a)','var(--green)'], warn:['var(--yellow-a)','var(--yellow)'], crit:['var(--red-a)','var(--red)'] };
-  const nCrit=itens.filter(i=>i.nivel==='crit').length, nWarn=itens.filter(i=>i.nivel==='warn').length;
-  const item=(it)=>{
-    const [bg,fg]=cores[it.nivel];
-    const dur=it.duracaoAnterior!=null?`${it.duracaoAnterior}d na troca anterior`:'primeira vez registrada';
-    return `<div style="padding:7px 0;border-top:1px solid var(--b2);">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span class="mono" style="font-size:9.5px;font-weight:700;color:var(--blue);">${_escMaq(it.cod)}</span>
-        <span style="margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:20px;background:${bg};color:${fg};white-space:nowrap;">${it.diasUso}d</span>
-      </div>
-      <div style="font-size:11px;font-weight:600;color:var(--t1);margin-top:1px;">${_escMaq(it.nome)}</div>
-      <div style="font-size:9.5px;color:var(--t4);margin-top:1px;">inst. ${_fmtData(it.instalada)} · ${dur}</div>
-    </div>`;
-  };
-  const badge = nCrit ? `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-a);color:var(--red);white-space:nowrap;">${nCrit} atenção</span>`
-    : nWarn ? `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--yellow-a);color:var(--yellow);white-space:nowrap;">${nWarn} ficar de olho</span>` : '';
-  return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:8px;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:36px;height:36px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🖨</div>
-      <div style="min-width:0;flex:1;">
-        <div style="font-weight:700;font-size:13px;color:var(--t1);">${_escMaq(m.nome)}</div>
-        <div style="font-size:11px;color:var(--t3);">${itens.length} peças rastreadas</div>
-      </div>
-      ${badge}
+function hpPecaRowHtml(p, idx, ativo){
+  return `<button class="peca-row${ativo?' active':''}" onclick="hpSelecionarParte(${idx})">
+    <div class="prow-main">
+      <span class="prow-cod mono">${p.cod}</span>
+      <span class="prow-nome">${p.nome}</span>
     </div>
-    <div style="max-height:340px;overflow-y:auto;">
-      ${itens.length?itens.map(item).join(''):'<span style="color:var(--t4);font-size:11px;">— sem eventos de peça registrados —</span>'}
+    <span class="prow-badge ${p.nivel}">${p.diasUso}d</span>
+  </button>`;
+}
+function hpPecaDetalheHtml(p){
+  const pct = p.duracaoAnterior ? Math.min(100, Math.round(p.diasUso / p.duracaoAnterior * 100)) : 0;
+  const anteriorVal = p.duracaoAnterior!=null ? `${p.duracaoAnterior}d` : '—';
+  const anteriorSub = p.duracaoAnterior!=null
+    ? `${p.anteriorInstalada} → ${p.anteriorRemovida}`
+    : 'primeira vez registrada';
+  return `<div class="peca-detalhe">
+    <div class="peca-id"><span class="cod">${p.cod}</span>${p.nome}</div>
+    <div class="peca-stats">
+      <div class="stat">
+        <div class="stat-lbl">Em uso há</div>
+        <div class="stat-val big">${p.diasUso}d</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Instalada em</div>
+        <div class="stat-val">${p.instalada}</div>
+      </div>
+      <div class="stat wide">
+        <div class="stat-lbl">Troca anterior durou</div>
+        <div class="stat-val">${anteriorVal}<span class="peca-sub">${anteriorSub}</span></div>
+      </div>
+    </div>
+    ${p.duracaoAnterior!=null
+      ? `<div class="peca-bar-wrap">
+           <div class="peca-bar"><i class="${p.nivel}" style="width:${pct}%;"></i></div>
+           <div class="peca-bar-hpCap"><b>${pct}%</b> do tempo que a peça durou da última vez (${p.duracaoAnterior}d)</div>
+         </div>`
+      : `<div class="peca-bar-wrap"><div class="peca-bar-hpCap muted">Sem troca anterior registrada pra comparar</div></div>`}
+  </div>`;
+}
+function hpEventoHtml(e){
+  const nomeHtml = e.cod
+    ? `<span class="cod">${e.cod}</span><span class="sep"> — </span>${e.nome||''}`
+    : (e.nome || '<span style="color:var(--t3);font-style:italic;">Sem peça associada nessa visita</span>');
+  return `<div class="tl-item">
+    <div class="tl-date">${e.data}<span class="tl-acao">${e.acao}</span></div>
+    <div class="tl-nome">${nomeHtml}</div>
+    ${e.defeito ? `<div class="tl-defeito"><span class="lbl">Defeito:</span> ${e.defeito}</div>` : ''}
+    ${e.proc ? `<div class="tl-proc"><span class="lbl">Procedimento:</span> ${e.proc}</div>` : ''}
+  </div>`;
+}
+function hpParseHead(v){
+  if (!v || v==='N/A') return {label:'—', cls:'na'};
+  const upper = v.toUpperCase();
+  if (upper.includes('ATENÇÃO')) return {label:'Atenção', cls:'crit'};
+  if (upper.includes('DESGASTE')) return {label:'Desgaste', cls:'warn'};
+  const numMatch = v.match(/\d+/);
+  const num = numMatch ? ' #'+parseInt(numMatch[0],10) : '';
+  if (upper.startsWith('N')) return {label:'Nova'+num, cls:'ok'};
+  if (upper.startsWith('U')) return {label:'Usada'+num, cls:'ok'};
+  return {label:v, cls:'na'};
+}
+function hpCompClass(v){
+  if (!v || v==='N/A') return 'na';
+  if (v==='OK') return 'ok';
+  if (v==='ATENÇÃO' || v==='VERIFICAR' || v==='SOLICITAR' || v==='SOLICITADO') return 'warn';
+  if (v==='CORRIGIR' || v==='DESGASTE') return 'crit';
+  return 'na';
+}
+function hpCap(s){ return s.split(' ').map(w=>w[0]+w.slice(1).toLowerCase()).join(' '); }
+
+// resumo usado tanto no tile compacto quanto no painel de detalhe
+function hpResumoMaquina(m){
+  const heads = m.cabecas.map(h => hpParseHead(h.valor));
+  const aplicaveis = m.componentes.filter(c => c.valor && c.valor!=='N/A');
+  const okCount = aplicaveis.filter(c=>c.valor==='OK').length;
+  const issues = aplicaveis.filter(c=>c.valor!=='OK');
+  const compCls = issues.length===0 ? 'ok' : issues.some(c=>hpCompClass(c.valor)==='crit') ? 'crit' : 'warn';
+  return { heads, aplicaveis, okCount, issues, compCls };
+}
+
+function hpTileHtml(m, idx, ativo){
+  const r = hpResumoMaquina(m);
+  const dots = r.heads.map(h => `<span class="dot ${h.cls}"></span>`).join('');
+  return `<button class="mtile${ativo?' active':''}" onclick="hpSelecionar(${idx})">
+    <span class="mtile-caret">▶</span>
+    <div class="mtile-top">
+      <div class="icon">🖨️</div>
+      <div><div class="mtile-name">${m.nome}</div><div class="mtile-model mono">${m.modelo}</div></div>
+    </div>
+    <div class="mtile-dots">${dots}</div>
+    <div class="mtile-comp ${r.compCls}"><span class="lbl">Componentes</span> ${r.okCount}/${r.aplicaveis.length} OK</div>
+  </button>`;
+}
+
+function hpOverviewHtml(m){
+  const heads = m.cabecas.map(h => {
+    const p = hpParseHead(h.valor);
+    return `<span class="head-chip ${p.cls}"><b>${h.head}</b> ${p.label}${h.data?`<span class="hd">${h.data}</span>`:''}</span>`;
+  }).join('');
+  return `<div class="overview">
+    <div class="ov-group">
+      <div class="ov-lbl">Cabeças</div>
+      <div class="ov-heads">${heads}</div>
     </div>
   </div>`;
 }
-
-function pc6042RenderPecasEmUso(){
-  const grid=document.getElementById('pc6042UsoGrid');
-  if(!grid) return;
-  const porModelo={};
-  MAQUINAS.forEach(m=>{ const k=m.modelo||'Sem modelo'; (porModelo[k]=porModelo[k]||[]).push(m); });
-  const modelos=Object.keys(porModelo).sort();
-  grid.innerHTML=modelos.map(modelo=>{
-    const ordenadas=[...porModelo[modelo]].sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
-    return `<div>
-      <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--b2);display:flex;align-items:center;gap:8px;">
-        <span>🖨 ${_escMaq(modelo)}</span>
-        <span style="font-weight:500;color:var(--t4);text-transform:none;letter-spacing:normal;">${ordenadas.length} máquina${ordenadas.length!==1?'s':''}</span>
+function hpComponentesHtml(m){
+  const rows = m.componentes.map(c => {
+    const cls = hpCompClass(c.valor);
+    const pecaHtml = c.peca
+      ? `<div class="cpeca"><span class="cod">${c.peca.cod}</span> <span class="pnome">${c.peca.nome}</span><span class="ptroca">última troca: ${c.peca.ultimaTroca}</span></div>`
+      : `<div class="cpeca vazio">sem peça/código vinculado no histórico</div>`;
+    return `<div class="comp-row ${cls}">
+      <div class="cinfo">
+        <span class="cname">${hpCap(c.nome)}</span>
+        ${pecaHtml}
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
-        ${ordenadas.map(pc6042RenderMaquinaPecasCard).join('')}
-      </div>
+      <span class="comp-pill ${cls}">${c.valor || 'N/A'}</span>
     </div>`;
   }).join('');
+  return `<div class="comp-grid">${rows}</div>`;
 }
 
-// ═══ fim Peças por Categoria ═══
+function hpCabecasHtml(m){
+  const cols = m.cabecas.map(h => {
+    const ciclos = h.ciclos || [];
+    const atual = ciclos[0];
+    const anteriores = ciclos.slice(1);
+
+    const atualHtml = atual ? (() => {
+      const p = hpParseHead(atual.valor);
+      const range = atual.desde === atual.ate ? atual.ate : `${atual.desde} → ${atual.ate}`;
+      const datasHtml = (atual.datas||[]).map(d => `<span>${d}</span>`).join('');
+      return `<div class="cab-atual ${p.cls}">
+        <div class="cab-atual-eyebrow">Em uso agora</div>
+        <div class="cab-atual-label">${p.label}</div>
+        <div class="cab-atual-range">${range}</div>
+        <div class="cab-atual-meta">Confirmado em <b>${atual.registros}</b> vistoria${atual.registros>1?'s':''} nesse período:</div>
+        <div class="cab-atual-datas">${datasHtml}</div>
+      </div>`;
+    })() : `<div class="detail-empty" style="padding:8px 0;">Sem histórico registrado</div>`;
+
+    const histHtml = anteriores.length ? `<div class="cab-hist-label">Histórico anterior · ${anteriores.length} ciclo${anteriores.length!==1?'s':''}</div>${anteriores.map(c => {
+      const p = hpParseHead(c.valor);
+      const range = c.desde === c.ate ? c.ate : `${c.desde} → ${c.ate}`;
+      const datasHtml = (c.datas||[]).map(d => `<span>${d}</span>`).join('');
+      return `<div class="cab-cycle">
+        <span class="cab-cycle-label ${p.cls}">${p.label}</span>
+        <div class="cab-cycle-range">${range}</div>
+        <div class="cab-cycle-meta">Confirmado em <b>${c.registros}</b> vistoria${c.registros>1?'s':''} nesse período:</div>
+        <div class="cab-cycle-datas">${datasHtml}</div>
+      </div>`;
+    }).join('')}` : '';
+
+    return `<div class="cab-col">
+      <div class="cab-col-title"><b>${h.head}</b><span class="cab-col-n">${ciclos.length} ciclo${ciclos.length!==1?'s':''} ao todo</span></div>
+      ${atualHtml}
+      ${histHtml}
+    </div>`;
+  }).join('');
+  return `<div class="cab-grid">${cols}</div>`;
+}
+
+const HP_TABS = [
+  { key:'pecas', label:'Peças em uso', count:m=>m.emUso.length },
+  { key:'cab', label:'Cabeças', count:m=>m.cabecas.reduce((s,h)=>s+(h.ciclos||[]).length,0) },
+  { key:'comp', label:'Componentes', count:m=>{ const r=hpResumoMaquina(m); return `${r.okCount}/${r.aplicaveis.length}`; }, warnFlag:m=>hpResumoMaquina(m).compCls!=='ok' },
+  { key:'hist', label:'Histórico completo', count:m=>m.eventos.length },
+];
+function hpPecasTabHtml(m){
+  if (!m.emUso.length) return `<div class="pane"><div class="pane-title">Peças em uso <span class="n">0</span></div><div class="detail-empty">Nenhuma peça com evento registrado</div></div>`;
+  if (_hpParteSel == null || !m.emUso[_hpParteSel]) _hpParteSel = 0;
+  const grid = m.emUso.map((p,i)=>hpPecaRowHtml(p,i,i===_hpParteSel)).join('');
+  const detalhe = hpPecaDetalheHtml(m.emUso[_hpParteSel]);
+  return `<div class="pane"><div class="pane-title">Peças em uso <span class="n">${m.emUso.length} · clique numa peça pra ver o detalhe completo</span></div>
+    <div class="peca-grid">${grid}</div>
+    ${detalhe}
+  </div>`;
+}
+function hpTabContentHtml(m, key){
+  if (key==='pecas') return hpPecasTabHtml(m);
+  if (key==='cab') return `<div class="pane"><div class="pane-title">Histórico das cabeças <span class="n">cada ciclo é um período com a mesma leitura; "vistorias" = quantas visitas confirmaram esse status até ele mudar</span></div>${hpCabecasHtml(m)}</div>`;
+  if (key==='comp') return `<div class="pane"><div class="pane-title">Componentes de inspeção <span class="n">17 itens${m.componentesData?` · conferido ${m.componentesData}`:''}</span></div>${hpComponentesHtml(m)}</div>`;
+  return `<div class="pane"><div class="pane-title">Histórico completo <span class="n">${m.eventos.length} eventos</span></div>${m.eventos.map(hpEventoHtml).join('')}</div>`;
+}
+function hpCardHtml(m){
+  const tabsHtml = HP_TABS.map(t => {
+    const active = t.key === _hpTab;
+    const warnFlag = t.warnFlag ? t.warnFlag(m) : false;
+    return `<button class="tab-btn${active?' active':''}${warnFlag?' warnflag':''}" onclick="hpSelecionarTab('${t.key}')">${t.label} <span class="n">${t.count(m)}</span></button>`;
+  }).join('');
+  return `<div class="mcard">
+    <div class="mhead">
+      <div class="icon">🖨️</div>
+      <div><div class="name">${m.nome}</div><div class="sub mono">${m.modelo}</div></div>
+    </div>
+    ${hpOverviewHtml(m)}
+    <div class="tabs">${tabsHtml}</div>
+    ${hpTabContentHtml(m, _hpTab)}
+  </div>`;
+}
+
+let _hpSel = 0;
+let _hpTab = 'pecas';
+let _hpParteSel = null;
+function hpRender(){
+  document.getElementById('tileGrid').innerHTML = HP_MAQUINAS.map((m,i)=>hpTileHtml(m,i,i===_hpSel)).join('');
+  document.getElementById('detailWrap').innerHTML = HP_MAQUINAS[_hpSel]
+    ? hpCardHtml(HP_MAQUINAS[_hpSel])
+    : `<div class="detail-empty">Selecione uma máquina acima</div>`;
+}
+function hpSelecionar(idx){ _hpSel = idx; _hpTab = 'pecas'; _hpParteSel = null; hpRender(); window.scrollTo({top:0,behavior:'smooth'}); }
+function hpSelecionarTab(key){ _hpTab = key; hpRender(); }
+function hpSelecionarParte(idx){ _hpParteSel = idx; hpRender(); }
+
+
+let _hpMontado = false;
+function renderHistoricoPecas(){
+  const root = document.getElementById('hp-root');
+  if (!root) return;
+  if (!_hpMontado) {
+    root.innerHTML = "<div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Histórico real de troca de peças, importado do controle físico da equipe.</b> \"Em uso há\" e \"durou na troca anterior\" são calculados ao vivo a partir desse histórico — cabeças e componentes são o último status conferido fisicamente.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · Frota real (7 máquinas)</div>\n  <h1>Histórico de Peças por Máquina</h1>\n  <p>Clique numa máquina pra abrir o detalhe completo: status das 4 cabeças (H1-H4), os 17 componentes de inspeção, peças em uso (código + nome, há quanto tempo, quanto durou a troca anterior) e a timeline de manutenção.</p>\n</div>\n\n<div class=\"grid-wrap\">\n  <div class=\"tile-grid\" id=\"tileGrid\"></div>\n</div>\n\n<div class=\"detail-wrap\" id=\"detailWrap\"></div>\n\n<div class=\"footnote\">\n  <b>Como calculo \"em uso há\" e \"troca anterior durou\":</b> pra cada peça, olho todas as vezes que o código dela aparece na mesma máquina, ordenado por data. A mais recente vira \"em uso há\" (hoje menos essa data); a diferença entre as duas últimas datas vira \"a troca anterior durou\". Se só apareceu uma vez, mostro \"primeira vez registrada\".<br>\n  <b>Sobre código/nome nos Componentes:</b> a planilha não liga cada um dos 17 itens do checklist a um código de peça — é só um \"OK/ATENÇÃO\" da vistoria. Pra alguns eu consegui casar com segurança pelo nome da peça no histórico da própria máquina (ex: FILTER BLACK ↔ \"FILTER ASSY (BLACK)\"); pros que não têm um nome de peça claramente equivalente no histórico (WIPER, CAP ABSORBER, sensores etc.), deixo marcado como \"sem peça/código vinculado\" em vez de chutar.\n</div>";
+    _hpMontado = true;
+  }
+  HP_MAQUINAS = hpMontarMaquinas();
+  if (_hpSel >= HP_MAQUINAS.length) _hpSel = 0;
+  hpRender();
+}
+
+// ═══ fim Histórico de Peças por Máquina ═══
+
 
 let _maqHistAtual=null;
 
