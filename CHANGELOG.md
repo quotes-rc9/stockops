@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.64.1] — 2026-09-28
+
+### 🐛 Correção — texto do banner de Peças por Categoria citava o Wiper Kit errado
+
+O aviso da tela "Peças por Categoria" dizia que o Wiper Kit ainda estava pendente de decisão — na verdade ele já tinha sido confirmado (SPA-0271, cruzado com fornecedores reais) antes mesmo do cadastro das 96 peças. Corrigido pra citar só a peça que de fato segue sem função identificada (MM-001621).
+
 ## [2.64.0] — 2026-09-25
 
 ### ✨ Nova funcionalidade — Peças por Categoria (UJF-6042MkII)
