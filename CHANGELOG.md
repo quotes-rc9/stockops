@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.65.0] — 2026-09-28
+
+### ✨ Nova funcionalidade — Peças em Uso, calculada ao vivo pra frota real
+
+A página "Peças por Categoria" ganha uma 2ª aba: "🔧 Peças em Uso — Frota Real". Mostra, pra cada uma das 7 máquinas (Mimaki 01-06 + UCJV300-160), a peça mais recente instalada de cada código, com "em uso há X dias" e "durou Y dias na troca anterior" — calculado ao vivo, igual o sistema já faz com tinta.
+
+Pra isso funcionar de verdade, migrei o histórico real de troca de peças de cada máquina (36 a 46 eventos por Mimaki, extraídos do controle físico "LOG DE RELATÓRIO") pro cadastro da própria máquina no Supabase (campo `pecasEventos`), sem mexer no histórico de tinta que já existia. Se um código só apareceu uma vez no histórico, o sistema mostra "primeira vez registrada" em vez de inventar uma duração.
+
 ## [2.64.1] — 2026-09-28
 
 ### 🐛 Correção — texto do banner de Peças por Categoria citava o Wiper Kit errado

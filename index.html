@@ -5037,12 +5037,100 @@ function renderPecas6042(){
   const root = document.getElementById('pc6042-root');
   if (!root) return;
   if (!_pc6042Montado) {
-    root.innerHTML = "<div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Catálogo verificado contra manuais Mimaki e a planilha real de manutenção da frota.</b> Estoque puxado ao vivo do cadastro — 68 peças novas cadastradas, 28 já existiam (compartilhadas com outras Mimaki). Uma peça (MM-001621) segue sem função identificada; 5 acessórios opcionais só entram se instalados.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · UJF-6042MkII</div>\n  <h1>Peças por Categoria — UJF-6042MkII</h1>\n  <p>Clique numa categoria na lista (ex: \"Sistema de Tinta\") ou direto num círculo numerado da imagem — os dois caminhos levam ao mesmo lugar: a lista de peças daquele grupo, com zoom automático na área correspondente da foto.</p>\n</div>\n\n<div class=\"layout\">\n  <div class=\"img-panel\">\n    <div class=\"img-head\">\n      <div class=\"t\">🖨️ UJF-6042MkII — Vista Explodida (imagem enviada por você)</div>\n      <div class=\"s\">Clique nos números 1-16 pra ver as peças de cada grupo</div>\n    </div>\n    <div class=\"img-viewport\" id=\"imgViewport\">\n      <div class=\"img-wrap\" id=\"imgWrap\">\n        <img src=\"img/6042_exploded.webp\" alt=\"Vista explodida UJF-6042MkII\">\n      </div>\n      <div class=\"zoom-label\" id=\"zoomLabel\"></div>\n      <div class=\"zoom-controls\">\n        <button class=\"zoom-btn\" onclick=\"pc6042ResetZoom()\">↺ Ver tudo</button>\n      </div>\n    </div>\n    <div class=\"img-caption\">Numeração e imagem exatamente como você enviou — clique num ponto pra dar zoom nele. Os pontos clicáveis foram posicionados por cima dos números originais.</div>\n  </div>\n\n  <div class=\"lista-panel\">\n    <div class=\"lista-head\">\n      <div class=\"t\">Categorias e peças</div>\n      <div class=\"n\" id=\"listaCount\"></div>\n    </div>\n    <div class=\"zona-grid\" id=\"zonaGrid\"></div>\n    <div class=\"bloco-ativa-tag\" id=\"blocoAtivaTag\"></div>\n    <div class=\"busca-row\">\n      <span class=\"busca-ic\">🔍</span>\n      <input class=\"busca-input\" id=\"buscaInput\" type=\"text\" placeholder=\"Buscar por código ou nome...\" oninput=\"pc6042BuscarTexto(this.value)\">\n    </div>\n    <div class=\"lista-scroll\" id=\"listaBody\"></div>\n    <div class=\"detalhe-wrap\" id=\"detalheWrap\"></div>\n  </div>\n</div>\n\n<div class=\"footnote\">\n  <b>Como usar:</b> cada categoria acima corresponde a um ou mais pontos numerados da imagem — clique na categoria OU no ponto da imagem, dá no mesmo. Pontos cinza na imagem (torre, tampas, painel de controle, botão de emergência, base, estrutura) ainda não têm peça catalogada.\n</div>";
+    root.innerHTML = "<div class=\"ped-tabs\" style=\"padding:0 24px;\"><button class=\"ped-tab active\" id=\"pc6042-tab-foto\" onclick=\"pc6042SwitchTab('foto')\">🖼️ Foto — UJF-6042MkII</button><button class=\"ped-tab\" id=\"pc6042-tab-uso\" onclick=\"pc6042SwitchTab('uso')\">🔧 Peças em Uso — Frota Real</button></div><div id=\"pc6042-pane-foto\"><div class=\"banner\" style=\"background:var(--blue-a);border-bottom:1px solid rgba(var(--blue-rgb),.25);color:var(--blue);\">📦 <b>Catálogo verificado contra manuais Mimaki e a planilha real de manutenção da frota.</b> Estoque puxado ao vivo do cadastro — 68 peças novas cadastradas, 28 já existiam (compartilhadas com outras Mimaki). Uma peça (MM-001621) segue sem função identificada; 5 acessórios opcionais só entram se instalados.</div>\n\n<div class=\"head\">\n  <div class=\"eyebrow\">Equipamentos · Máquinas · UJF-6042MkII</div>\n  <h1>Peças por Categoria — UJF-6042MkII</h1>\n  <p>Clique numa categoria na lista (ex: \"Sistema de Tinta\") ou direto num círculo numerado da imagem — os dois caminhos levam ao mesmo lugar: a lista de peças daquele grupo, com zoom automático na área correspondente da foto.</p>\n</div>\n\n<div class=\"layout\">\n  <div class=\"img-panel\">\n    <div class=\"img-head\">\n      <div class=\"t\">🖨️ UJF-6042MkII — Vista Explodida (imagem enviada por você)</div>\n      <div class=\"s\">Clique nos números 1-16 pra ver as peças de cada grupo</div>\n    </div>\n    <div class=\"img-viewport\" id=\"imgViewport\">\n      <div class=\"img-wrap\" id=\"imgWrap\">\n        <img src=\"img/6042_exploded.webp\" alt=\"Vista explodida UJF-6042MkII\">\n      </div>\n      <div class=\"zoom-label\" id=\"zoomLabel\"></div>\n      <div class=\"zoom-controls\">\n        <button class=\"zoom-btn\" onclick=\"pc6042ResetZoom()\">↺ Ver tudo</button>\n      </div>\n    </div>\n    <div class=\"img-caption\">Numeração e imagem exatamente como você enviou — clique num ponto pra dar zoom nele. Os pontos clicáveis foram posicionados por cima dos números originais.</div>\n  </div>\n\n  <div class=\"lista-panel\">\n    <div class=\"lista-head\">\n      <div class=\"t\">Categorias e peças</div>\n      <div class=\"n\" id=\"listaCount\"></div>\n    </div>\n    <div class=\"zona-grid\" id=\"zonaGrid\"></div>\n    <div class=\"bloco-ativa-tag\" id=\"blocoAtivaTag\"></div>\n    <div class=\"busca-row\">\n      <span class=\"busca-ic\">🔍</span>\n      <input class=\"busca-input\" id=\"buscaInput\" type=\"text\" placeholder=\"Buscar por código ou nome...\" oninput=\"pc6042BuscarTexto(this.value)\">\n    </div>\n    <div class=\"lista-scroll\" id=\"listaBody\"></div>\n    <div class=\"detalhe-wrap\" id=\"detalheWrap\"></div>\n  </div>\n</div>\n\n<div class=\"footnote\">\n  <b>Como usar:</b> cada categoria acima corresponde a um ou mais pontos numerados da imagem — clique na categoria OU no ponto da imagem, dá no mesmo. Pontos cinza na imagem (torre, tampas, painel de controle, botão de emergência, base, estrutura) ainda não têm peça catalogada.\n</div></div><div id=\"pc6042-pane-uso\" hidden><div class=\"head\"><div class=\"eyebrow\">Equipamentos · Máquinas · Frota real (7 máquinas)</div><h1>Peças em Uso — por máquina</h1><p>Pra cada máquina, a peça mais recente instalada de cada código, calculada ao vivo a partir do histórico real de manutenção importado da planilha. Sem dado inventado: se um código só apareceu uma vez, mostro \"primeira vez registrada\" em vez de chutar uma duração.</p></div><div style=\"padding:4px 24px 40px;display:grid;gap:22px;\" id=\"pc6042UsoGrid\"></div><div class=\"footnote\"><b>Como calculo \"em uso há\" e \"durou na troca anterior\":</b> pra cada peça, olho todas as vezes que o código dela aparece no histórico da mesma máquina, ordenado por data. A mais recente vira \"em uso há\" (hoje menos essa data); a diferença entre as duas últimas datas vira \"durou na troca anterior\". Selo vermelho = já passou do tempo que durou da última vez; amarelo = passou de 75% desse tempo.</div></div>";
     pc6042RenderHotspots();
     _pc6042Montado = true;
   }
   PC6042_PECAS = pc6042MontarPecas();
   pc6042RenderTudo();
+}
+
+function pc6042SwitchTab(tab){
+  const bFoto=document.getElementById('pc6042-tab-foto'), bUso=document.getElementById('pc6042-tab-uso');
+  const pFoto=document.getElementById('pc6042-pane-foto'), pUso=document.getElementById('pc6042-pane-uso');
+  if(bFoto) bFoto.classList.toggle('active', tab==='foto');
+  if(bUso) bUso.classList.toggle('active', tab==='uso');
+  if(pFoto) pFoto.hidden = tab!=='foto';
+  if(pUso) pUso.hidden = tab!=='uso';
+  if(tab==='uso') pc6042RenderPecasEmUso();
+}
+
+// pra cada código de peça no histórico real da máquina (pecasEventos), olha a instalação mais
+// recente ("em uso há") e a diferença pras duas últimas datas ("durou na troca anterior") —
+// mesma lógica usada pro histórico de tinta, só que peça a peça em vez de cor a cor
+function pc6042CalcularPecasEmUso(maquina){
+  const eventos=(maquina.pecasEventos||[]).filter(e=>e.cod);
+  const porCod={};
+  eventos.forEach(e=>{ (porCod[e.cod]=porCod[e.cod]||[]).push(e); });
+  return Object.entries(porCod).map(([cod,evs])=>{
+    const ordenados=evs.slice().sort((a,b)=>b.data.localeCompare(a.data));
+    const atual=ordenados[0], anterior=ordenados[1]||null;
+    const diasUso=_diasDesde(atual.data);
+    const duracaoAnterior=anterior?_duracaoDias(anterior.data,atual.data):null;
+    let nivel='ok';
+    if(duracaoAnterior!=null){
+      if(diasUso>=duracaoAnterior) nivel='crit';
+      else if(diasUso>=duracaoAnterior*0.75) nivel='warn';
+    }
+    return { cod, nome:atual.nome, instalada:atual.data, diasUso, duracaoAnterior, nivel };
+  }).sort((a,b)=>{
+    const ordem={crit:0,warn:1,ok:2};
+    if(ordem[a.nivel]!==ordem[b.nivel]) return ordem[a.nivel]-ordem[b.nivel];
+    return b.diasUso-a.diasUso;
+  });
+}
+
+function pc6042RenderMaquinaPecasCard(m){
+  const itens=pc6042CalcularPecasEmUso(m);
+  const cores={ ok:['var(--green-a)','var(--green)'], warn:['var(--yellow-a)','var(--yellow)'], crit:['var(--red-a)','var(--red)'] };
+  const nCrit=itens.filter(i=>i.nivel==='crit').length, nWarn=itens.filter(i=>i.nivel==='warn').length;
+  const item=(it)=>{
+    const [bg,fg]=cores[it.nivel];
+    const dur=it.duracaoAnterior!=null?`${it.duracaoAnterior}d na troca anterior`:'primeira vez registrada';
+    return `<div style="padding:7px 0;border-top:1px solid var(--b2);">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="mono" style="font-size:9.5px;font-weight:700;color:var(--blue);">${_escMaq(it.cod)}</span>
+        <span style="margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:20px;background:${bg};color:${fg};white-space:nowrap;">${it.diasUso}d</span>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--t1);margin-top:1px;">${_escMaq(it.nome)}</div>
+      <div style="font-size:9.5px;color:var(--t4);margin-top:1px;">inst. ${_fmtData(it.instalada)} · ${dur}</div>
+    </div>`;
+  };
+  const badge = nCrit ? `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-a);color:var(--red);white-space:nowrap;">${nCrit} atenção</span>`
+    : nWarn ? `<span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--yellow-a);color:var(--yellow);white-space:nowrap;">${nWarn} ficar de olho</span>` : '';
+  return `<div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);padding:14px;display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🖨</div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-weight:700;font-size:13px;color:var(--t1);">${_escMaq(m.nome)}</div>
+        <div style="font-size:11px;color:var(--t3);">${itens.length} peças rastreadas</div>
+      </div>
+      ${badge}
+    </div>
+    <div style="max-height:340px;overflow-y:auto;">
+      ${itens.length?itens.map(item).join(''):'<span style="color:var(--t4);font-size:11px;">— sem eventos de peça registrados —</span>'}
+    </div>
+  </div>`;
+}
+
+function pc6042RenderPecasEmUso(){
+  const grid=document.getElementById('pc6042UsoGrid');
+  if(!grid) return;
+  const porModelo={};
+  MAQUINAS.forEach(m=>{ const k=m.modelo||'Sem modelo'; (porModelo[k]=porModelo[k]||[]).push(m); });
+  const modelos=Object.keys(porModelo).sort();
+  grid.innerHTML=modelos.map(modelo=>{
+    const ordenadas=[...porModelo[modelo]].sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+    return `<div>
+      <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--b2);display:flex;align-items:center;gap:8px;">
+        <span>🖨 ${_escMaq(modelo)}</span>
+        <span style="font-weight:500;color:var(--t4);text-transform:none;letter-spacing:normal;">${ordenadas.length} máquina${ordenadas.length!==1?'s':''}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+        ${ordenadas.map(pc6042RenderMaquinaPecasCard).join('')}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ═══ fim Peças por Categoria ═══
