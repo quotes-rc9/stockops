@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.67.0] — 2026-09-28
+
+### 🗑 Remoção — aba "Pedido consolidado" da Previsão de Troca de Tinta
+
+Removida a aba "Pedido consolidado" (tabela linha a linha de todas as tintas) da Previsão de Troca de Tinta. Os atalhos "ver pedido completo →" no Resumo e o filtro por clique nos cartões Comprar/Repor/Programar/Tranquilo saíram junto, já que apontavam pra essa aba. As abas Resumo, Calendário de compra e Por máquina continuam normalmente.
+
 ## [2.66.0] — 2026-09-28
 
 ### ✨ Nova funcionalidade — Cabeças, Componentes e Histórico completo na aba Peças em Uso

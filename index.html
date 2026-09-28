@@ -1060,7 +1060,6 @@
         </div>
         <div class="ped-tabs" style="flex-shrink:0;margin-top:8px;">
           <button class="ped-tab active" id="ptt-resumo"     onclick="switchPrevisaoTintaTab('resumo')">📊 Resumo</button>
-          <button class="ped-tab" id="ptt-pedido"             onclick="switchPrevisaoTintaTab('pedido')">🛒 Pedido consolidado</button>
           <button class="ped-tab" id="ptt-calendario"         onclick="switchPrevisaoTintaTab('calendario')">🗓️ Calendário de compra</button>
           <button class="ped-tab" id="ptt-maquina"            onclick="switchPrevisaoTintaTab('maquina')">🖨 Por máquina</button>
         </div>
@@ -1074,34 +1073,17 @@
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:16px;">
             <div class="panel" style="padding:12px 14px;">
-              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🔴 Comprar agora <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🔴 Comprar agora</div>
               <div id="pt-urgentes-list"></div>
             </div>
             <div class="panel" style="padding:12px 14px;">
-              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🟣 Repor / ficar de olho <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('pedido')">ver pedido completo →</button></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🟣 Repor / ficar de olho</div>
               <div id="pt-repor-list"></div>
             </div>
             <div class="panel" style="padding:12px 14px;">
               <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;margin-bottom:8px;">🗓️ Próximo mês <button class="nav-btn" style="margin-left:auto;padding:3px 9px;font-size:10.5px;" onclick="switchPrevisaoTintaTab('calendario')">ver calendário →</button></div>
               <div id="pt-proximo-mes"></div>
             </div>
-          </div>
-        </div>
-
-        <div id="ptt-panel-pedido" style="display:none;flex:1;flex-direction:column;overflow-y:auto;padding:14px;">
-          <div id="pt-filtro-ativo"></div>
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr id="pt-thead">
-                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="maquina" onclick="sortPtBy('maquina')">Máquina <span class="sort-arrow"></span></th>
-                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="tinta" onclick="sortPtBy('tinta')">Tinta <span class="sort-arrow"></span></th>
-                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="diasAtual" onclick="sortPtBy('diasAtual')">Instalada há <span class="sort-arrow"></span></th>
-                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="media" onclick="sortPtBy('media')">Média <span class="sort-arrow"></span></th>
-                <th class="sortable" style="text-align:center;cursor:pointer;user-select:none;" data-campo="restante" onclick="sortPtBy('restante')">Restante <span class="sort-arrow"></span></th>
-                <th class="sortable" style="cursor:pointer;user-select:none;" data-campo="previsao" onclick="sortPtBy('previsao')">Previsão de compra <span class="sort-arrow"></span></th>
-              </tr></thead>
-              <tbody id="pt-tbody"></tbody>
-            </table>
           </div>
         </div>
 
@@ -4495,9 +4477,8 @@ const TODAS_PERMISSOES = [
   { id:'ver_valores',        icon:'💰', label:'Ver Valores (R$)',         desc:'Custos, valores totais e análises financeiras' },
   { id:'ver_maquinas',       icon:'🖨', label:'Ver Máquinas',             desc:'Cadastro e monitoramento de impressoras' },
   { id:'ver_analise_min',    icon:'🏭', label:'Ver Estoque de Tintas',        desc:'Quantidade por setor (Quotes x Compras), por modelo e cor' },
-  { id:'ver_previsao_tinta', icon:'🗓', label:'Ver Previsão de Troca de Tinta', desc:'Pedido consolidado e calendário de compra de tintas' },
+  { id:'ver_previsao_tinta', icon:'🗓', label:'Ver Previsão de Troca de Tinta', desc:'Resumo e calendário de compra de tintas' },
   { id:'ver_pt_resumo',      icon:'📊', label:'· Aba Resumo',              desc:'Sub-permissão de Previsão de Troca de Tinta — chips e listas Comprar/Repor' },
-  { id:'ver_pt_pedido',      icon:'🛒', label:'· Aba Pedido consolidado',  desc:'Sub-permissão de Previsão de Troca de Tinta — tabela com valores em R$' },
   { id:'ver_pt_calendario',  icon:'🗓️', label:'· Aba Calendário de compra',desc:'Sub-permissão de Previsão de Troca de Tinta — meses e compras previstas' },
   { id:'ver_pt_maquina',     icon:'🖨', label:'· Aba Por máquina',         desc:'Sub-permissão de Previsão de Troca de Tinta — nível e previsão por máquina' },
   { id:'exportar_dados',     icon:'💾', label:'Exportar Backup',          desc:'Baixar backup completo dos dados do sistema' },
@@ -5787,7 +5768,7 @@ function calcularPrevisaoTinta(){
 let _ptTab = 'resumo';
 function switchPrevisaoTintaTab(tab){
   _ptTab = tab;
-  ['resumo','pedido','calendario','maquina'].forEach(t=>{
+  ['resumo','calendario','maquina'].forEach(t=>{
     const btn = document.getElementById('ptt-'+t);
     const panel = document.getElementById('ptt-panel-'+t);
     if(btn) btn.classList.toggle('active', t===tab);
@@ -5795,23 +5776,6 @@ function switchPrevisaoTintaTab(tab){
   });
 }
 
-let _ptFiltro = null;
-function filtrarPtStatus(status){
-  _ptFiltro = status;
-  switchPrevisaoTintaTab('pedido');
-  renderPrevisaoTinta();
-}
-function limparPtFiltro(){
-  _ptFiltro = null;
-  renderPrevisaoTinta();
-}
-
-let _ptSort = { campo:'restante', dir:'asc' };
-function sortPtBy(campo){
-  if(_ptSort.campo===campo) _ptSort.dir = _ptSort.dir==='asc'?'desc':'asc';
-  else _ptSort = { campo, dir:'asc' };
-  renderPrevisaoTinta();
-}
 function _ptSortVal(r, campo){
   switch(campo){
     case 'maquina': return r.maquina;
@@ -5940,10 +5904,10 @@ function limparConferenciaTinta(maqId, tintaIdx){
 
 // Sub-permissões por aba (além de ver_previsao_tinta pra ver a página): admin
 // tem tudo por padrão; outros usuários só veem a aba explicitamente liberada.
-const PT_TAB_PERM = { resumo:'ver_pt_resumo', pedido:'ver_pt_pedido', calendario:'ver_pt_calendario', maquina:'ver_pt_maquina' };
+const PT_TAB_PERM = { resumo:'ver_pt_resumo', calendario:'ver_pt_calendario', maquina:'ver_pt_maquina' };
 function _ptAplicarPermissoesAbas(){
-  const permitidas = ['resumo','pedido','calendario','maquina'].filter(t=>temPermissao(PT_TAB_PERM[t]));
-  ['resumo','pedido','calendario','maquina'].forEach(t=>{
+  const permitidas = ['resumo','calendario','maquina'].filter(t=>temPermissao(PT_TAB_PERM[t]));
+  ['resumo','calendario','maquina'].forEach(t=>{
     const btn = document.getElementById('ptt-'+t);
     if(btn) btn.style.display = permitidas.includes(t) ? '' : 'none';
   });
@@ -5956,16 +5920,12 @@ function renderPrevisaoTinta(){
   _ptAplicarPermissoesAbas();
   const rows = calcularPrevisaoTinta();
   _renderPtResumo(rows);
-  _renderPtPedido(rows);
   _renderPtCalendario(rows);
   _renderPtPorMaquina(rows);
 }
 
-function _ptChipCard(id, cor, corA, titulo, sub, qtd, statusKey){
+function _ptChipCard(id, cor, corA, titulo, sub, qtd){
   const el = document.getElementById(id); if(!el) return;
-  el.style.cursor = 'pointer';
-  el.style.background = _ptFiltro===statusKey ? corA : '';
-  el.onclick = () => filtrarPtStatus(statusKey);
   el.innerHTML = `
     <div class="ph"><span class="ph-title" style="color:${cor};font-size:12px;">${titulo}</span></div>
     <div style="padding:12px;">
@@ -6002,10 +5962,10 @@ function _renderPtResumo(rows){
   const repor = rows.filter(r=>r.status.key==='repor');
   const programar = rows.filter(r=>r.status.key==='programar');
   const tranquilo = rows.filter(r=>r.status.key==='tranquilo');
-  _ptChipCard('pt-chip-crit', 'var(--red)', 'var(--red-a)', '🔴 Comprar', 'sem reserva válida pra trocar agora (ou sem folga de tempo) — comprar já', comprar.length, 'comprar');
-  _ptChipCard('pt-chip-trocarok', 'var(--purple)', 'var(--purple-a)', '🟣 Repor', 'já dá pra trocar (ou ainda há tempo), mas a reserva do estoque precisa ser reposta', repor.length, 'repor');
-  _ptChipCard('pt-chip-warn', 'var(--yellow)', 'var(--yellow-a)', '🟡 Programar', `dentro do prazo de reposição (${PRAZO_REPOSICAO_DIAS}d), com reserva válida`, programar.length, 'programar');
-  _ptChipCard('pt-chip-ok', 'var(--green)', 'var(--green-a)', '🟢 Tranquilo', 'consumo e reserva dentro do padrão da máquina', tranquilo.length, 'tranquilo');
+  _ptChipCard('pt-chip-crit', 'var(--red)', 'var(--red-a)', '🔴 Comprar', 'sem reserva válida pra trocar agora (ou sem folga de tempo) — comprar já', comprar.length);
+  _ptChipCard('pt-chip-trocarok', 'var(--purple)', 'var(--purple-a)', '🟣 Repor', 'já dá pra trocar (ou ainda há tempo), mas a reserva do estoque precisa ser reposta', repor.length);
+  _ptChipCard('pt-chip-warn', 'var(--yellow)', 'var(--yellow-a)', '🟡 Programar', `dentro do prazo de reposição (${PRAZO_REPOSICAO_DIAS}d), com reserva válida`, programar.length);
+  _ptChipCard('pt-chip-ok', 'var(--green)', 'var(--green-a)', '🟢 Tranquilo', 'consumo e reserva dentro do padrão da máquina', tranquilo.length);
 
   const urg = _ptListaAcao(rows, 'comprar');
   const urgEl = document.getElementById('pt-urgentes-list');
@@ -6035,54 +5995,6 @@ function _renderPtResumo(rows){
       <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:32px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);">${doProxMes.length}</span><span style="font-size:11.5px;color:var(--t3);">tinta${doProxMes.length!==1?'s':''} prevista${doProxMes.length!==1?'s':''} — ${nomeMes}</span></div>
       <div style="font-size:13px;color:var(--t2);margin-top:6px;">Total estimado: <b style="font-family:'JetBrains Mono',monospace;color:var(--green);">${RV(total)}</b></div>`;
   }
-}
-
-const FILTRO_PT_LABEL = { comprar:'🔴 Comprar', repor:'🟣 Repor', programar:'🟡 Programar', tranquilo:'🟢 Tranquilo' };
-function _renderPtPedido(rows){
-  const tb = document.getElementById('pt-tbody'); if(!tb) return;
-  const filtroEl = document.getElementById('pt-filtro-ativo');
-  if(filtroEl){
-    filtroEl.innerHTML = _ptFiltro
-      ? `<div style="display:inline-flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:6px 8px 6px 14px;font-size:12px;color:var(--t2);margin-bottom:10px;">Mostrando: <b>${FILTRO_PT_LABEL[_ptFiltro]}</b><button class="nav-btn" style="padding:4px 10px;font-size:10.5px;" onclick="limparPtFiltro()">✕ limpar filtro</button></div>`
-      : '';
-  }
-  const filtered = _ptFiltro ? rows.filter(r=>r.status.key===_ptFiltro) : rows;
-  const dirMul = _ptSort.dir==='asc'?1:-1;
-  const sorted = [...filtered].sort((a,b)=>{
-    const va=_ptSortVal(a,_ptSort.campo), vb=_ptSortVal(b,_ptSort.campo);
-    if(typeof va==='string') return va.localeCompare(vb)*dirMul;
-    return (va-vb)*dirMul;
-  });
-  const thead = document.getElementById('pt-thead');
-  if(thead){
-    thead.querySelectorAll('th.sortable').forEach(th=>{
-      const ativo = th.dataset.campo===_ptSort.campo;
-      th.style.color = ativo ? 'var(--green)' : '';
-      const arrow = th.querySelector('.sort-arrow');
-      if(arrow) arrow.textContent = ativo ? (_ptSort.dir==='asc'?'▲':'▼') : '';
-    });
-  }
-  if(!sorted.length){ tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--t4);padding:20px;">Nenhum item nessa categoria.</td></tr>`; return; }
-  tb.innerHTML = sorted.map(r=>{
-    const key = r.maqId+'|'+r.tintaIdx;
-    const expandido = _ptExpandidos.has(key);
-    const neg = r.effRestante!=null && r.effRestante<0;
-    let aviso = '';
-    if(r.status.primerVencido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⏰ Primer vencido — trocar já</span>`;
-    else if(r.conferido) aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--green);background:var(--green-a);padding:2px 7px;border-radius:20px;">✓ conferido</span>`;
-    else if(r.status.key==='comprar') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--red);background:var(--red-a);padding:2px 7px;border-radius:20px;">⚠ comprar + conferir %</span>`;
-    else if(r.status.key==='repor') aviso = `<span style="margin-left:8px;font-size:9.8px;font-weight:700;color:var(--purple);background:var(--purple-a);padding:2px 7px;border-radius:20px;">↻ repor a reserva</span>`;
-    const linha = `<tr style="cursor:pointer;" onclick="togglePtLinha('${r.maqId}',${r.tintaIdx})">
-      <td><span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10.5px;background:var(--blue-a);color:var(--blue);padding:2px 7px;border-radius:6px;">${_ptBadgeMaquina(r.maquina)}</span> <span class="mono" style="font-size:9.5px;color:var(--t4);">${_escMaq(r.modelo)}</span></td>
-      <td>${r.status.primerVencido?'<span title="Primer vencido, sem extensao" style="margin-right:5px;">⏰</span>':''}<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${r.status.cor};margin-right:7px;"></span>${_ptNomeCompleto(r)}</td>
-      <td style="text-align:center;" class="mono">${r.diasAtual}d</td>
-      <td style="text-align:center;" class="mono">${r.media!=null?Math.round(r.media)+'d':'—'}</td>
-      <td style="text-align:center;font-weight:700;color:${neg?'var(--red)':'var(--t2)'};" class="mono">${r.effRestante!=null?((r.effRestante<0?'':'+')+r.effRestante+'d'):'—'}</td>
-      <td class="mono">${r.previsaoData||'sem histórico'}${aviso}</td>
-    </tr>`;
-    const detalhe = expandido ? `<tr><td colspan="6" style="background:var(--s2);">${_ptDetalheHtml(r)}</td></tr>` : '';
-    return linha + detalhe;
-  }).join('');
 }
 
 let _ptCalMeses = [];
