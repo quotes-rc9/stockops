@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.68.0] — 2026-09-28
+
+### 🗑 Remoção — página "Alertas" do menu lateral
+
+Removida a página dedicada de Alertas (Críticos/Em alerta) — a mesma informação já existe em Estoque completo, filtrando por Status. O botão "Ver todos" do banner vermelho de itens críticos agora leva direto pro Estoque completo com o filtro Status = Crítico já aplicado, em vez de abrir a página removida. O widget "Central de Atenção" do Dashboard (que também mostra críticos/alertas/validades) não foi afetado — ele já calculava os números por conta própria, sem depender da página de Alertas.
+
 ## [2.67.0] — 2026-09-28
 
 ### 🗑 Remoção — aba "Pedido consolidado" da Previsão de Troca de Tinta
