@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.70.0] — 2026-10-08
+
+### ✨ Melhoria — Movimentações com filtros e visão por mês
+
+A tela de Movimentações ganhou filtros: mês, tipo (entradas ou saídas), categoria (peças, consumíveis, insumos), responsável e busca por produto, código ou observação. A lista agora é separada por mês, com o subtotal de entradas e saídas de cada um, e um resumo no topo soma o que está filtrado (movimentos, unidades e valor). O PDF exporta só o que está filtrado. Clicar numa barra do gráfico de consumo do Dashboard continua levando pra cá, já com mês, categoria e saídas aplicados.
+
 ## [2.69.0] — 2026-09-28
 
 ### 🎨 Reorganização — menu Equipamentos reduzido a 3 itens

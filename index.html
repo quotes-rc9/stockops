@@ -409,7 +409,15 @@
           <span>💡 <b style="color:var(--red);">Saída</b> = produto foi usado ou retirado</span>
           <span>💡 <b style="color:var(--purple);">Solicitação</b> = pedido aguardando aprovação do admin</span>
         </div>
-        <div id="mov-filtro-ativo" style="padding:0 14px;flex-shrink:0;"></div>
+        <div class="filtro-bar" id="mov-filtros" style="gap:10px;">
+          <input class="fi" id="mf-busca" placeholder="🔍 Buscar produto, código, responsável ou obs..." style="width:250px;" oninput="_mvf.busca=this.value;renderMov()">
+          <select class="fi" id="mf-mes" onchange="_mvf.mes=this.value;renderMov()" title="Filtrar por mês"></select>
+          <span id="mf-tipo" style="display:inline-flex;gap:4px;"></span>
+          <span id="mf-cat" style="display:inline-flex;gap:4px;"></span>
+          <select class="fi" id="mf-resp" onchange="_mvf.resp=this.value;renderMov()" title="Filtrar por responsável"></select>
+          <button type="button" class="nav-btn" id="mf-limpar" style="font-size:10.5px;padding:4px 10px;" onclick="limparMovFiltros()">✕ Limpar filtros</button>
+        </div>
+        <div id="mov-resumo" style="padding:7px 14px;flex-shrink:0;display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--t2);border-bottom:1px solid var(--b1);background:var(--s2);"></div>
         <div class="tbl-wrap" style="flex:1;">
           <table>
             <thead><tr>
@@ -2311,43 +2319,100 @@ function sortMovBy(campo) {
   renderMov();
 }
 const NOMES_MES_ABREV=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-// Filtro ativo em Movimentações (setado ao clicar numa barra do gráfico "Consumo real" do Dashboard)
-let _movFiltro = null; // {cat, ano, mes} | null
+// Filtros de Movimentações. mes = 'AAAA-MM'; tipo = 'ENTRADA' | 'SAÍDA'; cat = 'Peça' | 'Consumível' | 'Insumo'
+const NOMES_MES_LONGO=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let _mvf = { busca:'', mes:'', tipo:'', cat:'', resp:'' };
+// Chamado ao clicar numa barra do gráfico "Consumo real" do Dashboard
 function verSaidasCategoria(cat, ano, mes){
   const sbItem = document.querySelector(`.sb-item[onclick*="'mov'"]`);
   showPage('mov', sbItem || null);
   document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
   if (sbItem) sbItem.classList.add('active');
-  _movFiltro = { cat, ano, mes };
+  _mvf = { busca:'', mes: ano+'-'+String(mes+1).padStart(2,'0'), tipo:'SAÍDA', cat, resp:'' };
   setTimeout(() => renderMov(), 100);
 }
-function limparMovFiltro(){
-  _movFiltro = null;
+function limparMovFiltros(){
+  _mvf = { busca:'', mes:'', tipo:'', cat:'', resp:'' };
   renderMov();
 }
-function renderMov(){
-  const listaBase = _movFiltro
-    ? MOV.filter(mv=>{
-        if(mv.tipo!=='SAÍDA') return false;
-        const prod=P.find(p=>p.cod===mv.cod);
-        if(!prod || prod.cat!==_movFiltro.cat) return false;
-        const dt=parseDate(mv.data.split(' ')[0]);
-        return dt.getFullYear()===_movFiltro.ano && dt.getMonth()===_movFiltro.mes;
-      })
-    : MOV;
-  const filtroEl = $('mov-filtro-ativo');
-  if(filtroEl){
-    filtroEl.innerHTML = _movFiltro
-      ? `<div style="display:inline-flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:6px 8px 6px 14px;font-size:12px;color:var(--t2);margin:10px 0;">Mostrando: <b>Saídas de ${_movFiltro.cat} — ${NOMES_MES_ABREV[_movFiltro.mes]}/${_movFiltro.ano}</b> (${listaBase.length})<button class="nav-btn" style="padding:4px 10px;font-size:10.5px;" onclick="limparMovFiltro()">✕ limpar filtro</button></div>`
-      : '';
+function setMovSeg(campo, valor){
+  _mvf[campo] = (_mvf[campo] === valor) ? '' : valor;
+  renderMov();
+}
+function _movMesKey(m){
+  const t = _parseDataBR(m.data); if(!t) return '';
+  const d = new Date(t);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function _movMesLabel(k){ const [a,mm]=k.split('-'); return NOMES_MES_LONGO[+mm-1]+' de '+a; }
+function _movCatDe(m){ const p = P.find(x=>x.cod===m.cod); return p ? p.cat : 'Sem cadastro'; }
+function _movFiltrados(){
+  const q = _mvf.busca.trim().toLowerCase();
+  return MOV.filter(m=>{
+    if(_mvf.tipo && m.tipo!==_mvf.tipo) return false;
+    if(_mvf.mes && _movMesKey(m)!==_mvf.mes) return false;
+    if(_mvf.cat && _movCatDe(m)!==_mvf.cat) return false;
+    if(_mvf.resp && (m.resp||'')!==_mvf.resp) return false;
+    if(q && !(m.nome+' '+m.cod+' '+(m.resp||'')+' '+(m.obs||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function _movFiltroAtivo(){ return !!(_mvf.busca.trim() || _mvf.mes || _mvf.tipo || _mvf.cat || _mvf.resp); }
+function _movAtualizarFiltrosUI(){
+  const meses = [...new Set(MOV.map(_movMesKey).filter(Boolean))];
+  if(_mvf.mes && !meses.includes(_mvf.mes)) meses.push(_mvf.mes);
+  meses.sort().reverse();
+  const selMes = $('mf-mes');
+  if(selMes){
+    selMes.innerHTML = '<option value="">Todos os meses</option>' + meses.map(k=>`<option value="${k}">${_movMesLabel(k)}</option>`).join('');
+    selMes.value = _mvf.mes;
   }
-  $('mov-count').textContent=listaBase.length+' registro'+(listaBase.length!==1?'s':'')+(_movFiltro?' (filtrado)':'');
+  const resps = [...new Set(MOV.map(m=>m.resp).filter(Boolean))];
+  if(_mvf.resp && !resps.includes(_mvf.resp)) resps.push(_mvf.resp);
+  resps.sort((a,b)=>a.localeCompare(b));
+  const selResp = $('mf-resp');
+  if(selResp){
+    selResp.innerHTML = '<option value="">Todos os responsáveis</option>' + resps.map(r=>`<option value="${r}">${r}</option>`).join('');
+    selResp.value = _mvf.resp;
+  }
+  const busca = $('mf-busca');
+  if(busca && busca.value !== _mvf.busca) busca.value = _mvf.busca;
+  const seg = (campo, opcoes) => opcoes.map(([v,l])=>{
+    const ativo = (_mvf[campo]||'') === v;
+    return `<button type="button" onclick="setMovSeg('${campo}','${v}')" style="font-family:'Inter',sans-serif;font-size:11px;padding:4px 10px;border-radius:var(--r4);cursor:pointer;border:1px solid ${ativo?'rgba(var(--blue-rgb),.45)':'var(--b2)'};background:${ativo?'var(--blue-a)':'var(--s2)'};color:${ativo?'var(--blue)':'var(--t2)'};font-weight:${ativo?'700':'500'};">${l}</button>`;
+  }).join('');
+  $('mf-tipo').innerHTML = seg('tipo', [['','Todos'],['ENTRADA','📥 Entradas'],['SAÍDA','📤 Saídas']]);
+  $('mf-cat').innerHTML = seg('cat', [['','Todas'],['Peça','Peças'],['Consumível','Consumíveis'],['Insumo','Insumos']]);
+  const lim = $('mf-limpar'); if(lim) lim.style.display = _movFiltroAtivo() ? '' : 'none';
+}
+function renderMov(){
+  _movAtualizarFiltrosUI();
+  const listaBase = _movFiltrados();
+  const filtrado = _movFiltroAtivo();
+  $('mov-count').textContent = filtrado ? `${listaBase.length} de ${MOV.length} registros` : MOV.length+' registro'+(MOV.length!==1?'s':'');
+
+  const soma = a => a.reduce((s,m)=>s+(m.custo||0)*m.qty,0);
+  const un = a => a.reduce((s,m)=>s+m.qty,0);
+  const semValor = a => a.filter(m=>!m.custo).length;
+  const ent = listaBase.filter(m=>m.tipo==='ENTRADA'), sai = listaBase.filter(m=>m.tipo!=='ENTRADA');
+  const nota = a => semValor(a) ? ` <span style="color:var(--t4);">(${semValor(a)} sem valor)</span>` : '';
+  $('mov-resumo').innerHTML = listaBase.length
+    ? `<span>📥 Entradas: <b style="color:var(--green);">${ent.length}</b> mov. · <b>${un(ent)}</b> un · <b style="color:var(--green);">${R(soma(ent))}</b>${nota(ent)}</span>
+       <span>📤 Saídas: <b style="color:var(--red);">${sai.length}</b> mov. · <b>${un(sai)}</b> un · <b style="color:var(--red);">${R(soma(sai))}</b>${nota(sai)}</span>`
+    : '<span style="color:var(--t3);">Sem resultados para o resumo</span>';
+
   if(!listaBase.length){
-    $('mov-tbody').innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
-      <div style="font-size:24px;margin-bottom:8px;">📭</div>
-      Nenhuma movimentação registrada ainda.<br>
-      <span style="font-size:10px;">Use os botões acima para registrar entradas e saídas.</span>
-    </td></tr>`;
+    $('mov-tbody').innerHTML = MOV.length
+      ? `<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
+          <div style="font-size:24px;margin-bottom:8px;">🔎</div>
+          Nenhuma movimentação com esses filtros.<br>
+          <button class="nav-btn" style="margin-top:10px;font-size:11px;" onclick="limparMovFiltros()">✕ Limpar filtros</button>
+        </td></tr>`
+      : `<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:32px;">
+          <div style="font-size:24px;margin-bottom:8px;">📭</div>
+          Nenhuma movimentação registrada ainda.<br>
+          <span style="font-size:10px;">Use os botões acima para registrar entradas e saídas.</span>
+        </td></tr>`;
     return;
   }
   const movSortVal = (m, campo) => {
@@ -2360,14 +2425,35 @@ function renderMov(){
     if (campo === 'resp') return m.resp || '';
     return 0;
   };
-  const lista = _movSort.campo ? _sortArr(listaBase, _movSort, movSortVal) : [...listaBase].reverse();
+  const ordenadoPorData = !_movSort.campo;
+  const lista = ordenadoPorData
+    ? listaBase.map((m,ix)=>({m,ix,t:_parseDataBR(m.data)})).sort((a,b)=>b.t-a.t||b.ix-a.ix).map(x=>x.m)
+    : _sortArr(listaBase, _movSort, movSortVal);
   _atualizarSetas('mov', ['data','nome','tipo','qty','custo','total','resp'], _movSort);
-  $('mov-tbody').innerHTML=lista.map((m)=>{
+
+  // Separador por mês (só quando a ordem é por data) com o subtotal daquele mês
+  const porMes = {};
+  listaBase.forEach(m=>{ const k=_movMesKey(m)||'sem-data'; (porMes[k]=porMes[k]||[]).push(m); });
+  let mesAtual = null;
+  $('mov-tbody').innerHTML = lista.map((m)=>{
     const i=MOV.indexOf(m);
     const isE=m.tipo==='ENTRADA';
-    return `<tr>
+    let sep = '';
+    if(ordenadoPorData){
+      const k = _movMesKey(m)||'sem-data';
+      if(k!==mesAtual){
+        mesAtual = k;
+        const g = porMes[k];
+        const gEnt = g.filter(x=>x.tipo==='ENTRADA'), gSai = g.filter(x=>x.tipo!=='ENTRADA');
+        sep = `<tr><td colspan="9" style="background:var(--s3);padding:8px 14px;font-size:11.5px;font-weight:700;color:var(--t1);">
+          ${k==='sem-data'?'Sem data':_movMesLabel(k)}
+          <span style="font-weight:500;color:var(--t3);margin-left:8px;">${g.length} registro${g.length!==1?'s':''} · entradas ${R(soma(gEnt))} · saídas ${R(soma(gSai))}</span>
+        </td></tr>`;
+      }
+    }
+    return sep + `<tr>
       <td class="mono" style="font-size:10px;color:var(--t3);white-space:nowrap;">${m.data}</td>
-      <td style="font-weight:500;">${m.nome}<br><span style="font-size:10px;color:var(--t3);">${m.cod}</span></td>
+      <td style="font-weight:500;">${m.nome}<br><span style="font-size:10px;color:var(--t3);">${m.cod} · ${_movCatDe(m)}</span></td>
       <td><span class="badge ${isE?'b-ok':'b-crit'}" style="font-size:11px;">${isE?'📥 ENTRADA':'📤 SAÍDA'}</span></td>
       <td style="text-align:center;font-weight:700;font-size:14px;color:${isE?'var(--green)':'var(--red)'};">${isE?'+':'-'}${m.qty}</td>
       <td style="color:var(--t3);">${m.custo?R(m.custo):'—'}</td>
@@ -6689,15 +6775,25 @@ function exportarValidadesPDF() {
 
 // ── Exportar Movimentações PDF ───────────────────────────────
 function exportarMovPDF() {
-  const colunas = ['Data/Hora','Produto','Cód.','Tipo','Qtd','Custo Un.','Total','Responsável','Obs'];
-  const linhas = [...MOV].reverse().map(m => [
-    m.data, m.nome, m.cod, m.tipo, m.qty,
+  const colunas = ['Data/Hora','Produto','Cód.','Categoria','Tipo','Qtd','Custo Un.','Total','Responsável','Obs'];
+  const base = _movFiltrados();
+  const lista = base.map((m,ix)=>({m,ix,t:_parseDataBR(m.data)})).sort((a,b)=>b.t-a.t||b.ix-a.ix).map(x=>x.m);
+  const linhas = lista.map(m => [
+    m.data, m.nome, m.cod, _movCatDe(m), m.tipo, m.qty,
     m.custo ? RV(m.custo) : '—',
     m.custo ? RV(m.custo*m.qty) : '—',
     m.resp || '—', m.obs || '—'
   ]);
+  const partes = [];
+  if(_mvf.mes) partes.push(_movMesLabel(_mvf.mes));
+  if(_mvf.tipo) partes.push(_mvf.tipo==='ENTRADA'?'só entradas':'só saídas');
+  if(_mvf.cat) partes.push(_mvf.cat);
+  if(_mvf.resp) partes.push('resp. '+_mvf.resp);
+  if(_mvf.busca.trim()) partes.push('busca "'+_mvf.busca.trim()+'"');
   exportarPDF('Movimentações de Estoque', colunas, linhas, {
-    resumo: `${MOV.length} movimentações registradas`
+    resumo: _movFiltroAtivo()
+      ? `${lista.length} de ${MOV.length} movimentações (${partes.join(' · ')})`
+      : `${MOV.length} movimentações registradas`
   });
 }
 
