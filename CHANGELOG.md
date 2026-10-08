@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.71.0] — 2026-10-08
+
+### 🎨 Melhoria — filtros de Movimentações com caixas de seleção
+
+Os filtros de Mês e de Responsável nas Movimentações viraram caixas de seleção (dá pra marcar vários meses e várias pessoas ao mesmo tempo), no mesmo estilo do Estoque completo, com a quantidade de registros ao lado de cada opção. Na lista de responsáveis, "Fulano", "Fulano (aprovado)" e variações de maiúscula/minúscula agora aparecem como uma pessoa só (a coluna da tabela continua mostrando o texto original).
+
 ## [2.70.0] — 2026-10-08
 
 ### ✨ Melhoria — Movimentações com filtros e visão por mês
