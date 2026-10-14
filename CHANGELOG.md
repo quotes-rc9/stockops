@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.72.0] — 2026-10-14
+
+### ✨ Melhoria — registro completo da troca de tinta, com histórico por máquina
+
+O formulário "Registrar troca de tinta" ganhou três campos: **Quem trocou** (Anderson, Guilherme etc. — já vem preenchido com quem está logado), **Data da troca** (hoje por padrão; dá pra registrar uma troca de dias atrás, mas não no futuro nem antes da instalação da tinta atual) e **Motivo da troca** (campo aberto, obrigatório). Tudo isso vai pro histórico da máquina (Tintas na Máquina → Histórico), que agora mostra "Trocada por … em …" e o motivo em cada troca, e também sai no PDF da máquina. A movimentação de saída do estoque passa a ter o motivo na observação e a pessoa que trocou como responsável. Toda tinta trocada já nasce com a leitura inicial de 100% na data da troca.
+
 ## [2.71.0] — 2026-10-08
 
 ### 🎨 Melhoria — filtros de Movimentações com caixas de seleção

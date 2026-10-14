@@ -1409,9 +1409,21 @@
       <label class="fl">Número de série</label>
       <input class="fi2" id="tt-serie" type="text" placeholder="Ex: 81812301">
     </div>
-    <div class="fg" style="margin-bottom:0;">
+    <div class="fg">
       <label class="fl">Validade</label>
       <input class="fi2" id="tt-validade" type="date">
+    </div>
+    <div class="fg">
+      <label class="fl">Quem trocou?</label>
+      <select class="fi2" id="tt-quem"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Data da troca</label>
+      <input class="fi2" id="tt-data" type="date">
+    </div>
+    <div class="fg" style="margin-bottom:0;">
+      <label class="fl">Motivo da troca</label>
+      <textarea class="fi2" id="tt-motivo" rows="3" style="resize:vertical;" placeholder="Ex: acabou durante a produção, vencida, vazamento, troca preventiva..."></textarea>
     </div>
     <div class="m-foot">
       <button class="mbtn mbtn-cancel" onclick="fecharTrocaTinta()">Cancelar</button>
@@ -5553,7 +5565,9 @@ function openMaqHist(maqId){
       <div style="flex:1;min-width:0;">
         <div style="font-size:12px;color:var(--t1);font-weight:500;">${_escMaq(h.acao)}</div>
         ${h.detalhe?`<div style="font-size:11px;color:var(--t3);">${_escMaq(h.detalhe)}</div>`:''}
-        <div style="font-size:10px;color:var(--t4);margin-top:1px;">${h.ts||''} · ${_escMaq(h.user||'—')}</div>
+        ${h.tipo==='troca_tinta'?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">👤 Trocada por <b>${_escMaq(h.quemTrocou||'—')}</b> em <b>${_fmtData(h.dataTroca)}</b></div>
+        <div style="font-size:11px;color:var(--t2);">📝 Motivo: ${_escMaq(h.motivo||'—')}</div>`:''}
+        <div style="font-size:10px;color:var(--t4);margin-top:1px;">Registrado em ${h.ts||''} · ${_escMaq(h.user||'—')}</div>
       </div>
     </div>`).join('') : '<div style="color:var(--t4);font-size:11px;padding:6px 0;">Sem histórico ainda. As próximas ações nesta máquina vão aparecer aqui.</div>';
   $('overlay-maq-hist').classList.add('open');
@@ -5584,7 +5598,7 @@ function exportarMaqPDF(maqId){
   let y=doc.lastAutoTable.finalY+8;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,30,30); doc.text('Histórico',10,y);
   const hist=[...(m.historico||[])].sort((a,b)=>(b.tsMs||0)-(a.tsMs||0));
-  const histRows=hist.map(h=>[h.ts||'—', h.user||'—', h.acao||'', h.detalhe||'']);
+  const histRows=hist.map(h=>[h.ts||'—', h.user||'—', h.acao||'', (h.detalhe||'') + (h.tipo==='troca_tinta' ? ` | Trocada por ${h.quemTrocou||'—'} em ${_fmtData(h.dataTroca)} | Motivo: ${h.motivo||'—'}` : '')]);
   doc.autoTable({ head:[['Data','Usuário','Ação','Detalhe']], body: histRows.length?histRows:[['—','—','sem histórico','']], startY:y+3, theme:'striped', styles:{fontSize:8,cellPadding:2}, headStyles:{fillColor:[74,143,245],textColor:255,fontStyle:'bold'}, alternateRowStyles:{fillColor:[245,247,250]}, margin:{left:10,right:10} });
   const totalPag=doc.internal.getNumberOfPages();
   for(let i=1;i<=totalPag;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); const pageH=doc.internal.pageSize.getHeight(); doc.text(`Página ${i} de ${totalPag}`,pageW/2,pageH-6,{align:'center'}); doc.text('StockOps · Sistema de Gestão',10,pageH-6); doc.text('Confidencial',pageW-10,pageH-6,{align:'right'}); }
@@ -6355,6 +6369,16 @@ function abrirTrocaTinta(modelo, corParam, produtoCod){
   }
   const serieEl = document.getElementById('tt-serie'); if (serieEl) serieEl.value = '';
   const valEl = document.getElementById('tt-validade'); if (valEl) valEl.value = '';
+  const quemSel = document.getElementById('tt-quem');
+  if (quemSel) {
+    const nomes = [...new Set([(CURRENT_USER?CURRENT_USER.nome:''), ...USUARIOS.map(u=>u.nome)].filter(Boolean))];
+    quemSel.innerHTML = nomes.map(n => `<option value="${_escMaq(n)}">${_escMaq(n)}</option>`).join('') + '<option value="__outro">Outra pessoa...</option>';
+    quemSel.value = CURRENT_USER ? CURRENT_USER.nome : nomes[0];
+  }
+  const nT = new Date();
+  const hojeTT = `${nT.getFullYear()}-${String(nT.getMonth()+1).padStart(2,'0')}-${String(nT.getDate()).padStart(2,'0')}`;
+  const dataEl = document.getElementById('tt-data'); if (dataEl) { dataEl.value = hojeTT; dataEl.max = hojeTT; }
+  const motEl = document.getElementById('tt-motivo'); if (motEl) motEl.value = '';
   document.getElementById('overlay-troca-tinta')?.classList.add('open');
 }
 function fecharTrocaTinta(){
@@ -6368,6 +6392,18 @@ function confirmarTrocaTinta(){
   if (!maqId) { toast('Selecione a máquina.', 'error'); return; }
   if (!serie) { toast('Informe o número de série.', 'error'); return; }
   if (!validadeInput) { toast('Informe a validade.', 'error'); return; }
+  let quemTrocou = document.getElementById('tt-quem')?.value || '';
+  if (quemTrocou === '__outro') {
+    quemTrocou = (prompt('Nome de quem trocou a tinta:') || '').trim();
+  }
+  const dataTroca = document.getElementById('tt-data')?.value || '';
+  const motivo = (document.getElementById('tt-motivo')?.value || '').trim();
+  if (!quemTrocou) { toast('Informe quem trocou a tinta.', 'error'); return; }
+  if (!dataTroca) { toast('Informe a data da troca.', 'error'); return; }
+  const nV = new Date();
+  const hojeValida = `${nV.getFullYear()}-${String(nV.getMonth()+1).padStart(2,'0')}-${String(nV.getDate()).padStart(2,'0')}`;
+  if (dataTroca > hojeValida) { toast('A data da troca não pode ser no futuro.', 'error'); return; }
+  if (!motivo) { toast('Descreva o motivo da troca.', 'error'); return; }
 
   const corCode = _ttCor === 'BRANCO' ? (document.getElementById('tt-slot')?.value || 'BRANCO-07') : _ttCor;
   const produto = P.find(p => p.cod === _ttProdutoCod);
@@ -6378,29 +6414,50 @@ function confirmarTrocaTinta(){
   if (!m.tintas) m.tintas = [];
 
   const n = new Date();
-  const hojeISO = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
-  const dataHoraBR = n.toLocaleDateString('pt-BR') + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const hojeISO = dataTroca;
+  const dataTrocaBR = _fmtData(dataTroca);
+  const dataHoraBR = dataTrocaBR + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
   // Fecha o ciclo ativo atual dessa cor nessa máquina, se existir
   const atual = m.tintas.find(t => String(t.modelo||'').toUpperCase().trim() === corCode && !t.fim);
   let infoAnterior = '';
+  if (atual && atual.inicio && dataTroca < atual.inicio) {
+    toast(`A data da troca não pode ser anterior à instalação da tinta atual (${_fmtData(atual.inicio)}).`, 'error'); return;
+  }
   if (atual) {
     atual.fim = hojeISO;
+    atual.motivoFim = motivo;
     infoAnterior = ` — cartucho anterior (série ${atual.serieOrigem||'—'}) finalizado`;
   }
 
   // Abre o novo ciclo — mesmos campos da planilha física: série, validade, data instalada
-  m.tintas.push({
+  const novoCiclo = {
     tid: _novoTid(),
     inicio: hojeISO,
     modelo: corCode,
     validade: validadeInput,
-    quemRetirou: CURRENT_USER ? CURRENT_USER.nome : '',
+    quemRetirou: quemTrocou,
     serieOrigem: serie,
+    motivoTroca: motivo,
     fim: ''
-  });
+  };
+  m.tintas.push(novoCiclo);
+  // Toda tinta trocada começa em 100% — leitura inicial na data da troca
+  const finalizadas = m.tintas.filter(t => String(t.modelo||'').toUpperCase().trim() === corCode && t.fim);
+  const durs = finalizadas.map(t => _duracaoDias(t.inicio, t.fim)).filter(d => d != null && d > 0);
+  const confInicial = { data: hojeISO, nota: `Instalação nova: 100% (informado em ${dataTrocaBR})` };
+  if (durs.length) confInicial.diasRestantes = Math.round(durs.reduce((a,b)=>a+b,0) / durs.length);
+  novoCiclo.conferencia = confInicial;
+  novoCiclo.conferenciaHistorico = [confInicial];
   _maqHistPush(m, `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode}`,
-    `Novo cartucho (série ${serie}, validade ${validadeInput}) instalado por ${CURRENT_USER?CURRENT_USER.nome:'—'}${infoAnterior}`, '🔄');
+    `Novo cartucho (série ${serie}, validade ${validadeInput}) instalado por ${quemTrocou} em ${dataTrocaBR}${infoAnterior}`, '🔄');
+  const ultHist = m.historico[m.historico.length-1];
+  ultHist.tipo = 'troca_tinta';
+  ultHist.quemTrocou = quemTrocou;
+  ultHist.dataTroca = hojeISO;
+  ultHist.motivo = motivo;
+  ultHist.serie = serie;
+  ultHist.validade = validadeInput;
   if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
 
   // Baixa 1 unidade do Setor Quotes (e do total)
@@ -6413,22 +6470,22 @@ function confirmarTrocaTinta(){
     ts: dataHoraBR,
     diff: { estoque: {antes:antesTotal, depois:produto.estoque}, estoqueQuotes: {antes:antesQuotes, depois:produto.estoqueQuotes} },
     tsMs: n.getTime(),
-    user: `${CURRENT_USER?CURRENT_USER.nome:'Sistema'} (troca de tinta — ${m.nome})`
+    user: `${quemTrocou} (troca de tinta — ${m.nome})`
   });
   if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
 
   // Registra a movimentação de saída
   const movEntry = {
     cod: produto.cod, nome: produto.nome, tipo: 'SAÍDA', qty: 1, custo: produto.custo,
-    resp: CURRENT_USER ? CURRENT_USER.nome : '',
-    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode})`,
+    resp: quemTrocou,
+    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode}) — motivo: ${motivo}`,
     data: dataHoraBR
   };
   MOV.push(movEntry);
   if (typeof fbSalvarMov === 'function') fbSalvarMov(movEntry);
 
   registrarAudit('estoque', `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode} — ${m.nome}`,
-    `Série ${serie} | Validade ${validadeInput} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
+    `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR} | Motivo: ${motivo} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
 
   // Zerou o Setor Quotes dessa tinta? Sinaliza pro Thiago repor do Setor Compras.
   let zerouQuotes = false;
@@ -6440,13 +6497,13 @@ function confirmarTrocaTinta(){
       produtoNome: produto.nome,
       origem: 'troca',
       maquina: m.nome,
-      tecnico: CURRENT_USER ? CURRENT_USER.nome : '',
+      tecnico: quemTrocou,
       data: dataHoraBR,
       status: 'pendente'
     });
     if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES);
     registrarAudit('estoque', `Setor Quotes zerou: ${produto.nome}`,
-      `Sinalizado pra reposição a partir do Setor Compras | Troca feita por ${CURRENT_USER?CURRENT_USER.nome:'—'} na ${m.nome}`, '🚩');
+      `Sinalizado pra reposição a partir do Setor Compras | Troca feita por ${quemTrocou} na ${m.nome}`, '🚩');
   }
 
   fecharTrocaTinta();
