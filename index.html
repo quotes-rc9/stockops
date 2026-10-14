@@ -1422,7 +1422,7 @@
       <input class="fi2" id="tt-data" type="date">
     </div>
     <div class="fg" style="margin-bottom:0;">
-      <label class="fl">Motivo da troca</label>
+      <label class="fl">Motivo da troca <span style="font-weight:400;opacity:.7;">(opcional)</span></label>
       <textarea class="fi2" id="tt-motivo" rows="3" style="resize:vertical;" placeholder="Ex: acabou durante a produção, vencida, vazamento, troca preventiva..."></textarea>
     </div>
     <div class="m-foot">
@@ -5566,7 +5566,7 @@ function openMaqHist(maqId){
         <div style="font-size:12px;color:var(--t1);font-weight:500;">${_escMaq(h.acao)}</div>
         ${h.detalhe?`<div style="font-size:11px;color:var(--t3);">${_escMaq(h.detalhe)}</div>`:''}
         ${h.tipo==='troca_tinta'?`<div style="font-size:11px;color:var(--t2);margin-top:2px;">👤 Trocada por <b>${_escMaq(h.quemTrocou||'—')}</b> em <b>${_fmtData(h.dataTroca)}</b></div>
-        <div style="font-size:11px;color:var(--t2);">📝 Motivo: ${_escMaq(h.motivo||'—')}</div>`:''}
+        ${h.motivo?`<div style="font-size:11px;color:var(--t2);">📝 Motivo: ${_escMaq(h.motivo)}</div>`:''}`:''}
         <div style="font-size:10px;color:var(--t4);margin-top:1px;">Registrado em ${h.ts||''} · ${_escMaq(h.user||'—')}</div>
       </div>
     </div>`).join('') : '<div style="color:var(--t4);font-size:11px;padding:6px 0;">Sem histórico ainda. As próximas ações nesta máquina vão aparecer aqui.</div>';
@@ -5598,7 +5598,7 @@ function exportarMaqPDF(maqId){
   let y=doc.lastAutoTable.finalY+8;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,30,30); doc.text('Histórico',10,y);
   const hist=[...(m.historico||[])].sort((a,b)=>(b.tsMs||0)-(a.tsMs||0));
-  const histRows=hist.map(h=>[h.ts||'—', h.user||'—', h.acao||'', (h.detalhe||'') + (h.tipo==='troca_tinta' ? ` | Trocada por ${h.quemTrocou||'—'} em ${_fmtData(h.dataTroca)} | Motivo: ${h.motivo||'—'}` : '')]);
+  const histRows=hist.map(h=>[h.ts||'—', h.user||'—', h.acao||'', (h.detalhe||'') + (h.tipo==='troca_tinta' ? ` | Trocada por ${h.quemTrocou||'—'} em ${_fmtData(h.dataTroca)}${h.motivo ? ' | Motivo: ' + h.motivo : ''}` : '')]);
   doc.autoTable({ head:[['Data','Usuário','Ação','Detalhe']], body: histRows.length?histRows:[['—','—','sem histórico','']], startY:y+3, theme:'striped', styles:{fontSize:8,cellPadding:2}, headStyles:{fillColor:[74,143,245],textColor:255,fontStyle:'bold'}, alternateRowStyles:{fillColor:[245,247,250]}, margin:{left:10,right:10} });
   const totalPag=doc.internal.getNumberOfPages();
   for(let i=1;i<=totalPag;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150,150,150); const pageH=doc.internal.pageSize.getHeight(); doc.text(`Página ${i} de ${totalPag}`,pageW/2,pageH-6,{align:'center'}); doc.text('StockOps · Sistema de Gestão',10,pageH-6); doc.text('Confidencial',pageW-10,pageH-6,{align:'right'}); }
@@ -6403,7 +6403,6 @@ function confirmarTrocaTinta(){
   const nV = new Date();
   const hojeValida = `${nV.getFullYear()}-${String(nV.getMonth()+1).padStart(2,'0')}-${String(nV.getDate()).padStart(2,'0')}`;
   if (dataTroca > hojeValida) { toast('A data da troca não pode ser no futuro.', 'error'); return; }
-  if (!motivo) { toast('Descreva o motivo da troca.', 'error'); return; }
 
   const corCode = _ttCor === 'BRANCO' ? (document.getElementById('tt-slot')?.value || 'BRANCO-07') : _ttCor;
   const produto = P.find(p => p.cod === _ttProdutoCod);
@@ -6478,14 +6477,14 @@ function confirmarTrocaTinta(){
   const movEntry = {
     cod: produto.cod, nome: produto.nome, tipo: 'SAÍDA', qty: 1, custo: produto.custo,
     resp: quemTrocou,
-    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode}) — motivo: ${motivo}`,
+    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode})${motivo ? ' — motivo: ' + motivo : ''}`,
     data: dataHoraBR
   };
   MOV.push(movEntry);
   if (typeof fbSalvarMov === 'function') fbSalvarMov(movEntry);
 
   registrarAudit('estoque', `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode} — ${m.nome}`,
-    `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR} | Motivo: ${motivo} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
+    `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR}${motivo ? ' | Motivo: ' + motivo : ''} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
 
   // Zerou o Setor Quotes dessa tinta? Sinaliza pro Thiago repor do Setor Compras.
   let zerouQuotes = false;

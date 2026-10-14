@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.72.1] — 2026-10-14
+
+### 🎨 Ajuste — motivo da troca de tinta passa a ser opcional
+
+No formulário "Registrar troca de tinta", o campo Motivo da troca não é mais obrigatório. Quando fica em branco, o histórico da máquina e a observação da movimentação simplesmente não mostram a linha do motivo.
+
 ## [2.72.0] — 2026-10-14
 
 ### ✨ Melhoria — registro completo da troca de tinta, com histórico por máquina
