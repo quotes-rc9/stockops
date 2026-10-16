@@ -6365,7 +6365,7 @@ function _etCardModelo(modelo, campo){
     <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">${_escMaq(modelo)}</span></div>
     <div>${linhas.map(l=>{
       const corParam = l.cores.length>1 ? 'BRANCO' : l.cores[0];
-      const trocaCtx = l.produto && (isQuotes || _etEhAdmin()) ? { modelo, corParam, produtoCod:l.produto.cod, origem: isQuotes ? '' : 'compras' } : null;
+      const trocaCtx = isQuotes && l.produto ? { modelo, corParam, produtoCod:l.produto.cod } : null;
       return _etLinhaHtml(l.label, l.produto?l.produto[campo]:null, trocaCtx);
     }).join('')}</div>
   </div>`;
@@ -6373,7 +6373,7 @@ function _etCardModelo(modelo, campo){
 function _etCardPrimer(campo){
   const produto = P.find(p=>String(p.nome||'').trim().toLowerCase()===TINTA_PRIMER.produtoNome.trim().toLowerCase());
   const isQuotes = campo === 'estoqueQuotes';
-  const trocaCtx = produto && (isQuotes || _etEhAdmin()) ? { modelo:'', corParam:'PRIMER', produtoCod:produto.cod, origem: isQuotes ? '' : 'compras' } : null;
+  const trocaCtx = isQuotes && produto ? { modelo:'', corParam:'PRIMER', produtoCod:produto.cod } : null;
   return `<div class="panel" style="overflow:hidden;">
     <div class="ph" style="padding:8px 12px;"><span class="ph-title" style="font-size:12px;">Primer <span style="font-weight:400;color:var(--t4);">(compartilhado entre as 6 máquinas)</span></span></div>
     <div>${_etLinhaHtml('Tinta Neutra PR 200', produto?produto[campo]:null, trocaCtx)}</div>
@@ -6700,7 +6700,9 @@ function confirmarTrocaTinta(){
   if (_ttCor === 'BRANCO') {
     const outro = corCode === 'BRANCO-07' ? 'BRANCO-08' : 'BRANCO-07';
     const ativoOutro = m.tintas.find(t => String(t.modelo||'').toUpperCase().trim() === outro && !t.fim);
-    if (ativoOutro && confirm(`Trocar também o ${AMIN_NOME_COR[outro]||outro} da ${m.nome}?`)) {
+    const semQuotes = produto && origem === 'quotes' && (produto.estoqueQuotes||0) <= 0;
+    const aviso = semQuotes ? `\n\n⚠ O Setor Quotes de ${produto.nome} está zerado: peça a reposição ao administrador antes de trocar, ou escolha "sem baixa de estoque" se a garrafa não estava no sistema.` : '';
+    if (ativoOutro && confirm(`Trocar também o ${AMIN_NOME_COR[outro]||outro} da ${m.nome}?${aviso}`)) {
       abrirTrocaTinta(m.modelo, 'BRANCO', produto ? produto.cod : '', { maqId: m.id, slot: outro, origem, quem: quemTrocou, data: dataTroca, semProduto: !produto });
     }
   }

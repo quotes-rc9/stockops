@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.77.0] — 2026-10-16
+
+### 🎨 Ajuste — botão de troca só no Setor Quotes
+
+O botão "🔄 Troquei" voltou a existir só na coluna do Setor Quotes (o botão da coluna do Setor Compras foi retirado). Depois de trocar um Branco, o sistema continua oferecendo a troca do outro (07 ou 08) da mesma máquina — e, se o Setor Quotes zerou com a primeira troca, avisa que é preciso pedir a reposição antes de trocar o segundo.
+
 ## [2.76.0] — 2026-10-16
 
 ### ✨ Melhoria — Estoque Tintas como tela central das trocas
