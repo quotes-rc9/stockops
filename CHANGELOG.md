@@ -1,5 +1,13 @@
 # 📝 Changelog — StockOps
 
+## [2.75.0] — 2026-10-16
+
+### ✨ Melhoria — Previsão de Troca de Tinta separa o que está na máquina do que está no estoque
+
+No detalhe de cada tinta (Previsão de Troca de Tinta → Por máquina), as validades agora aparecem em dois blocos. **"Na máquina agora — sendo usadas"** lista cada garrafa instalada nas máquinas daquele tipo de tinta, com máquina, posição, lote, validade (e até quando é usável), desde quando e quem trocou, marcando qual é a da linha aberta. **"Em estoque — aguardando uso"** lista só as garrafas que ainda não foram usadas, com as quantidades do Setor Quotes e do Setor Compras. Se a lista de validades não bate com a quantidade em estoque, aparece um aviso pra conferir as garrafas.
+
+Além disso, ao registrar uma troca, a validade da garrafa usada sai da lista do estoque (e volta se a troca for desfeita), para a lista continuar igual ao que existe de fato.
+
 ## [2.74.0] — 2026-10-16
 
 ### ✨ Nova funcionalidade — painel de leituras do RasterLink pendentes

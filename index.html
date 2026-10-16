@@ -5952,15 +5952,51 @@ function _ptDetalheHtml(r){
       const ateMs = _ptUsavelAte(v, r.cor);
       const vencida = ateMs > 0 && ateMs < Date.now();
       const ateTxt = ateMs>0 ? new Date(ateMs).toLocaleDateString('pt-BR') : null;
-      return `<span title="${regraValTxt}" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Un.${i+1}: ${_escMaq(v)}${r.cor!=='PRIMER' && ateTxt ? ' · usável até '+ateTxt : ''}${vencida?' (vencida)':''}</span>`;
+      return `<span title="${regraValTxt}" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Garrafa ${i+1}: ${_escMaq(v)}${r.cor!=='PRIMER' && ateTxt ? ' · usável até '+ateTxt : ''}${vencida?' (vencida)':''}</span>`;
     }).join(' ') : `<span style="color:var(--t4);font-size:11px;">Sem validade registrada.</span>`;
+    // Garrafas que estão INSTALADAS nas máquinas (ciclos em uso cujo produto de estoque é este)
+    const nomeProd = String(p.nome||'').trim().toLowerCase();
+    const instaladas = [];
+    MAQUINAS.forEach(mq=>(mq.tintas||[]).forEach(t=>{
+      if(!t || typeof t==='string' || t.fim) return;
+      const corT = String(t.modelo||'').toUpperCase().trim();
+      const inf = _tintaInfoPorModeloCor(mq.modelo, corT);
+      if(inf && inf.produtoNome.trim().toLowerCase() === nomeProd) instaladas.push({ mq, t, corT });
+    }));
+    const _ptTintaAtual = (MAQUINAS.find(x=>x.id===r.maqId)||{}).tintas;
+    const ehEstaLinha = x => x.mq.id===r.maqId && _ptTintaAtual && _ptTintaAtual[r.tintaIdx]===x.t;
+    instaladas.sort((a,b)=> (ehEstaLinha(b)?1:0)-(ehEstaLinha(a)?1:0) || String(a.mq.nome).localeCompare(String(b.mq.nome)) || a.corT.localeCompare(b.corT));
+    const instaladasHtml = instaladas.length ? instaladas.map(x=>{
+      const vBR = x.t.validade ? _fmtData(x.t.validade) : '';
+      const ateMs = vBR ? _ptUsavelAte(vBR, x.corT) : 0;
+      const vencida = ateMs > 0 && ateMs < Date.now();
+      const ateTxt = ateMs>0 && x.corT!=='PRIMER' ? ' · usável até ' + new Date(ateMs).toLocaleDateString('pt-BR') : '';
+      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;border-top:1px solid var(--b2);font-size:11px;">
+        <span style="font-weight:700;color:var(--t1);min-width:150px;">🖨 ${_escMaq(x.mq.nome)} · ${_escMaq(x.corT)}</span>
+        <span style="color:var(--t2);">lote ${_escMaq(x.t.serieOrigem||'—')}</span>
+        <span style="color:${vencida?'var(--red)':'var(--t2)'};">val. ${vBR||'—'}${ateTxt}${vencida?' (vencida)':''}</span>
+        <span style="color:var(--t4);">desde ${_fmtData(x.t.inicio)}${x.t.quemRetirou?' · por '+_escMaq(x.t.quemRetirou):''}</span>
+        ${ehEstaLinha(x)?'<span style="margin-left:auto;font-size:9px;color:var(--blue);font-weight:700;">ESTA LINHA</span>':''}
+      </div>`;
+    }).join('') : `<div style="color:var(--t4);font-size:11px;">Nenhuma garrafa desta tinta instalada em máquina.</div>`;
+    const doisSetores = typeof p.estoqueQuotes==='number' || typeof p.estoqueCompras==='number';
+    const setoresTxt = doisSetores ? ` — Quotes: <b>${p.estoqueQuotes||0} un</b> · Compras: <b>${p.estoqueCompras||0} un</b>` : '';
+    const valDesalinhada = Array.isArray(p.val) && p.val.length !== (p.estoque||0);
     estoqueHtml = `
       <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;margin-bottom:8px;">
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Estoque atual</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;color:${baixo?'var(--red)':'var(--t1)'};">${p.estoque} un</b></div>
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Mínimo</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${p.min!=null?p.min:'—'}</b></div>
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Custo unitário</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${RV(p.custo||0)}</b></div>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${valHtml}</div>`;
+      <div style="border:1px solid var(--b2);border-radius:var(--r6);padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t4);font-weight:700;margin-bottom:4px;">🖨 Na máquina agora — sendo usadas (${instaladas.length})</div>
+        ${instaladasHtml}
+      </div>
+      <div style="border:1px solid var(--b2);border-radius:var(--r6);padding:8px 10px;margin-bottom:10px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t4);font-weight:700;margin-bottom:6px;">📦 Em estoque — aguardando uso (${p.estoque||0} un)${setoresTxt?'<span style="text-transform:none;letter-spacing:normal;font-weight:500;color:var(--t3);">'+setoresTxt+'</span>':''}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${valHtml}</div>
+        ${valDesalinhada?`<div style="margin-top:6px;font-size:10.5px;color:var(--yellow);">⚠ A lista de validades tem ${p.val.length} item(ns), mas o estoque é ${p.estoque||0} un — confira as garrafas.</div>`:''}
+      </div>`;
   }
 
   const _ptMaqObj = MAQUINAS.find(x=>x.id===r.maqId);
@@ -6597,6 +6633,12 @@ function confirmarTrocaTinta(){
       ts: dataHoraBR, diff, tsMs: n.getTime(),
       user: `${quemTrocou} (troca de tinta — ${m.nome}${origem==='compras'?', direto do Setor Compras':''})`
     });
+    // a garrafa que foi pra máquina deixa de contar na lista de validades do estoque
+    const valBR = _fmtData(validadeInput);
+    if (Array.isArray(produto.val)) {
+      const iv = produto.val.indexOf(valBR);
+      if (iv >= 0) { produto.val.splice(iv, 1); ref.valRemovida = valBR; }
+    }
     if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
 
     // Registra a movimentação de saída
@@ -6678,6 +6720,7 @@ function desfazerTrocaTinta(maqId, tid){
     const antes = { total: produto.estoque||0, quotes: produto.estoqueQuotes||0, compras: produto.estoqueCompras||0 };
     produto.estoque = antes.total + 1;
     const diff = { estoque: {antes:antes.total, depois:produto.estoque} };
+    if (ref.valRemovida) { if (!Array.isArray(produto.val)) produto.val = []; produto.val.push(ref.valRemovida); }
     if (ref.origem === 'quotes') { produto.estoqueQuotes = antes.quotes + 1; diff.estoqueQuotes = {antes:antes.quotes, depois:produto.estoqueQuotes}; }
     if (ref.origem === 'compras') { produto.estoqueCompras = antes.compras + 1; diff.estoqueCompras = {antes:antes.compras, depois:produto.estoqueCompras}; }
     if (!produto.historico) produto.historico = [];
