@@ -1205,7 +1205,7 @@
 
 <!-- MODAL HISTÓRICO DA MÁQUINA -->
 <div class="overlay" id="overlay-maq-hist" onclick="if(event.target===this)closeMaqHist()">
-  <div class="modal" style="width:640px;max-height:90vh;overflow-y:auto;">
+  <div class="modal" style="width:780px;max-width:96vw;max-height:90vh;overflow-y:auto;">
     <div class="m-head">
       <div>
         <div class="m-title" id="maq-hist-titulo">📜 Histórico</div>
@@ -1215,7 +1215,7 @@
     </div>
 
     <div style="margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-weight:600;">Relatório de tintas</div>
-    <div id="maq-hist-tintas" style="margin-bottom:16px;"></div>
+    <div id="maq-hist-tintas" style="margin-bottom:16px;overflow-x:auto;"></div>
 
     <div style="margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);font-weight:600;">Linha do tempo</div>
     <div id="maq-hist-timeline"></div>
@@ -1392,7 +1392,7 @@
       <button class="m-close" onclick="fecharTrocaTinta()">✕</button>
     </div>
     <div style="background:var(--blue-a);border:1px solid rgba(var(--blue-rgb),.2);border-radius:var(--r6);padding:8px 12px;font-size:11px;color:var(--blue);margin-bottom:12px;">
-      ℹ Isso vai tirar <b>1 unidade do Setor Quotes</b> de <b id="tt-produto-nome">—</b> e fechar o ciclo da tinta antiga na máquina escolhida.
+      <span id="tt-aviso">—</span>
     </div>
     <div class="fg" id="tt-slot-wrap" style="display:none;">
       <label class="fl">Qual posição do Branco?</label>
@@ -1406,7 +1406,11 @@
       <select class="fi2" id="tt-maquina"></select>
     </div>
     <div class="fg">
-      <label class="fl">Número de série</label>
+      <label class="fl">De onde saiu a tinta?</label>
+      <select class="fi2" id="tt-origem" onchange="_ttAtualizaAviso()"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Número de série (lote)</label>
       <input class="fi2" id="tt-serie" type="text" placeholder="Ex: 81812301">
     </div>
     <div class="fg">
@@ -4757,15 +4761,22 @@ function _renderMaquinaCard(m){
       const datas=[];
       if(o.inicio) datas.push(`inst. ${_fmtData(o.inicio)}`);
       if(o.validade) datas.push(`val. ${_fmtData(o.validade)}`);
+      if(o.serieOrigem) datas.push(`lote ${_escMaq(o.serieOrigem)}`);
+      if(o.quemRetirou) datas.push(`por ${_escMaq(o.quemRetirou)}`);
+      const aguardaLeitura = o.conferencia && /Instalação nova/.test(o.conferencia.nota||'') && (o.conferenciaHistorico||[]).length<=1;
       return `<div style="padding:4px 0;border-top:1px solid var(--b2);">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-weight:600;font-size:11.5px;color:var(--t1);">${_escMaq(o.modelo)}</span>
           ${st?`<span style="margin-left:auto;font-size:9.5px;font-weight:600;padding:0 6px;border-radius:var(--r6);background:${st.bg};color:${st.fg};white-space:nowrap;">${st.txt}</span>`:''}
         </div>
         ${datas.length?`<div style="font-size:9.5px;color:var(--t4);margin-top:1px;">${datas.join(' · ')}</div>`:''}
+        ${aguardaLeitura?`<div style="font-size:9.5px;color:var(--blue);margin-top:1px;">⏳ 100% na instalação — aguardando a 1ª leitura do RasterLink</div>`:''}
         <div style="display:flex;align-items:center;gap:6px;margin-top:1px;">
           ${desde!=null?`<span style="font-size:10.5px;font-weight:700;color:var(--t1);">em uso há ${desde}d</span>`:''}
-          <button class="btn-edit" style="margin-left:auto;padding:1px 7px;font-size:10px;flex-shrink:0;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>
+          <span style="margin-left:auto;display:flex;gap:4px;">
+            ${temPermissao('trocar_tinta')?`<button class="btn-edit" style="padding:1px 7px;font-size:10px;flex-shrink:0;" onclick="abrirTrocaTintaMaquina('${m.id}',${idx})">🔄 Trocar</button>`:''}
+            ${podeEditar()?`<button class="btn-edit" style="padding:1px 7px;font-size:10px;flex-shrink:0;" onclick="maqTintaAcabou('${m.id}',${idx})">✓ Acabou</button>`:''}
+          </span>
         </div>
       </div>`;
     };
@@ -4783,7 +4794,7 @@ function _renderMaquinaCard(m){
           ${itens.map(o=>{
             const dur=_duracaoDias(o.inicio,o.fim);
             return `<div style="padding:5px 0 5px 4px;border-top:1px solid var(--b2);">
-              <div style="font-size:9.5px;color:var(--t4);">inst. ${_fmtData(o.inicio)} · val. ${_fmtData(o.validade)}</div>
+              <div style="font-size:9.5px;color:var(--t4);">inst. ${_fmtData(o.inicio)} · val. ${_fmtData(o.validade)}${o.serieOrigem?` · lote ${_escMaq(o.serieOrigem)}`:''}${o.quemRetirou?` · por ${_escMaq(o.quemRetirou)}`:''}</div>
               <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
                 <span style="font-size:9.5px;color:var(--t4);">encerrada ${_fmtData(o.fim)}</span>
                 ${dur!=null?`<span style="margin-left:auto;font-size:10.5px;font-weight:700;color:var(--t2);">durou ${dur}d</span>`:''}
@@ -5497,6 +5508,7 @@ function salvarMaquina(){
       if(!ot) ot = antigas.find(a=>!usadas.has(a) && a.modelo===nt.modelo);
       if(ot){
         usadas.add(ot);
+        nt.__ot = ot;
         if(!ot.fim && nt.fim){
           const d=_duracaoDias(nt.inicio,nt.fim);
           _maqHistPush(m,`Tinta finalizada: ${nt.modelo}`, d!=null?`Durou ${d} dias (${_fmtData(nt.inicio)} → ${_fmtData(nt.fim)})`:`Acabou em ${_fmtData(nt.fim)}`,'🟥');
@@ -5508,7 +5520,9 @@ function salvarMaquina(){
       }
     });
     antigas.forEach(a=>{ if(!usadas.has(a)) _maqHistPush(m,`Tinta removida: ${a.modelo}`,'','🗑'); });
-    m.nome=nome; m.modelo=modelo; m.tintas=tintas; m.obs=obs;
+    // preserva lote, quem trocou, motivo, leituras do RasterLink etc. de cada ciclo já existente
+    const tintasFinal=tintas.map(nt=>{ const ot=nt.__ot; delete nt.__ot; return ot?Object.assign({},ot,nt):nt; });
+    m.nome=nome; m.modelo=modelo; m.tintas=tintasFinal; m.obs=obs;
     registrarAudit('sistema',`Máquina editada: ${nome}`,`Modelo: ${modelo} | Tintas: ${tintas.map(t=>t.modelo).join(', ')||'—'}`,'✏');
     if(typeof fbSalvarMaquina==='function') fbSalvarMaquina(m);
     toast(`Máquina "${nome}" atualizada!`,'success');
@@ -5549,14 +5563,16 @@ function openMaqHist(maqId){
       <td style="padding:5px 6px;font-weight:600;color:var(--t1);">${_escMaq(t.modelo)}</td>
       <td style="padding:5px 6px;color:var(--t3);">${_fmtData(t.inicio)}</td>
       <td style="padding:5px 6px;color:var(--t3);">${_fmtData(t.validade)}</td>
+      <td style="padding:5px 6px;color:var(--t2);">${_escMaq(t.serieOrigem||'—')}</td>
+      <td style="padding:5px 6px;color:var(--t2);">${_escMaq(t.quemRetirou||'—')}</td>
       <td style="padding:5px 6px;color:var(--t3);">${_fmtData(t.fim)}</td>
-      <td style="padding:5px 6px;">${status}</td>
+      <td style="padding:5px 6px;">${status}${(t.trocaRef&&!t.fim&&podeExcluir())?` <button class="btn-del" style="padding:0 6px;font-size:10px;margin-left:4px;" onclick="desfazerTrocaTinta('${m.id}','${t.tid}')">↩ Desfazer</button>`:''}</td>
     </tr>`;
   }).join('');
-  if(!ordered.length) linhas=`<tr><td colspan="5" style="padding:8px 6px;color:var(--t4);">Nenhuma tinta cadastrada.</td></tr>`;
+  if(!ordered.length) linhas=`<tr><td colspan="7" style="padding:8px 6px;color:var(--t4);">Nenhuma tinta cadastrada.</td></tr>`;
   $('maq-hist-tintas').innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:11.5px;">
     <thead><tr style="text-align:left;color:var(--t4);font-size:10px;text-transform:uppercase;">
-      <th style="padding:4px 6px;">Tinta</th><th style="padding:4px 6px;">Instalada</th><th style="padding:4px 6px;">Validade</th><th style="padding:4px 6px;">Acabou</th><th style="padding:4px 6px;">Duração / status</th>
+      <th style="padding:4px 6px;">Tinta</th><th style="padding:4px 6px;">Instalada</th><th style="padding:4px 6px;">Validade</th><th style="padding:4px 6px;">Lote</th><th style="padding:4px 6px;">Trocada por</th><th style="padding:4px 6px;">Acabou</th><th style="padding:4px 6px;">Duração / status</th>
     </tr></thead><tbody>${linhas}</tbody></table>`;
   const hist=[...(m.historico||[])].sort((a,b)=>(b.tsMs||0)-(a.tsMs||0));
   $('maq-hist-timeline').innerHTML = hist.length ? hist.map(h=>`
@@ -5593,8 +5609,8 @@ function exportarMaqPDF(maqId){
   doc.text(`${m.modelo||'—'}  ·  criada em ${m.criadoEm||'—'}`,10,34);
   const arr=(m.tintas||[]).map(t=> typeof t==='string'?{modelo:t}:t);
   const ordered=[...arr.filter(t=>!t.fim), ...arr.filter(t=>t.fim)];
-  const tintasRows=ordered.map(t=>{ const d=_duracaoDias(t.inicio,t.fim); return [t.modelo||'—', _fmtData(t.inicio), _fmtData(t.validade), _fmtData(t.fim), t.fim?(d!=null?d+' dias':'—'):'em uso']; });
-  doc.autoTable({ head:[['Tinta','Instalada','Validade','Acabou em','Duração / status']], body: tintasRows.length?tintasRows:[['—','—','—','—','sem tintas']], startY:40, theme:'striped', styles:{fontSize:8,cellPadding:2}, headStyles:{fillColor:[74,143,245],textColor:255,fontStyle:'bold'}, alternateRowStyles:{fillColor:[245,247,250]}, margin:{left:10,right:10} });
+  const tintasRows=ordered.map(t=>{ const d=_duracaoDias(t.inicio,t.fim); return [t.modelo||'—', _fmtData(t.inicio), _fmtData(t.validade), t.serieOrigem||'—', t.quemRetirou||'—', _fmtData(t.fim), t.fim?(d!=null?d+' dias':'—'):'em uso']; });
+  doc.autoTable({ head:[['Tinta','Instalada','Validade','Lote','Trocada por','Acabou em','Duração / status']], body: tintasRows.length?tintasRows:[['—','—','—','—','—','—','sem tintas']], startY:40, theme:'striped', styles:{fontSize:8,cellPadding:2}, headStyles:{fillColor:[74,143,245],textColor:255,fontStyle:'bold'}, alternateRowStyles:{fillColor:[245,247,250]}, margin:{left:10,right:10} });
   let y=doc.lastAutoTable.finalY+8;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,30,30); doc.text('Histórico',10,y);
   const hist=[...(m.historico||[])].sort((a,b)=>(b.tsMs||0)-(a.tsMs||0));
@@ -6347,26 +6363,60 @@ function atenderRepoQuotes(id){
   }
 }
 
-// ── TROCA DE TINTA: registra de uma vez o consumo da unidade do Setor Quotes +
-// fecha o ciclo da tinta antiga na máquina + abre o novo ciclo (série, validade,
-// instalada hoje) — mesmo padrão de campos da planilha física do setor. ──
+// ── TROCA DE TINTA: registra de uma vez a troca na máquina (fecha o ciclo da tinta antiga,
+// abre o novo com lote, validade, quem trocou, data e motivo — começando em 100%) e a baixa
+// da unidade no estoque (Setor Quotes, Setor Compras direto pra máquina, ou sem baixa).
+// Pode ser iniciada pelo Estoque ("🔄 Troquei") ou pelo card da máquina ("🔄 Trocar"). ──
 let _ttModelo = null, _ttCor = null, _ttProdutoCod = null;
-function abrirTrocaTinta(modelo, corParam, produtoCod){
+function _ttCorParam(corCode){ return /^BRANCO/.test(corCode) ? 'BRANCO' : corCode; }
+// Origens possíveis da unidade que foi pra máquina, conforme o que há em estoque
+function _ttOrigens(produto){
+  const o = [];
+  if (produto) {
+    const doisSetores = typeof produto.estoqueQuotes === 'number' || typeof produto.estoqueCompras === 'number';
+    if (doisSetores) {
+      if ((produto.estoqueQuotes||0) > 0) o.push({ v:'quotes', l:`Setor Quotes (${produto.estoqueQuotes} un)` });
+      if ((produto.estoqueCompras||0) > 0) o.push({ v:'compras', l:`Setor Compras — direto pra máquina (${produto.estoqueCompras} un)` });
+    } else if ((produto.estoque||0) > 0) {
+      o.push({ v:'geral', l:`Estoque (${produto.estoque} un)` });
+    }
+  }
+  o.push({ v:'nenhum', l:'Sem baixa de estoque (garrafa que não estava no sistema)' });
+  return o;
+}
+function _ttAtualizaAviso(){
+  const el = document.getElementById('tt-aviso'); if (!el) return;
+  const produto = _ttProdutoCod ? P.find(p => p.cod === _ttProdutoCod) : null;
+  const origem = document.getElementById('tt-origem')?.value || 'nenhum';
+  const nome = produto ? `<b>${_escMaq(produto.nome)}</b>` : 'a tinta';
+  const fim = ' e fechar o ciclo da tinta antiga na máquina escolhida. A tinta nova entra com 100%.';
+  el.innerHTML = origem === 'quotes' ? `ℹ Isso vai tirar <b>1 unidade do Setor Quotes</b> de ${nome}${fim}`
+    : origem === 'compras' ? `ℹ Isso vai tirar <b>1 unidade do Setor Compras</b> de ${nome} (sem passar pelo Quotes)${fim}`
+    : origem === 'geral' ? `ℹ Isso vai tirar <b>1 unidade do estoque</b> de ${nome}${fim}`
+    : `ℹ <b>Não mexe no estoque.</b> Só registra a troca na máquina${fim}`;
+}
+function abrirTrocaTinta(modelo, corParam, produtoCod, opts){
+  opts = opts || {};
   if (!temPermissao('trocar_tinta')) { toast('Você não tem permissão para registrar troca de tinta.', 'error'); return; }
-  const produto = P.find(p => p.cod === produtoCod);
-  if (!produto) { toast('Produto não encontrado.', 'error'); return; }
-  if ((produto.estoqueQuotes||0) <= 0) { toast('Não há unidade no Setor Quotes pra essa tinta.', 'error'); return; }
-  _ttModelo = modelo; _ttCor = corParam; _ttProdutoCod = produtoCod;
-  const nomeEl = document.getElementById('tt-produto-nome'); if (nomeEl) nomeEl.textContent = produto.nome;
+  const produto = produtoCod ? P.find(p => p.cod === produtoCod) : null;
+  if (!produto && !opts.semProduto) { toast('Produto não encontrado.', 'error'); return; }
+  _ttModelo = modelo; _ttCor = corParam; _ttProdutoCod = produto ? produto.cod : null;
   const slotWrap = document.getElementById('tt-slot-wrap');
   if (slotWrap) slotWrap.style.display = corParam === 'BRANCO' ? '' : 'none';
-  const maqs = modelo ? MAQUINAS.filter(m => m.modelo === modelo) : MAQUINAS.slice();
+  const slotSel = document.getElementById('tt-slot');
+  if (slotSel) { slotSel.value = opts.slot || 'BRANCO-07'; slotSel.disabled = !!opts.slot; }
+  const maqs = opts.maqId ? MAQUINAS.filter(m => m.id === opts.maqId)
+    : (modelo ? MAQUINAS.filter(m => m.modelo === modelo) : MAQUINAS.slice());
   const maqSel = document.getElementById('tt-maquina');
   if (maqSel) {
     maqSel.innerHTML = maqs.length
-      ? maqs.map(m => `<option value="${m.id}">${m.nome} (${m.modelo||'—'})</option>`).join('')
+      ? maqs.map(m => `<option value="${m.id}">${_escMaq(m.nome)} (${_escMaq(m.modelo||'—')})</option>`).join('')
       : '<option value="">Nenhuma máquina cadastrada</option>';
+    maqSel.disabled = !!opts.maqId;
   }
+  const origSel = document.getElementById('tt-origem');
+  if (origSel) origSel.innerHTML = _ttOrigens(produto).map(o => `<option value="${o.v}">${_escMaq(o.l)}</option>`).join('');
+  _ttAtualizaAviso();
   const serieEl = document.getElementById('tt-serie'); if (serieEl) serieEl.value = '';
   const valEl = document.getElementById('tt-validade'); if (valEl) valEl.value = '';
   const quemSel = document.getElementById('tt-quem');
@@ -6381,6 +6431,17 @@ function abrirTrocaTinta(modelo, corParam, produtoCod){
   const motEl = document.getElementById('tt-motivo'); if (motEl) motEl.value = '';
   document.getElementById('overlay-troca-tinta')?.classList.add('open');
 }
+// Troca iniciada pelo card da máquina: já sabe a máquina e a cor, só procura a tinta no estoque
+function abrirTrocaTintaMaquina(maqId, idx){
+  if (!temPermissao('trocar_tinta')) { toast('Você não tem permissão para registrar troca de tinta.', 'error'); return; }
+  const m = MAQUINAS.find(x => x.id === maqId);
+  if (!m || !m.tintas || !m.tintas[idx]) return;
+  const corCode = String(m.tintas[idx].modelo || '').toUpperCase().trim();
+  const info = _tintaInfoPorModeloCor(m.modelo, corCode);
+  const produto = info ? P.find(p => String(p.nome||'').trim().toLowerCase() === info.produtoNome.trim().toLowerCase()) : null;
+  abrirTrocaTinta(m.modelo, /^BRANCO/.test(corCode) ? 'BRANCO' : corCode, produto ? produto.cod : '',
+    { maqId, slot: /^BRANCO/.test(corCode) ? corCode : null, semProduto: !produto });
+}
 function fecharTrocaTinta(){
   document.getElementById('overlay-troca-tinta')?.classList.remove('open');
 }
@@ -6390,7 +6451,7 @@ function confirmarTrocaTinta(){
   const serie = (document.getElementById('tt-serie')?.value || '').trim();
   const validadeInput = document.getElementById('tt-validade')?.value || '';
   if (!maqId) { toast('Selecione a máquina.', 'error'); return; }
-  if (!serie) { toast('Informe o número de série.', 'error'); return; }
+  if (!serie) { toast('Informe o número de série (lote).', 'error'); return; }
   if (!validadeInput) { toast('Informe a validade.', 'error'); return; }
   let quemTrocou = document.getElementById('tt-quem')?.value || '';
   if (quemTrocou === '__outro') {
@@ -6404,10 +6465,14 @@ function confirmarTrocaTinta(){
   const hojeValida = `${nV.getFullYear()}-${String(nV.getMonth()+1).padStart(2,'0')}-${String(nV.getDate()).padStart(2,'0')}`;
   if (dataTroca > hojeValida) { toast('A data da troca não pode ser no futuro.', 'error'); return; }
 
+  const origem = document.getElementById('tt-origem')?.value || 'nenhum';
   const corCode = _ttCor === 'BRANCO' ? (document.getElementById('tt-slot')?.value || 'BRANCO-07') : _ttCor;
-  const produto = P.find(p => p.cod === _ttProdutoCod);
-  if (!produto) { toast('Produto não encontrado.', 'error'); return; }
-  if ((produto.estoqueQuotes||0) <= 0) { toast('Não há mais unidade no Setor Quotes pra essa tinta.', 'error'); return; }
+  const produto = _ttProdutoCod ? P.find(p => p.cod === _ttProdutoCod) : null;
+  if (origem !== 'nenhum') {
+    if (!produto) { toast('Produto não encontrado.', 'error'); return; }
+    const disp = origem === 'quotes' ? (produto.estoqueQuotes||0) : origem === 'compras' ? (produto.estoqueCompras||0) : (produto.estoque||0);
+    if (disp <= 0) { toast('Não há mais unidade nesse estoque pra essa tinta.', 'error'); return; }
+  }
   const m = MAQUINAS.find(x => x.id === maqId);
   if (!m) { toast('Máquina não encontrada.', 'error'); return; }
   if (!m.tintas) m.tintas = [];
@@ -6416,6 +6481,7 @@ function confirmarTrocaTinta(){
   const hojeISO = dataTroca;
   const dataTrocaBR = _fmtData(dataTroca);
   const dataHoraBR = dataTrocaBR + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const nomeCor = AMIN_NOME_COR[corCode] || corCode;
 
   // Fecha o ciclo ativo atual dessa cor nessa máquina, se existir
   const atual = m.tintas.find(t => String(t.modelo||'').toUpperCase().trim() === corCode && !t.fim);
@@ -6424,12 +6490,13 @@ function confirmarTrocaTinta(){
     toast(`A data da troca não pode ser anterior à instalação da tinta atual (${_fmtData(atual.inicio)}).`, 'error'); return;
   }
   if (atual) {
+    if (!atual.tid) atual.tid = _novoTid();
     atual.fim = hojeISO;
     atual.motivoFim = motivo;
     infoAnterior = ` — cartucho anterior (série ${atual.serieOrigem||'—'}) finalizado`;
   }
 
-  // Abre o novo ciclo — mesmos campos da planilha física: série, validade, data instalada
+  // Abre o novo ciclo — série (lote), validade, data instalada, quem trocou e motivo
   const novoCiclo = {
     tid: _novoTid(),
     inicio: hojeISO,
@@ -6441,14 +6508,14 @@ function confirmarTrocaTinta(){
     fim: ''
   };
   m.tintas.push(novoCiclo);
-  // Toda tinta trocada começa em 100% — leitura inicial na data da troca
+  // Toda tinta trocada começa em 100% — leitura inicial na data da troca; a próxima vem do RasterLink
   const finalizadas = m.tintas.filter(t => String(t.modelo||'').toUpperCase().trim() === corCode && t.fim);
   const durs = finalizadas.map(t => _duracaoDias(t.inicio, t.fim)).filter(d => d != null && d > 0);
   const confInicial = { data: hojeISO, nota: `Instalação nova: 100% (informado em ${dataTrocaBR})` };
   if (durs.length) confInicial.diasRestantes = Math.round(durs.reduce((a,b)=>a+b,0) / durs.length);
   novoCiclo.conferencia = confInicial;
   novoCiclo.conferenciaHistorico = [confInicial];
-  _maqHistPush(m, `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode}`,
+  _maqHistPush(m, `Troca de tinta: ${nomeCor}`,
     `Novo cartucho (série ${serie}, validade ${validadeInput}) instalado por ${quemTrocou} em ${dataTrocaBR}${infoAnterior}`, '🔄');
   const ultHist = m.historico[m.historico.length-1];
   ultHist.tipo = 'troca_tinta';
@@ -6457,61 +6524,125 @@ function confirmarTrocaTinta(){
   ultHist.motivo = motivo;
   ultHist.serie = serie;
   ultHist.validade = validadeInput;
-  if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
+  ultHist.origemEstoque = origem;
 
-  // Baixa 1 unidade do Setor Quotes (e do total)
-  const antesQuotes = produto.estoqueQuotes || 0;
-  const antesTotal = produto.estoque || 0;
-  produto.estoqueQuotes = antesQuotes - 1;
-  produto.estoque = antesTotal - 1;
-  if (!produto.historico) produto.historico = [];
-  produto.historico.unshift({
-    ts: dataHoraBR,
-    diff: { estoque: {antes:antesTotal, depois:produto.estoque}, estoqueQuotes: {antes:antesQuotes, depois:produto.estoqueQuotes} },
-    tsMs: n.getTime(),
-    user: `${quemTrocou} (troca de tinta — ${m.nome})`
-  });
-  if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
-
-  // Registra a movimentação de saída
-  const movEntry = {
-    cod: produto.cod, nome: produto.nome, tipo: 'SAÍDA', qty: 1, custo: produto.custo,
-    resp: quemTrocou,
-    obs: `Troca de tinta: instalada na ${m.nome} (${AMIN_NOME_COR[corCode]||corCode})${motivo ? ' — motivo: ' + motivo : ''}`,
-    data: dataHoraBR
-  };
-  MOV.push(movEntry);
-  if (typeof fbSalvarMov === 'function') fbSalvarMov(movEntry);
-
-  registrarAudit('estoque', `Troca de tinta: ${AMIN_NOME_COR[corCode]||corCode} — ${m.nome}`,
-    `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR}${motivo ? ' | Motivo: ' + motivo : ''} | Setor Quotes: ${antesQuotes} → ${produto.estoqueQuotes}`, '🔄');
-
-  // Zerou o Setor Quotes dessa tinta? Sinaliza pro Thiago repor do Setor Compras.
-  let zerouQuotes = false;
-  if (produto.estoqueQuotes <= 0) {
-    zerouQuotes = true;
-    REPO_QUOTES.push({
-      id: 'rq_' + Date.now(),
-      produtoCod: produto.cod,
-      produtoNome: produto.nome,
-      origem: 'troca',
-      maquina: m.nome,
-      tecnico: quemTrocou,
-      data: dataHoraBR,
-      status: 'pendente'
+  // Baixa 1 unidade do estoque, conforme a origem escolhida
+  const ref = { origem, produtoCod: produto ? produto.cod : null, cicloAnteriorTid: atual ? atual.tid : null, movId: null, repoId: null };
+  let zerouQuotes = false, zerouCompras = false;
+  if (origem !== 'nenhum') {
+    const antes = { total: produto.estoque||0, quotes: produto.estoqueQuotes||0, compras: produto.estoqueCompras||0 };
+    produto.estoque = antes.total - 1;
+    const diff = { estoque: {antes:antes.total, depois:produto.estoque} };
+    if (origem === 'quotes') { produto.estoqueQuotes = antes.quotes - 1; diff.estoqueQuotes = {antes:antes.quotes, depois:produto.estoqueQuotes}; }
+    if (origem === 'compras') { produto.estoqueCompras = antes.compras - 1; diff.estoqueCompras = {antes:antes.compras, depois:produto.estoqueCompras}; zerouCompras = produto.estoqueCompras <= 0; }
+    if (!produto.historico) produto.historico = [];
+    produto.historico.unshift({
+      ts: dataHoraBR, diff, tsMs: n.getTime(),
+      user: `${quemTrocou} (troca de tinta — ${m.nome}${origem==='compras'?', direto do Setor Compras':''})`
     });
-    if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES);
-    registrarAudit('estoque', `Setor Quotes zerou: ${produto.nome}`,
-      `Sinalizado pra reposição a partir do Setor Compras | Troca feita por ${quemTrocou} na ${m.nome}`, '🚩');
+    if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
+
+    // Registra a movimentação de saída
+    const origemTxt = origem === 'compras' ? ' — saiu direto do Setor Compras' : origem === 'quotes' ? ' — saiu do Setor Quotes' : '';
+    const movEntry = {
+      id: 'mov_' + n.getTime() + '_' + Math.random().toString(36).slice(2, 8),
+      cod: produto.cod, nome: produto.nome, tipo: 'SAÍDA', qty: 1, custo: produto.custo,
+      resp: quemTrocou,
+      obs: `Troca de tinta: instalada na ${m.nome} (${nomeCor})${origemTxt}${motivo ? ' — motivo: ' + motivo : ''}`,
+      data: dataHoraBR
+    };
+    ref.movId = movEntry.id;
+    MOV.push(movEntry);
+    if (typeof fbSalvarMov === 'function') fbSalvarMov(movEntry);
+
+    registrarAudit('estoque', `Troca de tinta: ${nomeCor} — ${m.nome}`,
+      `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR}${motivo ? ' | Motivo: ' + motivo : ''} | ${origem==='compras'?'Setor Compras: '+antes.compras+' → '+produto.estoqueCompras:origem==='quotes'?'Setor Quotes: '+antes.quotes+' → '+produto.estoqueQuotes:'Estoque: '+antes.total+' → '+produto.estoque}`, '🔄');
+
+    // Zerou o Setor Quotes dessa tinta? Sinaliza pro Thiago repor do Setor Compras.
+    if (origem === 'quotes' && produto.estoqueQuotes <= 0) {
+      zerouQuotes = true;
+      ref.repoId = 'rq_' + Date.now();
+      REPO_QUOTES.push({
+        id: ref.repoId,
+        produtoCod: produto.cod,
+        produtoNome: produto.nome,
+        origem: 'troca',
+        maquina: m.nome,
+        tecnico: quemTrocou,
+        data: dataHoraBR,
+        status: 'pendente'
+      });
+      if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES);
+      registrarAudit('estoque', `Setor Quotes zerou: ${produto.nome}`,
+        `Sinalizado pra reposição a partir do Setor Compras | Troca feita por ${quemTrocou} na ${m.nome}`, '🚩');
+    }
+  } else {
+    registrarAudit('estoque', `Troca de tinta: ${nomeCor} — ${m.nome}`,
+      `Série ${serie} | Validade ${validadeInput} | Trocada por ${quemTrocou} em ${dataTrocaBR}${motivo ? ' | Motivo: ' + motivo : ''} | Sem baixa de estoque`, '🔄');
   }
+  novoCiclo.trocaRef = ref;
+  if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
 
   fecharTrocaTinta();
   renderAnaliseMin();
-  if (currentPage === 'maquinas') renderMaquinas();
+  if (currentPage === 'maquinas' || typeof renderMaquinas === 'function') { try { renderMaquinas(); } catch(e) {} }
+  if (typeof renderPrevisaoTinta === 'function') { try { renderPrevisaoTinta(); } catch(e) {} }
   renderKPIs();
   toast(zerouQuotes
     ? `Troca registrada! O Setor Quotes zerou de ${produto.nome} — sinalizado pra reposição.`
-    : 'Troca registrada! Estoque do Quotes baixado e histórico da máquina atualizado.', 'success');
+    : zerouCompras ? `Troca registrada! O Setor Compras zerou de ${produto.nome} — hora de comprar mais.`
+    : 'Troca registrada! Máquina em 100% — aguardando a próxima foto do RasterLink.', 'success');
+}
+
+// Desfaz a troca mais recente (só admin): tira o cartucho novo, reabre o anterior,
+// devolve a unidade ao estoque e apaga a saída. Mantém tudo registrado no histórico da máquina.
+function desfazerTrocaTinta(maqId, tid){
+  if (!podeExcluir()) { toast('Apenas administradores podem desfazer uma troca.', 'error'); return; }
+  const m = MAQUINAS.find(x => x.id === maqId); if (!m || !m.tintas) return;
+  const i = m.tintas.findIndex(t => t.tid === tid);
+  const t = m.tintas[i];
+  if (!t || !t.trocaRef || t.fim) { toast('Só dá pra desfazer uma troca registrada pelo sistema que ainda esteja em uso.', 'error'); return; }
+  const ref = t.trocaRef;
+  const ant = ref.cicloAnteriorTid ? m.tintas.find(x => x.tid === ref.cicloAnteriorTid) : null;
+  const produto = ref.produtoCod ? P.find(p => p.cod === ref.produtoCod) : null;
+  const estoqueTxt = ref.origem === 'quotes' ? 'a unidade volta pro Setor Quotes'
+    : ref.origem === 'compras' ? 'a unidade volta pro Setor Compras'
+    : ref.origem === 'geral' ? 'a unidade volta pro estoque' : 'o estoque não muda';
+  if (!confirm(`Desfazer a troca de ${t.modelo} na ${m.nome}?\n\nO cartucho de lote ${t.serieOrigem||'—'} sai do histórico${ant ? `, o anterior (lote ${ant.serieOrigem||'—'}) volta a ficar em uso` : ''} e ${estoqueTxt}.`)) return;
+
+  if (ant) { ant.fim = ''; delete ant.motivoFim; }
+  m.tintas.splice(i, 1);
+  _maqHistPush(m, `Troca desfeita: ${t.modelo}`,
+    `Troca do cartucho lote ${t.serieOrigem||'—'} (${t.quemRetirou||'—'}, ${_fmtData(t.inicio)}) desfeita por ${CURRENT_USER.nome}${ant ? ` — cartucho anterior (lote ${ant.serieOrigem||'—'}) voltou a ficar em uso` : ''}`, '↩');
+  if (typeof fbSalvarMaquina === 'function') fbSalvarMaquina(m);
+
+  if (produto && ref.origem !== 'nenhum') {
+    const n = new Date();
+    const antes = { total: produto.estoque||0, quotes: produto.estoqueQuotes||0, compras: produto.estoqueCompras||0 };
+    produto.estoque = antes.total + 1;
+    const diff = { estoque: {antes:antes.total, depois:produto.estoque} };
+    if (ref.origem === 'quotes') { produto.estoqueQuotes = antes.quotes + 1; diff.estoqueQuotes = {antes:antes.quotes, depois:produto.estoqueQuotes}; }
+    if (ref.origem === 'compras') { produto.estoqueCompras = antes.compras + 1; diff.estoqueCompras = {antes:antes.compras, depois:produto.estoqueCompras}; }
+    if (!produto.historico) produto.historico = [];
+    produto.historico.unshift({ ts: n.toLocaleDateString('pt-BR') + ' ' + n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}), diff, tsMs: n.getTime(), user: `${CURRENT_USER.nome} (troca de tinta desfeita — ${m.nome})` });
+    if (typeof fbSalvarProduto === 'function') fbSalvarProduto(produto);
+  }
+  if (ref.movId) {
+    const mi = MOV.findIndex(x => x.id === ref.movId);
+    if (mi >= 0) MOV.splice(mi, 1);
+    if (typeof fbExcluirMov === 'function') fbExcluirMov(ref.movId);
+  }
+  if (ref.repoId) {
+    const ri = REPO_QUOTES.findIndex(r => r.id === ref.repoId && r.status === 'pendente');
+    if (ri >= 0) { REPO_QUOTES.splice(ri, 1); if (typeof fbSalvarRepoQuotes === 'function') fbSalvarRepoQuotes(REPO_QUOTES); }
+  }
+  registrarAudit('estoque', `Troca de tinta desfeita: ${t.modelo} — ${m.nome}`, `Lote ${t.serieOrigem||'—'} | Desfeita por ${CURRENT_USER.nome}`, '↩');
+  renderAnaliseMin();
+  try { renderMaquinas(); } catch(e) {}
+  if (typeof renderPrevisaoTinta === 'function') { try { renderPrevisaoTinta(); } catch(e) {} }
+  renderKPIs();
+  openMaqHist(maqId);
+  toast('Troca desfeita.', 'success');
 }
 
   // ═══════════════════════════════════════════════════════════════
@@ -7761,6 +7892,15 @@ window.fbSalvarMov = async function(mov) {
     const { error } = await sb.from(COL_MOV).upsert({ id: mov.id, data: mov }); if (error) throw error;
     setSyncStatus('ok');
   } catch(e) { console.error('Erro ao salvar mov:', e); setSyncStatus('error'); }
+};
+
+// ── EXCLUIR movimentação (usado ao desfazer uma troca de tinta) ──
+window.fbExcluirMov = async function(id) {
+  try {
+    setSyncStatus('saving');
+    const { error } = await sb.from(COL_MOV).delete().eq('id', id); if (error) throw error;
+    setSyncStatus('ok');
+  } catch(e) { console.error('Erro ao excluir mov:', e); setSyncStatus('error'); }
 };
 
 // ── SALVAR solicitação ────────────────────────────────────────

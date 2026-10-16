@@ -1,5 +1,17 @@
 # 📝 Changelog — StockOps
 
+## [2.73.0] — 2026-10-16
+
+### ✨ Nova funcionalidade — troca de tinta feita direto pela máquina, sem planilha
+
+Cada tinta em uso no card da máquina ganhou o botão **🔄 Trocar**: a máquina e a posição do Branco (07 ou 08) já vêm preenchidas, então não dá mais pra trocar a posição errada. O formulário pergunta **de onde saiu a tinta** — Setor Quotes, Setor Compras (direto pra máquina, sem passar pelo Quotes) ou sem baixa de estoque (garrafa que não estava no sistema) — e a baixa e a movimentação de saída seguem a origem escolhida. A tinta nova entra com **100%** e o card mostra "aguardando a 1ª leitura do RasterLink" até chegar a próxima foto.
+
+O histórico da máquina agora tem as colunas **Lote** e **Trocada por** (além de tinta, instalada, validade e acabou), no card e no PDF. Administradores ganham o botão **↩ Desfazer** na troca mais recente: ele tira o cartucho novo, reabre o anterior, devolve a unidade ao estoque de origem e apaga a saída — tudo fica registrado na linha do tempo da máquina.
+
+### 🐛 Correção — editar uma máquina apagava dados das tintas
+
+Ao salvar a edição de uma máquina, os ciclos de tinta perdiam o lote, quem trocou, o motivo e as leituras do RasterLink (só data e validade eram mantidas). Agora tudo isso é preservado.
+
 ## [2.72.1] — 2026-10-14
 
 ### 🎨 Ajuste — motivo da troca de tinta passa a ser opcional
