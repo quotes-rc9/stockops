@@ -645,7 +645,6 @@
                   <select class="fi2" id="cart-forn">
                     <option value="">Selecione...</option>
                     <option value="MIMAKI Brasil">MIMAKI Brasil</option>
-                    <option value="Roland">Roland</option>
                     <option value="Local/Mercado">Local/Mercado</option>
                     <option value="Outro">Outro</option>
                   </select>
@@ -1188,7 +1187,7 @@
       <div id="maq-tintas-vazio" class="fhint">Nenhuma tinta. Clique em “＋ Adicionar tinta”.</div>
       <datalist id="maq-tintas-sugestoes">
         <option value="LUS-120"><option value="LUS-150"><option value="LUS-170"><option value="LUS-175">
-        <option value="LH-100"><option value="SUV-100"><option value="PR-200"><option value="ECO UV">
+        <option value="LH-100"><option value="SUV-100"><option value="PR-200">
       </datalist>
     </div>
 
@@ -1361,7 +1360,7 @@
       </div>
       <div class="fg">
         <label class="fl">Fornecedor (opcional)</label>
-        <input class="fi2" id="solic-forn-livre" placeholder="Ex: MIMAKI Brasil, Roland...">
+        <input class="fi2" id="solic-forn-livre" placeholder="Ex: MIMAKI Brasil...">
       </div>
     </div>
     <div class="frow">
@@ -1643,10 +1642,6 @@ let P = [
   {cod:'LH100-CL',  nome:'Verniz Clear LH100',          cat:'Insumo',forn:'MIMAKI Brasil',estoque:2,min:2,repo:3,custo:280, consumo:0.9,abc:'B',val:['30/07/2026','02/10/2026']},
   {cod:'LH100-M',   nome:'Magenta LH100',               cat:'Insumo',forn:'MIMAKI Brasil',estoque:2,min:2,repo:3,custo:360, consumo:1.5,abc:'A',val:['07/03/2027','07/03/2027']},
   {cod:'PR200',     nome:'Tinta Neutra PR 200',          cat:'Insumo',forn:'MIMAKI Brasil',estoque:3,min:1,repo:2,custo:2243.42, consumo:0.5,abc:'B',val:['06/07/2026']},
-  // ── INSUMOS: ROLAND ECO UV ──────────────────────────────────
-  {cod:'ECO UV-YE', nome:'Tinta Amarela Roland ECO UV', cat:'Insumo',forn:'Roland',        estoque:1,min:2,repo:2,custo:503.63, consumo:0.7,abc:'B',val:['27/01/2026']},
-  {cod:'ECO UV-MG', nome:'Tinta Magenta Roland ECO UV', cat:'Insumo',forn:'Roland',        estoque:1,min:2,repo:2,custo:503.63, consumo:0.7,abc:'B',val:['28/08/2025']},
-  {cod:'ECO UV-BK', nome:'Tinta Preta Roland ECO UV',   cat:'Insumo',forn:'Roland',        estoque:1,min:2,repo:2,custo:503.63, consumo:0.6,abc:'B',val:['02/10/2025']},
   // ── INSUMOS: LÍQUIDOS / MANUTENÇÃO ──────────────────────────
   {cod:'LIQ-001a',  nome:'Tecnopaint (lote Jun/25)',    cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:229.80, consumo:0.5,abc:'C',val:['12/06/2026']},
   {cod:'LIQ-001b',  nome:'Tecnopaint (lote Jan/25)',    cat:'Insumo',forn:'MIMAKI Brasil',estoque:1,min:1,repo:2,custo:229.80, consumo:0.5,abc:'C',val:['08/01/2026']},
@@ -2147,10 +2142,9 @@ function renderEstoque(){
 
   const INSUMO_SUBCAT_ORDER = ['Tintas', 'Liquidos de manutencao', 'Solvente'];
   const INSUMO_SUBCAT_LABEL = { 'Tintas': 'Tintas', 'Liquidos de manutencao': 'Líquidos de manutenção', 'Solvente': 'Solvente' };
-  const TINTA_MODELO_ORDER = ['LH100', 'LUS120', 'LUS175', 'LUS150', 'PR-200 (Primer)', 'Roland ECO UV'];
+  const TINTA_MODELO_ORDER = ['LH100', 'LUS120', 'LUS175', 'LUS150', 'PR-200 (Primer)'];
   function _tintaModelo(p){
     const c=(p.cod||'').toUpperCase(), n=(p.nome||'').toUpperCase();
-    if (c.startsWith('ECO UV') || n.includes('ECO UV')) return 'Roland ECO UV';
     if (c.startsWith('PR200') || n.includes('PR 200') || n.includes('PR200')) return 'PR-200 (Primer)';
     let m = c.match(/^(LH100|LUS120|LUS175|LUS150)/);
     if (m) return m[1];

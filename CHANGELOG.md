@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.79.0] — 2026-10-16
+
+### 🗑 Remoção — tintas Roland ECO UV
+
+O sistema passa a trabalhar só com MIMAKI. Foram excluídos os 6 produtos Roland ECO UV (Magenta, Ciano, Preta, Amarela, Branca e Verniz Gloss), as 2 movimentações de entrada de agosto e o pedido "PEDIDO TINTAS ROLAND - AGO/2026". Também saíram do código os produtos Roland de partida, a opção "Roland" da lista de fornecedores, o grupo "Roland ECO UV" do Estoque completo e a sugestão "ECO UV" no cadastro de máquinas.
+
 ## [2.78.0] — 2026-10-16
 
 ### 🎨 Ajuste — "Na máquina agora" mostra só a garrafa da máquina da linha
