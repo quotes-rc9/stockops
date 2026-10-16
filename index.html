@@ -1072,6 +1072,7 @@
             </div>
           </div>
           <div style="padding:14px;flex:1;overflow-y:auto;">
+            <div id="maq-leituras" style="margin-bottom:16px;"></div>
             <div id="maq-empty" style="display:none;text-align:center;color:var(--t4);padding:48px 14px;font-size:13px;">
               Nenhuma máquina cadastrada ainda.<br>Clique em <b>＋ Nova máquina</b> para começar.
             </div>
@@ -4726,9 +4727,65 @@ let _maqEditId = null;
 
 function _escMaq(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// ── Leituras do RasterLink pendentes: tinta recém-trocada (entra com 100% e espera a 1ª foto)
+// ou tinta em uso sem leitura há mais de LEITURA_LIMITE_DIAS dias. ──
+const LEITURA_LIMITE_DIAS = 7;
+function _leiturasPendentes(){
+  const out=[];
+  MAQUINAS.forEach(m=>{
+    (m.tintas||[]).forEach(t=>{
+      if(!t || typeof t==='string' || t.fim) return;
+      const hist=t.conferenciaHistorico||[];
+      const ultima=(t.conferencia&&t.conferencia.data)||(hist[0]&&hist[0].data)||null;
+      const nota=(t.conferencia&&t.conferencia.nota)||'';
+      const desdeInst=_diasDesde(t.inicio);
+      if(/Instalação nova/.test(nota) && hist.length<=1){
+        out.push({ maq:m.nome, cor:t.modelo, tipo:'aguarda', dias:desdeInst||0, ref:t.inicio });
+        return;
+      }
+      const dUlt = ultima ? _diasDesde(ultima) : null;
+      if(dUlt==null){
+        if(desdeInst!=null && desdeInst>LEITURA_LIMITE_DIAS) out.push({ maq:m.nome, cor:t.modelo, tipo:'nunca', dias:desdeInst, ref:t.inicio });
+        return;
+      }
+      if(dUlt>LEITURA_LIMITE_DIAS) out.push({ maq:m.nome, cor:t.modelo, tipo:'atrasada', dias:dUlt, ref:ultima });
+    });
+  });
+  return out.sort((a,b)=> b.dias-a.dias || a.maq.localeCompare(b.maq));
+}
+function renderLeiturasPendentes(){
+  const box=$('maq-leituras'); if(!box) return;
+  const itens=_leiturasPendentes();
+  if(!itens.length){
+    box.innerHTML=`<div style="border:1px solid var(--b2);border-left:3px solid var(--green);border-radius:var(--r6);padding:9px 12px;font-size:12px;color:var(--t2);">✅ Leituras do RasterLink em dia — nenhuma tinta sem leitura há mais de ${LEITURA_LIMITE_DIAS} dias e nenhuma troca aguardando a 1ª leitura.</div>`;
+    return;
+  }
+  const aguardam=itens.filter(i=>i.tipo==='aguarda').length;
+  const atrasadas=itens.length-aguardam;
+  const linha=i=>{
+    const txt = i.tipo==='aguarda'
+      ? `trocada em ${_fmtData(i.ref)} — 100% na instalação, aguardando a 1ª leitura${i.dias>0?` (há ${i.dias}d)`:''}`
+      : i.tipo==='nunca' ? `nenhuma leitura registrada — em uso há ${i.dias}d`
+      : `última leitura em ${_fmtData(i.ref)} (há ${i.dias}d)`;
+    const urgente = i.dias>LEITURA_LIMITE_DIAS;
+    return `<div style="display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--b2);font-size:11.5px;">
+      <span style="flex:none;width:160px;font-weight:600;color:var(--t1);">${_escMaq(i.maq)}</span>
+      <span style="flex:none;width:92px;font-weight:600;color:var(--t2);">${_escMaq(i.cor)}</span>
+      <span style="color:${urgente?'var(--red)':'var(--t3)'};">${txt}</span>
+    </div>`;
+  };
+  box.innerHTML=`<details open style="border:1px solid var(--b2);border-left:3px solid var(--yellow);border-radius:var(--r6);padding:9px 12px;">
+    <summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:var(--t1);">📸 Leituras do RasterLink pendentes — ${itens.length}
+      <span style="font-weight:500;color:var(--t3);margin-left:8px;">${aguardam?`⏳ ${aguardam} aguardando a 1ª leitura`:''}${aguardam&&atrasadas?' · ':''}${atrasadas?`⚠ ${atrasadas} sem leitura há mais de ${LEITURA_LIMITE_DIAS} dias`:''}</span>
+    </summary>
+    <div style="margin-top:6px;">${itens.map(linha).join('')}</div>
+  </details>`;
+}
+
 function renderMaquinas(){
   const grid=$('maq-grid'); const empty=$('maq-empty'); const count=$('maq-count');
   if(!grid) return;
+  renderLeiturasPendentes();
   if(count) count.textContent = MAQUINAS.length+' máquina'+(MAQUINAS.length!==1?'s':'');
   if(!MAQUINAS.length){ grid.innerHTML=''; if(empty) empty.style.display=''; return; }
   if(empty) empty.style.display='none';

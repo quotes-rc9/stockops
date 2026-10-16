@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.74.0] — 2026-10-16
+
+### ✨ Nova funcionalidade — painel de leituras do RasterLink pendentes
+
+No topo de Tintas na Máquina, um painel lista tudo que precisa de leitura do RasterLink: tintas recém-trocadas (entram com 100% e aguardam a 1ª leitura) e tintas em uso sem nenhuma leitura há mais de 7 dias, da mais atrasada pra mais recente, com a máquina, a cor e quantos dias faz. Quando não há nada pendente, aparece a confirmação "Leituras do RasterLink em dia".
+
 ## [2.73.0] — 2026-10-16
 
 ### ✨ Nova funcionalidade — troca de tinta feita direto pela máquina, sem planilha
