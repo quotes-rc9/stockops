@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.78.0] — 2026-10-16
+
+### 🎨 Ajuste — "Na máquina agora" mostra só a garrafa da máquina da linha
+
+No detalhe da Previsão de Troca de Tinta, o bloco "Na máquina agora" deixou de listar as garrafas das 6 máquinas e passou a mostrar só a tinta instalada na máquina e na cor da linha aberta: lote, validade (e até quando é usável), data em que foi colocada e por quem, a última leitura do RasterLink (percentual e data) e até quando a tinta dura — pela leitura do RasterLink quando existe, pela média da máquina quando não existe, ou pela validade impressa no caso do Primer.
+
 ## [2.77.0] — 2026-10-16
 
 ### 🎨 Ajuste — botão de troca só no Setor Quotes

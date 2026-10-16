@@ -5954,31 +5954,40 @@ function _ptDetalheHtml(r){
       const ateTxt = ateMs>0 ? new Date(ateMs).toLocaleDateString('pt-BR') : null;
       return `<span title="${regraValTxt}" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:${vencida?'var(--red-a)':'var(--s2)'};color:${vencida?'var(--red)':'var(--t2)'};border:1px solid ${vencida?'rgba(var(--red-rgb),.3)':'var(--b2)'};">Garrafa ${i+1}: ${_escMaq(v)}${r.cor!=='PRIMER' && ateTxt ? ' · usável até '+ateTxt : ''}${vencida?' (vencida)':''}</span>`;
     }).join(' ') : `<span style="color:var(--t4);font-size:11px;">Sem validade registrada.</span>`;
-    // Garrafas que estão INSTALADAS nas máquinas (ciclos em uso cujo produto de estoque é este)
-    const nomeProd = String(p.nome||'').trim().toLowerCase();
-    const instaladas = [];
-    MAQUINAS.forEach(mq=>(mq.tintas||[]).forEach(t=>{
-      if(!t || typeof t==='string' || t.fim) return;
-      const corT = String(t.modelo||'').toUpperCase().trim();
-      const inf = _tintaInfoPorModeloCor(mq.modelo, corT);
-      if(inf && inf.produtoNome.trim().toLowerCase() === nomeProd) instaladas.push({ mq, t, corT });
-    }));
-    const _ptTintaAtual = (MAQUINAS.find(x=>x.id===r.maqId)||{}).tintas;
-    const ehEstaLinha = x => x.mq.id===r.maqId && _ptTintaAtual && _ptTintaAtual[r.tintaIdx]===x.t;
-    instaladas.sort((a,b)=> (ehEstaLinha(b)?1:0)-(ehEstaLinha(a)?1:0) || String(a.mq.nome).localeCompare(String(b.mq.nome)) || a.corT.localeCompare(b.corT));
-    const instaladasHtml = instaladas.length ? instaladas.map(x=>{
-      const vBR = x.t.validade ? _fmtData(x.t.validade) : '';
-      const ateMs = vBR ? _ptUsavelAte(vBR, x.corT) : 0;
+    // Garrafa que está INSTALADA nesta máquina agora (a da linha aberta)
+    const _ptMaqLinha = MAQUINAS.find(x=>x.id===r.maqId);
+    const tAtual = _ptMaqLinha && _ptMaqLinha.tintas ? _ptMaqLinha.tintas[r.tintaIdx] : null;
+    let instaladasHtml;
+    if(!tAtual || typeof tAtual==='string'){
+      instaladasHtml = `<div style="color:var(--t4);font-size:11px;">Nenhuma garrafa desta cor registrada nesta máquina.</div>`;
+    } else {
+      const vBR = tAtual.validade ? _fmtData(tAtual.validade) : '';
+      const ateMs = vBR ? _ptUsavelAte(vBR, r.cor) : 0;
       const vencida = ateMs > 0 && ateMs < Date.now();
-      const ateTxt = ateMs>0 && x.corT!=='PRIMER' ? ' · usável até ' + new Date(ateMs).toLocaleDateString('pt-BR') : '';
-      return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;border-top:1px solid var(--b2);font-size:11px;">
-        <span style="font-weight:700;color:var(--t1);min-width:150px;">🖨 ${_escMaq(x.mq.nome)} · ${_escMaq(x.corT)}</span>
-        <span style="color:var(--t2);">lote ${_escMaq(x.t.serieOrigem||'—')}</span>
-        <span style="color:${vencida?'var(--red)':'var(--t2)'};">val. ${vBR||'—'}${ateTxt}${vencida?' (vencida)':''}</span>
-        <span style="color:var(--t4);">desde ${_fmtData(x.t.inicio)}${x.t.quemRetirou?' · por '+_escMaq(x.t.quemRetirou):''}</span>
-        ${ehEstaLinha(x)?'<span style="margin-left:auto;font-size:9px;color:var(--blue);font-weight:700;">ESTA LINHA</span>':''}
+      const ateTxt = ateMs>0 && r.cor!=='PRIMER' ? 'usável até ' + new Date(ateMs).toLocaleDateString('pt-BR') : '';
+      const confL = r.conferencia;
+      const pctL = confL ? _ptExtrairPct(confL.nota) : null;
+      const campo = (titulo, valor, sub, cor) => `<div style="min-width:140px;flex:1;"><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">${titulo}</span><b style="font-size:12px;color:${cor||'var(--t1)'};">${valor}</b>${sub?`<span style="display:block;font-size:10px;color:var(--t3);">${sub}</span>`:''}</div>`;
+      const desde = _diasDesde(tAtual.inicio);
+      let ateCampo;
+      if(r.previsaoData && r.effRestante!=null){
+        const primerLimitado = r.cor==='PRIMER' && tAtual.validade && (()=>{ const v=_parseData(tAtual.validade); return v && Math.floor((v.getTime()-Date.now())/86400000)===r.effRestante; })();
+        const sub = primerLimitado ? 'limitado pela validade impressa (o Primer não tem extensão de 1 ano)'
+          : r.conferido
+          ? (pctL!=null ? `pela leitura de ${_fmtData(confL.data)} (${pctL}%) do RasterLink` : `pela conferência de ${_fmtData(confL.data)}`)
+          : 'estimativa pela média desta máquina (sem leitura do RasterLink)';
+        ateCampo = campo('Dura até', r.previsaoData, (r.effRestante>=0 ? `faltam ${r.effRestante}d · ` : 'já passou do previsto · ') + sub, r.effRestante<0?'var(--red)':'');
+      } else {
+        ateCampo = campo('Dura até', '—', 'sem histórico pra estimar');
+      }
+      instaladasHtml = `<div style="display:flex;gap:14px;flex-wrap:wrap;">
+        ${campo('Lote', _escMaq(tAtual.serieOrigem||'—'))}
+        ${campo('Validade', vBR||'—', vencida ? 'vencida' : ateTxt, vencida?'var(--red)':'')}
+        ${campo('Colocada em', _fmtData(tAtual.inicio), (tAtual.quemRetirou?'por '+_escMaq(tAtual.quemRetirou)+' · ':'') + (desde!=null?'há '+desde+'d':''))}
+        ${campo('Última leitura', pctL!=null ? pctL+'%' : '—', confL ? _fmtData(confL.data)+' · RasterLink' : 'sem leitura registrada')}
+        ${ateCampo}
       </div>`;
-    }).join('') : `<div style="color:var(--t4);font-size:11px;">Nenhuma garrafa desta tinta instalada em máquina.</div>`;
+    }
     const doisSetores = typeof p.estoqueQuotes==='number' || typeof p.estoqueCompras==='number';
     const setoresTxt = doisSetores ? ` — Quotes: <b>${p.estoqueQuotes||0} un</b> · Compras: <b>${p.estoqueCompras||0} un</b>` : '';
     const valDesalinhada = Array.isArray(p.val) && p.val.length !== (p.estoque||0);
@@ -5989,7 +5998,7 @@ function _ptDetalheHtml(r){
         <div><span style="display:block;font-size:9.5px;color:var(--t4);text-transform:uppercase;">Custo unitário</span><b style="font-family:'JetBrains Mono',monospace;font-size:13px;">${RV(p.custo||0)}</b></div>
       </div>
       <div style="border:1px solid var(--b2);border-radius:var(--r6);padding:8px 10px;margin-bottom:8px;">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t4);font-weight:700;margin-bottom:4px;">🖨 Na máquina agora — sendo usadas (${instaladas.length})</div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t4);font-weight:700;margin-bottom:4px;">🖨 Na máquina agora — ${_escMaq(r.maquina)} · ${_escMaq(r.cor)}</div>
         ${instaladasHtml}
       </div>
       <div style="border:1px solid var(--b2);border-radius:var(--r6);padding:8px 10px;margin-bottom:10px;">
