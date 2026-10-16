@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.76.0] — 2026-10-16
+
+### ✨ Melhoria — Estoque Tintas como tela central das trocas
+
+Depois de registrar a troca de um Branco, o sistema pergunta se quer trocar também o outro (07 ou 08) da mesma máquina: o formulário abre de novo com a máquina, a posição, quem trocou e a data já preenchidos. A coluna do Setor Compras também ganhou o botão **🔄 Troquei** (só para administrador, já com a origem "Setor Compras") — usuários comuns continuam trocando só a partir do Setor Quotes, e o estoque do Compras fica sob controle de quem o administra.
+
 ## [2.75.0] — 2026-10-16
 
 ### ✨ Melhoria — Previsão de Troca de Tinta separa o que está na máquina do que está no estoque
