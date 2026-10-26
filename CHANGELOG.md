@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.80.0] — 2026-10-26
+
+### 🗑 Remoção — abas "Resumo" e "Calendário de compra" da Previsão de Troca de Tinta
+
+A Previsão de Troca de Tinta agora tem só duas abas: **Por máquina** (que abre por padrão) e **Tintas na Máquina**. Saíram a aba Resumo (cartões Comprar/Repor/Programar/Tranquilo e as listas de ações) e a aba Calendário de compra, junto com o código delas e as duas sub-permissões de aba ("Aba Resumo" e "Aba Calendário de compra"). O veredito de cada tinta (Comprar, Repor, Programar, Tranquilo) continua em cada linha da aba Por máquina.
+
 ## [2.79.0] — 2026-10-16
 
 ### 🗑 Remoção — tintas Roland ECO UV
