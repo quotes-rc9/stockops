@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.81.0] — 2026-11-03
+
+### 🖨 Modelo da impressora nas máquinas
+
+As Mimakis 01 a 06 agora têm cadastrado o modelo da impressora (**UJF-6042MkII**), num campo próprio (`modeloImpressora`). Ele aparece junto da série de tinta (ex.: "UJF-6042MkII · LH-100") nos cartões e na lista de máquinas, no cabeçalho do histórico e no PDF da máquina. O campo "modelo" que escolhe as tintas de cada máquina não mudou.
+
 ## [2.80.0] — 2026-10-26
 
 ### 🗑 Remoção — abas "Resumo" e "Calendário de compra" da Previsão de Troca de Tinta

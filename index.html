@@ -4820,7 +4820,7 @@ function _renderMaquinaCard(m){
         <div style="width:40px;height:40px;border-radius:var(--r8);background:var(--blue-a);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🖨</div>
         <div style="min-width:0;flex:1;">
           <div style="font-weight:700;font-size:14px;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escMaq(m.nome)}</div>
-          <div style="font-size:12px;color:var(--t3);">${_escMaq(m.modelo)||'—'}</div>
+          <div style="font-size:12px;color:var(--t3);">${_escMaq((m.modeloImpressora?m.modeloImpressora+' · ':'')+(m.modelo||''))||'—'}</div>
         </div>
         <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--r6);background:var(--s3);color:var(--t3);white-space:nowrap;">${_emUso.length} em uso</span>
       </div>
@@ -5246,7 +5246,7 @@ function hpTileHtml(m, idx, ativo){
     <span class="mtile-caret">▶</span>
     <div class="mtile-top">
       <div class="icon">🖨️</div>
-      <div><div class="mtile-name">${m.nome}</div><div class="mtile-model mono">${m.modelo}</div></div>
+      <div><div class="mtile-name">${m.nome}</div><div class="mtile-model mono">${(m.modeloImpressora?m.modeloImpressora+' · ':'')}${m.modelo}</div></div>
     </div>
     <div class="mtile-dots">${dots}</div>
     <div class="mtile-comp ${r.compCls}"><span class="lbl">Componentes</span> ${r.okCount}/${r.aplicaveis.length} OK</div>
@@ -5353,7 +5353,7 @@ function hpCardHtml(m){
   return `<div class="mcard">
     <div class="mhead">
       <div class="icon">🖨️</div>
-      <div><div class="name">${m.nome}</div><div class="sub mono">${m.modelo}</div></div>
+      <div><div class="name">${m.nome}</div><div class="sub mono">${(m.modeloImpressora?m.modeloImpressora+' · ':'')}${m.modelo}</div></div>
     </div>
     ${hpOverviewHtml(m)}
     <div class="tabs">${tabsHtml}</div>
@@ -5562,7 +5562,7 @@ function openMaqHist(maqId){
   const m=MAQUINAS.find(x=>x.id===maqId); if(!m) return;
   _maqHistAtual=maqId;
   $('maq-hist-titulo').textContent='📜 '+m.nome;
-  $('maq-hist-sub').textContent=`${m.modelo||'—'} · criada em ${m.criadoEm||'—'}`;
+  $('maq-hist-sub').textContent=`${(m.modeloImpressora?m.modeloImpressora+' · ':'')}${m.modelo||'—'} · criada em ${m.criadoEm||'—'}`;
   const arr=(m.tintas||[]).map(t=> typeof t==='string'?{modelo:t}:t);
   const ordered=[...arr.filter(t=>!t.fim), ...arr.filter(t=>t.fim)];
   let linhas=ordered.map(t=>{
@@ -5617,7 +5617,7 @@ function exportarMaqPDF(maqId){
   doc.setTextColor(30,30,30); doc.setFont('helvetica','bold'); doc.setFontSize(13);
   doc.text('Máquina: '+(m.nome||''),10,28);
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,100,100);
-  doc.text(`${m.modelo||'—'}  ·  criada em ${m.criadoEm||'—'}`,10,34);
+  doc.text(`${(m.modeloImpressora?m.modeloImpressora+' · ':'')}${m.modelo||'—'}  ·  criada em ${m.criadoEm||'—'}`,10,34);
   const arr=(m.tintas||[]).map(t=> typeof t==='string'?{modelo:t}:t);
   const ordered=[...arr.filter(t=>!t.fim), ...arr.filter(t=>t.fim)];
   const tintasRows=ordered.map(t=>{ const d=_duracaoDias(t.inicio,t.fim); return [t.modelo||'—', _fmtData(t.inicio), _fmtData(t.validade), t.serieOrigem||'—', t.quemRetirou||'—', _fmtData(t.fim), t.fim?(d!=null?d+' dias':'—'):'em uso']; });
