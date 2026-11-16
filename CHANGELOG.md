@@ -1,5 +1,11 @@
 # 📝 Changelog — StockOps
 
+## [2.82.0] — 2026-11-16
+
+### 🗑 Remoção — card "Pedidos em Trânsito" da tela inicial
+
+O card "Pedidos em Trânsito" foi retirado do Dashboard. Os pedidos continuam em Compras › Histórico, e o aviso de "pedido a caminho" na tela de Estoque não mudou.
+
 ## [2.81.0] — 2026-11-03
 
 ### 🖨 Modelo da impressora nas máquinas
