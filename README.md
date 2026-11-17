@@ -4,8 +4,8 @@ Sistema completo de gestão de estoque para empresa de **Impressão Digital**, c
 
 ## 🌐 Acesso ao sistema
 
-- **Site em produção**: https://thiagodejesusconceicao300-del.github.io/stockops/
-- **Repositório GitHub**: https://github.com/thiagodejesusconceicao300-del/stockops
+- **Site em produção**: https://quotes-rc9.github.io/stockops/
+- **Repositório GitHub**: https://github.com/quotes-rc9/stockops
 
 ## 🎯 Funcionalidades principais
 
